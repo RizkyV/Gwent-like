@@ -13,25 +13,30 @@ type GameConfig = {
 };
 
 type GameState = {
-  friendlyRows: Row[];
-  enemyRows: Row[];
-  friendlyHand: CardInstance[];
-  enemyHand: CardInstance[];
-  friendlyDeck: CardInstance[];
-  enemyDeck: CardInstance[];
-  friendlyGraveyard: CardInstance[];
-  enemyGraveyard: CardInstance[];
+  players: {
+    friendly: PlayerState;
+    enemy: PlayerState;
+  };
   currentPlayer: 'friendly' | 'enemy';
-  roundWins: { friendly: number; enemy: number };
   currentRound: number;
   phase: 'draw' | 'play' | 'end' | 'gameOver';
+};
+
+type PlayerState = {
+  hand: CardInstance[];
+  deck: CardInstance[];
+  graveyard: CardInstance[];
+  rows: Row[];
+  passed: boolean;
+  roundWins: number;
 };
 
 type RowEffect = {
   id: string;
   description?: string;
-  duration?: number; // e.g., how long an effect like "frost" lasts
+  duration?: number; //how long an effect like "frost" lasts
   apply: (state: GameState, row: Row) => Row;
+  trigger: 'endOfTurn' | 'startOfTurn';
 };
 
 type Row = {
@@ -43,29 +48,54 @@ type Row = {
 interface CardDefinition {
   id: string;
   name: string;
-  power: number;
-  type: 'unit' | 'special' | 'resource';
-  tags?: string[];
-  onPlay?: string | GameEffect;
+  basePower: number;
+  category: 'unit' | 'special' | 'resource';
+  provisionCost: number;
+  type?: string[]; //races - classes - factions
+  rarity?: 'bronze' | 'gold'
+  tags?: string[]; //mechanical or deck tags for filtering
+  onPlay?: GameEffect;
   isToken?: boolean;
 }
 
 interface CardInstance {
-  instanceId: string; // Unique per game instance (e.g. UUID)
-  baseCard: CardDefinition; // Reference to static card definition
-  currentPower: number; // Modifiable in-game value
+  instanceId: string; //Unique per game instance (e.g. UUID)
+  baseCard: CardDefinition; //Reference to static card definition
+  currentPower: number; //Modifiable in-game value
   boosted?: boolean;
   locked?: boolean;
 }
 
-type GameEffect = (state: GameState) => GameState;
+type GameEffect = (state: GameState, context: EffectContext) => GameState;
+
+type EffectContext = {
+  source: CardInstance;
+  player: PlayerRole;
+};
+
+
+const boostAllFriendlyUnits: GameEffect = (state, context) => {
+    const rows = getRows(state, context.player);
+
+    const boostedRows = rows.map(row => ({
+        ...row,
+        cards: row.cards.map(card => ({
+            ...card,
+            currentPower: card.currentPower + 1
+        }))
+    }));
+
+    return setRows(state, context.player, boostedRows);
+};
 
 const cardDefinitions: CardDefinition[] = [
   {
     id: 'card1',
     name: 'Card One',
-    power: 5,
-    type: 'unit',
-    tags: ['warrior'],
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
+    onPlay: boostAllFriendlyUnits
   }
 ];

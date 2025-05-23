@@ -3,6 +3,7 @@
         "module": "commonjs",
         "target": "ES5",
         "outDir": "ts-built",
-        "rootDir": "script"
+        "rootDir": "script",
+        "lib": ["es2015", "dom"]
     }
   }
