@@ -54,9 +54,18 @@ interface CardInstance {
   instanceId: string; // Unique per game instance (e.g. UUID)
   baseCard: CardDefinition; // Reference to static card definition
   currentPower: number; // Modifiable in-game value
-  boosted?: boolean;    // Example runtime flag
-  locked?: boolean;     // Another runtime modifier
-  // ... extend as needed
+  boosted?: boolean;
+  locked?: boolean;
 }
 
 type GameEffect = (state: GameState) => GameState;
+
+const cardDefinitions: CardDefinition[] = [
+  {
+    id: 'card1',
+    name: 'Card One',
+    power: 5,
+    type: 'unit',
+    tags: ['warrior'],
+  }
+];
