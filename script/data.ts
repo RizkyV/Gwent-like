@@ -54,16 +54,16 @@ interface CardDefinition {
   type?: string[]; //races - classes - factions
   rarity?: 'bronze' | 'gold'
   tags?: string[]; //mechanical or deck tags for filtering
-  onPlay?: GameEffect;
   isToken?: boolean;
+  effects?: HookedEffect[]; //Hooks
 }
 
 interface CardInstance {
   instanceId: string; //Unique per game instance (e.g. UUID)
   baseCard: CardDefinition; //Reference to static card definition
   currentPower: number; //Modifiable in-game value
-  boosted?: boolean;
-  locked?: boolean;
+  boosted?: boolean; // Temporary boost status
+  statuses: Set<StatusId>;  // Use Set for easy add/remove/check
 }
 
 type GameEffect = (state: GameState, context: EffectContext) => GameState;
@@ -71,21 +71,71 @@ type GameEffect = (state: GameState, context: EffectContext) => GameState;
 type EffectContext = {
   source: CardInstance;
   player: PlayerRole;
+  metadata?: Record<string, any>; // Hook-specific data (e.g., damagedCard)
+};
+
+type StatusId = 'locked' | 'poisoned' | 'veil' | string;
+
+type StatusEffect = {
+  id: StatusId;
+  description: string;
+  // For example, a predicate to check if card can be targeted
+  canBeTargeted?: (card: CardInstance, state: GameState) => boolean;
+  // You can add hooks for onTurnStart, onDamageTaken, etc.
+};
+
+type HookType =
+  | 'onPlay'
+  | 'onTargeted'
+  | 'onTurnStart'
+  | 'onTurnEnd'
+  | 'onAttack'
+  | 'onDamaged'
+  | 'onDeath'
+  | 'onSummoned'
+  | 'onDraw'
+  | 'onDiscard'
+  | 'onGraveyardEnter'
+  | 'onMoveToRow'
+  | 'onRoundStart'
+  | 'onRoundEnd'
+  | 'onAbilityActivated';
+
+type HookedEffect = {
+  hook: HookType;
+  effect: GameEffect;
 };
 
 
 const boostAllFriendlyUnits: GameEffect = (state, context) => {
-    const rows = getRows(state, context.player);
+  const rows = getRows(state, context.player);
 
-    const boostedRows = rows.map(row => ({
-        ...row,
-        cards: row.cards.map(card => ({
-            ...card,
-            currentPower: card.currentPower + 1
-        }))
-    }));
+  const boostedRows = rows.map(row => ({
+    ...row,
+    cards: row.cards.map(card => ({
+      ...card,
+      currentPower: card.currentPower + 1
+    }))
+  }));
 
-    return setRows(state, context.player, boostedRows);
+  return setRows(state, context.player, boostedRows);
+};
+
+const boostSelfOnEnemyDamaged: GameEffect = (state, context) => {
+  const { source } = context;
+  const damagedCard = context.metadata?.damagedCard;
+  if (!damagedCard) return state;
+
+  const sourceOwner = getCardOwner(state, source);
+  const damagedOwner = getCardOwner(state, damagedCard);
+
+  // Only trigger if the damaged card is on the opposing team
+  if (sourceOwner === damagedOwner) return state;
+
+  return updateCardInState(state, source.instanceId, card => ({
+    ...card,
+    currentPower: card.currentPower + 1
+  }));
 };
 
 const cardDefinitions: CardDefinition[] = [
@@ -96,6 +146,42 @@ const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
-    onPlay: boostAllFriendlyUnits
+    effects: [
+      {
+        hook: 'onPlay',
+        effect: boostAllFriendlyUnits
+      }
+    ]
+  },
+  {
+    id: 'card2',
+    name: 'Card Two',
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
+    effects: [
+      {
+        hook: 'onDamaged',
+        effect: boostSelfOnEnemyDamaged
+      }
+    ]
   }
 ];
+
+const statusEffects: Record<StatusId, StatusEffect> = {
+  locked: {
+    id: 'locked',
+    description: 'Card cannot be moved or acted upon',
+  },
+  veil: {
+    id: 'veil',
+    description: 'Card cannot be targeted by enemy effects',
+    canBeTargeted: (card, state) => false,
+  },
+  poisoned: {
+    id: 'poisoned',
+    description: 'Card loses 1 power each turn',
+    // You could add onTurnStart hooks here for ticking damage
+  },
+};
