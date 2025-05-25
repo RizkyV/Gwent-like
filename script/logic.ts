@@ -1,19 +1,206 @@
+//Gameplay logic
 function createCardInstance(def: CardDefinition): CardInstance {
-    return {
-        instanceId: crypto.randomUUID(), // or your UUID generator
-        baseCard: def,
-        currentPower: def.basePower,
-        statuses: new Set<StatusId>(),
-    };
+  return {
+    instanceId: crypto.randomUUID(), // or your UUID generator
+    baseCard: def,
+    currentPower: def.basePower,
+    statuses: new Set<StatusId>(),
+  };
 }
 
 function resolveCardPlay(card: CardInstance, state: GameState, player: PlayerRole): GameState {
-    const effect = card.baseCard.effects?.find(e => e.hook === 'onPlay')?.effect;
-    if (!effect) return state;
-    return effect(state, { source: card, player });
+  const effect = card.baseCard.effects?.find(e => e.hook === 'onPlay')?.effect;
+  if (!effect) return state;
+  return effect(state, { source: card, player });
 }
-console.log(cardDefinitions);
-console.log(createCardInstance(cardDefinitions[0]));
+
+function createInitialGameState(friendlyDeck: CardInstance[], enemyDeck: CardInstance[]): GameState {
+  return {
+    players: {
+      friendly: {
+        hand: [],
+        deck: [...friendlyDeck],
+        graveyard: [],
+        rows: [
+          { id: 'melee', cards: [] },
+          { id: 'ranged', cards: [] }
+        ],
+        passed: false,
+        roundWins: 0
+      },
+      enemy: {
+        hand: [],
+        deck: [...enemyDeck],
+        graveyard: [],
+        rows: [
+          { id: 'melee', cards: [] },
+          { id: 'ranged', cards: [] }
+        ],
+        passed: false,
+        roundWins: 0
+      }
+    },
+    currentPlayer: 'friendly',
+    currentRound: 1,
+    phase: 'draw',
+    turn: {
+      hasActivatedAbility: false,
+      hasPlayedCard: false
+    }
+  };
+}
+
+function startRound(state: GameState): GameState {
+  let newState = state;
+  newState = drawCards(newState, 'friendly', 10);
+  newState = drawCards(newState, 'enemy', 10);
+  return {
+    ...newState,
+    phase: 'play',
+    currentPlayer: flipCoin ? 'friendly' : 'enemy' // the one that lost last
+  };
+}
+
+function checkEndOfRound(state: GameState): GameState {
+  const bothPassed = state.players.friendly.passed && state.players.enemy.passed; //or both players hands are empty
+
+  if (bothPassed) {
+    // TODO: Calculate round winner, add to roundWins, reset for next round or end game
+    return {
+      ...state,
+      phase: 'roundEnd',
+    };
+  }
+
+  return state;
+}
+
+function resetForNewRound(state: GameState): GameState {
+  //TODO: clear rows, check if done with game
+  state.currentRound += 1;
+  state.phase = 'draw';
+  state.players.friendly.passed = false;
+  state.players.enemy.passed = false;
+  return state;
+}
+
+function newTurn(state: GameState): GameState {
+  state.turn = { hasActivatedAbility: false, hasPlayedCard: false };
+  state.currentPlayer = state.currentPlayer === 'friendly' ? 'enemy' : 'friendly';
+  return state;
+}
+
+async function gameLoop(config: GameConfig, initialState: GameState) {
+  let state = initialState;
+
+  while (state.phase !== 'gameOver') {
+    // --- Phase: Draw ---
+    if (state.phase === 'draw') {
+      console.log(`Starting round ${state.currentRound}`);
+      state = drawCards(state, 'friendly', 3); // e.g. draw 3 each round
+      state = drawCards(state, 'enemy', 3);
+      // Trigger round-start effects
+      state = triggerHook('onRoundStart', state, { player: 'friendly', source: null });
+      state = triggerHook('onRoundStart', state, { player: 'enemy', source: null });
+      state.phase = 'play';
+      continue;
+    }
+
+    // --- Phase: Play ---
+    if (state.phase === 'play') {
+      console.log(`Player ${state.currentPlayer}'s turn.`);
+      const controller = config.controllers[state.currentPlayer];
+      const newState = await controller.makeMove(state, state.currentPlayer);
+      state = newTurn(newState);
+
+      const bothPassed = state.players.friendly.passed && state.players.enemy.passed;
+      const bothHandsEmpty = state.players.friendly.hand.length === 0 && state.players.enemy.hand.length === 0;
+
+      if (bothPassed || bothHandsEmpty) {
+        state.phase = 'roundEnd';
+        continue;
+      }
+      continue;
+    }
+
+    // --- Phase: End (End of Round) ---
+    if (state.phase === 'roundEnd') {
+      const friendlyPoints = state.players.friendly.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
+      const enemyPoints = state.players.enemy.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
+
+      if (friendlyPoints > enemyPoints) {
+        state.players.friendly.roundWins += 1;
+        console.log(`Round ${state.currentRound} goes to Friendly (${friendlyPoints} vs ${enemyPoints})`);
+      } else if (enemyPoints > friendlyPoints) {
+        state.players.enemy.roundWins += 1;
+        console.log(`Round ${state.currentRound} goes to Enemy (${enemyPoints} vs ${friendlyPoints})`);
+      } else {
+        console.log(`Round ${state.currentRound} is a tie! (${friendlyPoints} vs ${enemyPoints})`);
+      }
+
+      // Trigger round-end effects
+      state = triggerHook('onRoundEnd', state, { player: 'friendly', source: null });
+      state = triggerHook('onRoundEnd', state, { player: 'enemy', source: null });
+
+      // Clear the board
+      state.players.friendly.rows.forEach(row => row.cards = []);
+      state.players.enemy.rows.forEach(row => row.cards = []);
+
+      // Check for game over
+      const friendlyWins = state.players.friendly.roundWins;
+      const enemyWins = state.players.enemy.roundWins;
+      const maxRoundsReached = state.currentRound >= 3;
+      const gameIsOver = friendlyWins === 2 || enemyWins === 2 || maxRoundsReached;
+
+      if (gameIsOver) {
+        state.phase = 'gameOver';
+        const winner = friendlyWins > enemyWins ? 'Friendly' : (enemyWins > friendlyWins ? 'Enemy' : 'Draw');
+        console.log(`Game Over! Winner: ${winner}`);
+        break;
+      }
+
+      // Prepare next round
+      state = resetForNewRound(state);
+      continue;
+    }
+  }
+}
+
+
+function passTurn(state: GameState, player: PlayerRole): GameState {
+  const playerState = state.players[player];
+  if (playerState.passed) {
+    console.warn(`${player} has already passed this turn.`);
+    return state; // Cannot pass again
+  }
+
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [player]: {
+        ...playerState,
+        passed: true
+      }
+    },
+    turn: {
+      ...state.turn,
+      hasPlayedCard: true // Passing counts as playing a card
+    }
+  };
+}
+const dummyPlayer: PlayerController = {
+  type: 'human',
+  makeMove: async (state, role) => {
+    console.log(`It's ${role}'s turn.`);
+    console.log('Hand: ', state.players[role].hand.map(c => c.baseCard.name));
+    console.log('Rows: ', state.players[role].rows.map(r => ({
+      id: r.id,
+      cards: r.cards.map(c => c.baseCard.name)
+    })));
+    return passTurn(state, role); // For now, just pass the turn
+  }
+};
 
 /*
  * Core gameplay hooks for effect system
@@ -45,45 +232,67 @@ console.log(createCardInstance(cardDefinitions[0]));
 /*
 * Helpers
 */
+
+function flipCoin(): boolean {
+  return Math.random() < 0.5;
+}
+function drawCards(state: GameState, player: PlayerRole, count: number): GameState {
+  const playerState = state.players[player];
+  const drawn = playerState.deck.slice(0, count);
+  const newDeck = playerState.deck.slice(count);
+
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [player]: {
+        ...playerState,
+        hand: [...playerState.hand, ...drawn],
+        deck: newDeck
+      }
+    }
+  };
+}
+
 function getRows(state: GameState, player: PlayerRole): Row[] {
-    return player === 'friendly' ? state.players.friendly.rows : state.players.enemy.rows;
+  return player === 'friendly' ? state.players.friendly.rows : state.players.enemy.rows;
 }
 function setRows(state: GameState, player: PlayerRole, rows: Row[]): GameState {
-    return {
-        ...state,
-        ...(player === 'friendly'
-            ? { friendlyRows: rows }
-            : { enemyRows: rows })
-    };
+  return {
+    ...state,
+    ...(player === 'friendly'
+      ? { friendlyRows: rows }
+      : { enemyRows: rows })
+  };
 }
 function getRowById(rows: Row[], id: 'melee' | 'ranged'): Row | undefined {
-    return rows.find(row => row.id === id);
+  return rows.find(row => row.id === id);
 }
 
 function addStatus(card: CardInstance, status: StatusId): CardInstance {
-    const newStatuses = new Set(card.statuses);
-    newStatuses.add(status);
-    return { ...card, statuses: newStatuses };
+  const newStatuses = new Set(card.statuses);
+  newStatuses.add(status);
+  return { ...card, statuses: newStatuses };
 }
 
 function removeStatus(card: CardInstance, status: StatusId): CardInstance {
-    const newStatuses = new Set(card.statuses);
-    newStatuses.delete(status);
-    return { ...card, statuses: newStatuses };
+  const newStatuses = new Set(card.statuses);
+  newStatuses.delete(status);
+  return { ...card, statuses: newStatuses };
 }
 
 function hasStatus(card: CardInstance, status: StatusId): boolean {
-    return card.statuses.has(status);
+  return card.statuses.has(status);
 }
 
 function canTargetCard(card: CardInstance, state: GameState): boolean {
-    for (const status of Array.from(card.statuses)) {
-        const effect = statusEffects[status];
-        if (effect?.canBeTargeted && !effect.canBeTargeted(card, state)) {
-            return false; // one status disallows targeting
-        }
+  for (const status of Array.from(card.statuses)) {
+    const effect = statusEffects[status];
+    if (effect?.canBeTargeted && !effect.canBeTargeted(card, state)) {
+      return false; // one status disallows targeting
     }
-    return true; // no status disallows targeting
+  }
+  return true; // no status disallows targeting
 }
 
 function triggerHook(
@@ -182,4 +391,20 @@ function updateCardInState(
   }
 
   throw new Error(`Card with instanceId ${cardId} not found in any player's rows.`);
+}
+
+window.onload = async () => {
+  const friendlyDeck = cardDefinitions.slice(0, 10).map(createCardInstance);
+  const enemyDeck = cardDefinitions.slice(10, 20).map(createCardInstance);
+  const state = createInitialGameState(friendlyDeck, enemyDeck);
+  const config: GameConfig = {
+    controllers: {
+      friendly: dummyPlayer,
+      enemy: dummyPlayer
+    }
+  }
+  console.log(state);
+  console.log('Game starting...');
+  await gameLoop(config, state);
+  console.log('Game finished.');
 }

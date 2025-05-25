@@ -12,6 +12,11 @@ type GameConfig = {
   };
 };
 
+type TurnState = {
+  hasPlayedCard: boolean;
+  hasActivatedAbility: boolean;
+};
+
 type GameState = {
   players: {
     friendly: PlayerState;
@@ -19,7 +24,8 @@ type GameState = {
   };
   currentPlayer: 'friendly' | 'enemy';
   currentRound: number;
-  phase: 'draw' | 'play' | 'end' | 'gameOver';
+  phase: 'draw' | 'mulligan' | 'play' | 'roundEnd' | 'gameOver';
+  turn: TurnState;
 };
 
 type PlayerState = {
@@ -62,8 +68,8 @@ interface CardInstance {
   instanceId: string; //Unique per game instance (e.g. UUID)
   baseCard: CardDefinition; //Reference to static card definition
   currentPower: number; //Modifiable in-game value
-  boosted?: boolean; // Temporary boost status
-  statuses: Set<StatusId>;  // Use Set for easy add/remove/check
+  statuses: Set<StatusId>;
+  boosted?: boolean; //certain cached f
 }
 
 type GameEffect = (state: GameState, context: EffectContext) => GameState;
@@ -117,7 +123,6 @@ const boostAllFriendlyUnits: GameEffect = (state, context) => {
       currentPower: card.currentPower + 1
     }))
   }));
-
   return setRows(state, context.player, boostedRows);
 };
 
