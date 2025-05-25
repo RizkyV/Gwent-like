@@ -4,6 +4,11 @@
     "typescript": "^5.7.3"
   },
   "scripts": {
-    "start": "live-server"
+    "exec": "npm run build && npm run start",
+    "start": "live-server",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
   }
 }

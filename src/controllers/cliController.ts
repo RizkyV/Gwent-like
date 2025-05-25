@@ -1,4 +1,8 @@
 import promptSync from 'prompt-sync';
+import { PlayerController } from '../core/types.js';
+import { passTurn } from '../core/engine.js';
+import { resolveCardPlay } from '../core/logic.js';
+
 const prompt = promptSync();
 
 export const humanCLIController: PlayerController = {
@@ -23,7 +27,6 @@ export const humanCLIController: PlayerController = {
     const rowChoice = prompt('Choose a row to play on (melee/ranged): ') as 'melee' | 'ranged';
     const validRow = rowChoice === 'melee' || rowChoice === 'ranged' ? rowChoice : 'melee';
 
-    // Remove card from hand and place it on the board
     const updatedHand = playerState.hand.filter((_, i) => i !== cardIndex);
     const updatedRows = playerState.rows.map(row =>
       row.id === validRow ? { ...row, cards: [...row.cards, card] } : row
@@ -45,7 +48,6 @@ export const humanCLIController: PlayerController = {
       }
     };
 
-    // Trigger onPlay effect
     return resolveCardPlay(card, newState, role);
   }
 };
