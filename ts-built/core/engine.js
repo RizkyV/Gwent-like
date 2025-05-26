@@ -9,10 +9,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { drawCards, triggerHook } from './logic.js';
 import { flipCoin } from '../utils/utils.js';
+import { CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3, MAX_ROUNDS } from './constants.js';
 export function startRound(state) {
     let newState = state;
-    newState = drawCards(newState, 'friendly', 10);
-    newState = drawCards(newState, 'enemy', 10);
+    let cardsToDraw = CARDS_DRAWN_ROUND_1;
+    if (state.currentRound === 2)
+        cardsToDraw = CARDS_DRAWN_ROUND_2;
+    if (state.currentRound === 3)
+        cardsToDraw = CARDS_DRAWN_ROUND_3;
+    newState = drawCards(newState, 'friendly', cardsToDraw);
+    newState = drawCards(newState, 'enemy', cardsToDraw);
     return Object.assign(Object.assign({}, newState), { phase: 'play', currentPlayer: flipCoin() ? 'friendly' : 'enemy' });
 }
 export function checkEndOfRound(state) {
@@ -88,8 +94,11 @@ export function gameLoop(config, initialState) {
                 state.players.enemy.rows.forEach(row => row.cards = []);
                 const friendlyWins = state.players.friendly.roundWins;
                 const enemyWins = state.players.enemy.roundWins;
-                const maxRoundsReached = state.currentRound >= 3;
-                const gameIsOver = friendlyWins === 2 || enemyWins === 2 || maxRoundsReached;
+                //Calculate the amount of round wins needed to win the game
+                const roundsLeft = MAX_ROUNDS - state.currentRound;
+                const friendlyCanBeCaught = (friendlyWins + roundsLeft) >= enemyWins;
+                const enemyCanBeCaught = (enemyWins + roundsLeft) >= friendlyWins;
+                const gameIsOver = !friendlyCanBeCaught || !enemyCanBeCaught || state.currentRound >= MAX_ROUNDS;
                 if (gameIsOver) {
                     state.phase = 'gameOver';
                     const winner = friendlyWins > enemyWins ? 'Friendly' : (enemyWins > friendlyWins ? 'Enemy' : 'Draw');
