@@ -57,5 +57,69 @@ export const cardDefinitions: CardDefinition[] = [
         effect: boostSelfOnEnemyDamaged
       }
     ]
+  },
+  {
+    id: 'card3',
+    name: 'Card Three',
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
+  },
+  {
+    id: 'card4',
+    name: 'Card Four',
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
+  },
+  {
+    id: 'card5',
+    name: 'Card Five',
+    type: ['warrior'],
+    basePower: 10,
+    category: 'unit',
+    provisionCost: 5,
+  },
+  {
+    id: 'card6',
+    name: 'Card Six',
+    type: ['warrior'],
+    basePower: 6,
+    category: 'unit',
+    provisionCost: 5,
+  },
+  {
+    id: 'card7',
+    name: 'Card Seven',
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
+  },
+  {
+    id: 'card8',
+    name: 'Card Eight',
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
+  },
+  {
+    id: 'card9',
+    name: 'Card Nine',
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
+  },
+  {
+    id: 'card10',
+    name: 'Card Ten',
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
   }
 ];
