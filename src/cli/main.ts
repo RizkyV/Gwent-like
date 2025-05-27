@@ -5,7 +5,7 @@ import { GameConfig } from '../core/types.js';
 import { dummyPlayer } from '../controllers/dummyPlayer.js';
 import { gameLoop } from '../core/engine.js';
 
-(async () => {
+export const runGame = async () => {
     console.log('Starting game...');
     const friendlyDeck = cardDefinitions.slice(0, 10).map(createCardInstance);
     const enemyDeck = cardDefinitions.slice(10, 20).map(createCardInstance);
@@ -19,4 +19,4 @@ import { gameLoop } from '../core/engine.js';
     console.log('Game starting...');
     await gameLoop(config, state);
     console.log('Game finished.');
-})();
+}
