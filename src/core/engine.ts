@@ -69,8 +69,9 @@ export function passTurn(state: GameState, player: PlayerRole): GameState {
   };
 }
 
-export async function gameLoop(config: GameConfig, initialState: GameState) {
+export async function gameLoop(config: GameConfig, initialState: GameState, onStateUpdate?: (state: GameState) => void) {
   let state = initialState;
+  if (onStateUpdate) onStateUpdate(state); // Initial state
   while (state.phase !== 'gameOver') {
     if (state.phase === 'draw') {
       console.log(`Starting round ${state.currentRound}`);
@@ -84,8 +85,11 @@ export async function gameLoop(config: GameConfig, initialState: GameState) {
     if (state.phase === 'play') {
       console.log(`Player ${state.currentPlayer}'s turn.`);
       const controller = config.controllers[state.currentPlayer];
+
       const newState = await controller.makeMove(state, state.currentPlayer);
       state = newTurn(newState);
+      if (onStateUpdate) onStateUpdate(state);
+
       const bothPassed = state.players.friendly.passed && state.players.enemy.passed;
       const bothHandsEmpty = state.players.friendly.hand.length === 0 && state.players.enemy.hand.length === 0;
       if (bothPassed || bothHandsEmpty) {
@@ -129,6 +133,9 @@ export async function gameLoop(config: GameConfig, initialState: GameState) {
         console.log(`Game Over! Winner: ${winner}`);
         break;
       }
+
+      if (onStateUpdate) onStateUpdate(state);
+      
       state = resetForNewRound(state);
       continue;
     }

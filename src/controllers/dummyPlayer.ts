@@ -10,6 +10,8 @@ export const dummyPlayer: PlayerController = {
       id: r.id,
       cards: r.cards.map(c => c.baseCard.name)
     })));
+    // Wait for 5 seconds before making a move
+    await new Promise(resolve => setTimeout(resolve, 5000));
     return passTurn(state, role);
   }
 };
