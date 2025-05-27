@@ -7,9 +7,9 @@ export type RowProps = {
 };
 
 export const Row: React.FC<RowProps> = ({ cards, title }) => (
-  <div style={{ margin: "12px 0" }}>
-    {title && <h3 style={{ color: "#fff" }}>{title}</h3>}
-    <div style={{ display: "flex", flexDirection: "row" }}>
+  <div className="row">
+    {title && <h3 className="row__title">{title}</h3>}
+    <div className="row__cards">
       {cards.map((card, idx) => (
         <Card key={idx} {...card} />
       ))}

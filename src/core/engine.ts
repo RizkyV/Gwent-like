@@ -87,8 +87,8 @@ export async function gameLoop(config: GameConfig, initialState: GameState, onSt
       const controller = config.controllers[state.currentPlayer];
 
       const newState = await controller.makeMove(state, state.currentPlayer);
+      if (onStateUpdate) onStateUpdate(newState);
       state = newTurn(newState);
-      if (onStateUpdate) onStateUpdate(state);
 
       const bothPassed = state.players.friendly.passed && state.players.enemy.passed;
       const bothHandsEmpty = state.players.friendly.hand.length === 0 && state.players.enemy.hand.length === 0;
@@ -135,7 +135,7 @@ export async function gameLoop(config: GameConfig, initialState: GameState, onSt
       }
 
       if (onStateUpdate) onStateUpdate(state);
-      
+
       state = resetForNewRound(state);
       continue;
     }

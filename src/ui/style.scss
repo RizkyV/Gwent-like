@@ -1,0 +1,72 @@
+$app-bg: #181818;
+$card-bg: #223;
+$card-border: #333;
+$card-highlight: gold;
+$text-color: #fff;
+
+.app {
+  background: $app-bg;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.app__title {
+  color: $text-color;
+}
+
+.hand {
+  margin: 16px 0;
+  &__title {
+    color: $text-color;
+  }
+  &__cards {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.row {
+  margin: 12px 0;
+  &__title {
+    color: $text-color;
+  }
+  &__cards {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.card {
+  border: 1px solid $card-border;
+  border-radius: 8px;
+  padding: 12px;
+  background: $card-bg;
+  color: $text-color;
+  width: 160px;
+  margin: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  cursor: default;
+  user-select: none;
+
+  &--highlight {
+    border: 2px solid $card-highlight;
+    box-shadow: 0 0 12px 2px $card-highlight;
+  }
+
+  &__name {
+    font-weight: bold;
+    font-size: 1.2em;
+  }
+  &__power {
+    font-weight: normal;
+    span {
+      font-weight: bold;
+    }
+  }
+  &__type,
+  &__category,
+  &__provision {
+    font-size: 0.95em;
+    margin-top: 2px;
+  }
+}

@@ -7,9 +7,9 @@ export type HandProps = {
 };
 
 export const Hand: React.FC<HandProps> = ({ cards, title }) => (
-  <div style={{ margin: "16px 0" }}>
-    {title && <h2 style={{ color: "#fff" }}>{title}</h2>}
-    <div style={{ display: "flex", flexDirection: "row" }}>
+  <div className="hand">
+    {title && <h2 className="hand__title">{title}</h2>}
+    <div className="hand__cards">
       {cards.map((card, idx) => (
         <Card key={idx} {...card} />
       ))}
