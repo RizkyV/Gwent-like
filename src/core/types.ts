@@ -24,9 +24,27 @@ export type GameState = {
   };
   currentPlayer: 'friendly' | 'enemy';
   currentRound: number;
-  phase: 'draw' | 'mulligan' | 'play' | 'roundEnd' | 'gameOver';
+  phase: GamePhase;
   turn: TurnState;
 };
+
+export enum GamePhase {
+  Draw = 'draw',
+  Mulligan = 'mulligan',
+  Play = 'play',
+  RoundEnd = 'roundEnd',
+  GameOver = 'gameOver'
+}
+
+export enum Zone {
+  Deck = 'deck',
+  Hand = 'hand',
+  Graveyard = 'graveyard',
+  RowMelee = 'melee',
+  RowRanged = 'ranged',
+  Exile = 'exile',
+}
+
 
 export type PlayerState = {
   hand: CardInstance[];

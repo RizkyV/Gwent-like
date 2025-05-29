@@ -1,4 +1,4 @@
-export const CARDS_DRAWN_ROUND_1 = 10;
+export const CARDS_DRAWN_ROUND_1 = 3;
 export const CARDS_DRAWN_ROUND_2 = 3;
 export const CARDS_DRAWN_ROUND_3 = 3;
 

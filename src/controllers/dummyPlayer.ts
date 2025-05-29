@@ -1,5 +1,5 @@
+import { getGameState, passTurn } from '../core/state.js';
 import { PlayerController } from '../core/types.js';
-import { passTurn } from '../core/engine.js';
 
 export const dummyPlayer: PlayerController = {
   type: 'human',
@@ -12,6 +12,7 @@ export const dummyPlayer: PlayerController = {
     })));
     // Wait for 5 seconds before making a move
     await new Promise(resolve => setTimeout(resolve, 5000));
-    return passTurn(state, role);
+    passTurn(role);
+    return getGameState();
   }
 };

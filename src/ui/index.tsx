@@ -1,18 +1,25 @@
-import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { runGame } from "../cli/main";
 import Hand from "./hand";
-import { GameState } from "../core/types";
 import Row from "./row";
-import "./style.scss"; // Import the SCSS file
+import { subscribe } from "../core/state";
+import { runGame } from "../cli/main";
+
+import "./style.scss";
+import { useEffect, useState } from "react";
+
 
 const App = () => {
-  const [gameState, setGameState] = useState<GameState | null>(null);
-
-  React.useEffect(() => {
-    runGame(setGameState);
+  const [gameState, setGameState] = useState(null);
+  
+  useEffect(() => {
+    // Subscribe to state changes
+    const unsubscribe = subscribe(setGameState);
+    // Start the game
+    runGame();
+    // Cleanup on unmount
+    return unsubscribe;
   }, []);
-
+  //console.debug("App component mounted, gameState:", gameState);
   if (!gameState) return <div>Loading...</div>;
 
   const getRowCards = (player: "friendly" | "enemy", rowId: "melee" | "ranged") => {
