@@ -4,6 +4,13 @@ $card-border: #333;
 $card-highlight: gold;
 $text-color: #fff;
 
+body,
+html {
+  margin: 0;
+  padding: 0;
+  background: $app-bg;
+}
+
 .app {
   background: $app-bg;
   min-height: 100vh;
@@ -12,24 +19,49 @@ $text-color: #fff;
 
 .app__title {
   color: $text-color;
+  text-align: center;
+  font-size: 3em;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin: 32px 0 24px 0;
+  text-shadow: 0 4px 24px rgba(255, 215, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .hand {
   margin: 16px 0;
+
   &__title {
     color: $text-color;
   }
+
   &__cards {
     display: flex;
     flex-direction: row;
   }
 }
 
+
 .row {
   margin: 12px 0;
+
+  .row__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .row__points {
+    font-size: 1.1em;
+    color: $card-highlight;
+    font-weight: bold;
+    margin-left: 12px;
+  }
+
   &__title {
     color: $text-color;
   }
+
   &__cards {
     display: flex;
     flex-direction: row;
@@ -44,7 +76,7 @@ $text-color: #fff;
   color: $text-color;
   width: 160px;
   margin: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   cursor: default;
   user-select: none;
 
@@ -57,16 +89,87 @@ $text-color: #fff;
     font-weight: bold;
     font-size: 1.2em;
   }
+
   &__power {
     font-weight: normal;
+
     span {
       font-weight: bold;
     }
   }
+
   &__type,
   &__category,
   &__provision {
     font-size: 0.95em;
     margin-top: 2px;
+  }
+}
+
+.card__description-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  background: #222;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 4px;
+  min-width: 180px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-size: 0.95em;
+  pointer-events: none;
+}
+
+.game-info {
+  color: $text-color;
+  background: rgba(34, 34, 51, 0.95);
+  border: 2px solid $card-highlight;
+  border-radius: 10px;
+  padding: 18px 28px;
+  margin: 24px auto 32px auto;
+  font-size: 1.35em;
+  font-weight: bold;
+  box-shadow: 0 2px 16px 2px rgba(255, 215, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.25);
+  max-width: 480px;
+  text-align: center;
+
+  div {
+    margin: 6px 0;
+  }
+
+  span {
+    color: $card-highlight;
+  }
+
+  .player-points {
+    margin: 12px 0 0 0;
+    font-size: 1.35em;
+    font-weight: bold;
+    color: $card-highlight;
+    text-shadow: 0 2px 8px rgba(255, 215, 0, 0.10);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .player-points__enemy,
+    .player-points__friendly {
+      margin: 2px 0;
+    }
+  }
+
+  .game-over-banner {
+    margin-top: 18px;
+    padding: 14px 0;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: $card-highlight;
+    background: rgba(40, 40, 20, 0.95);
+    border: 2px solid $card-highlight;
+    border-radius: 10px;
+    box-shadow: 0 2px 16px 2px rgba(255, 215, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.18);
+    letter-spacing: 1px;
   }
 }

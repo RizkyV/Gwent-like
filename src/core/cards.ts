@@ -1,4 +1,4 @@
-import { GameEffect, CardDefinition, PlayerRole, CardInstance, EffectContext } from '../core/types.js';
+import { GameEffect, CardDefinition } from '../core/types.js';
 import { getRows, setRows, getCardOwner, updateCardInState } from './logic.js';
 
 export const boostAllFriendlyUnits: GameEffect = (state, context) => {
@@ -37,12 +37,7 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
-    effects: [
-      {
-        hook: 'onPlay',
-        effect: boostAllFriendlyUnits
-      }
-    ]
+    description: 'Card One',
   },
   {
     id: 'card2',
@@ -51,12 +46,7 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
-    effects: [
-      {
-        hook: 'onDamaged',
-        effect: boostSelfOnEnemyDamaged
-      }
-    ]
+    description: 'Card Two',
   },
   {
     id: 'card3',
@@ -65,6 +55,7 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
+    description: 'Card Three',
   },
   {
     id: 'card4',
@@ -73,6 +64,7 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
+    description: 'Card Four',
   },
   {
     id: 'card5',
@@ -81,6 +73,7 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 10,
     category: 'unit',
     provisionCost: 5,
+    description: 'Card Five',
   },
   {
     id: 'card6',
@@ -89,6 +82,7 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 6,
     category: 'unit',
     provisionCost: 5,
+    description: 'Card Six',
   },
   {
     id: 'card7',
@@ -97,6 +91,7 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
+    description: 'Card Seven',
   },
   {
     id: 'card8',
@@ -105,6 +100,7 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
+    description: 'Card Eight',
   },
   {
     id: 'card9',
@@ -113,6 +109,7 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
+    description: 'Card Nine',
   },
   {
     id: 'card10',
@@ -121,5 +118,6 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
+    description: 'Card Ten',
   }
 ];

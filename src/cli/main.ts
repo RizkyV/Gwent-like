@@ -4,6 +4,7 @@ import { GameConfig } from '../core/types.js';
 import { dummyPlayer } from '../controllers/dummyPlayer.js';
 import { gameLoop } from '../core/engine.js';
 import { resetGameState } from '../core/state.js';
+import { dummyPlayer2 } from '../controllers/dummyPlayer2.js';
 
 export const runGame = async () => {
     const friendlyDeck = cardDefinitions.slice(0, 10).map(createCardInstance);
@@ -11,8 +12,8 @@ export const runGame = async () => {
     resetGameState(friendlyDeck, enemyDeck);
     const config: GameConfig = {
         controllers: {
-            friendly: dummyPlayer,
-            enemy: dummyPlayer
+            friendly: dummyPlayer2,
+            enemy: dummyPlayer2
         }
     }
     console.log('Game starting...');

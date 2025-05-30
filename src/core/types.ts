@@ -2,7 +2,7 @@ export type PlayerRole = 'friendly' | 'enemy';
 
 export type PlayerController = {
   type: 'human' | 'ai' | 'scripted';
-  makeMove: (state: GameState, role: PlayerRole) => Promise<GameState>;
+  makeMove: (role: PlayerRole) => Promise<GameState>;
 };
 
 export type GameConfig = {
@@ -75,6 +75,9 @@ export interface CardDefinition {
   basePower: number;
   category: 'unit' | 'special' | 'resource';
   provisionCost: number;
+  description?: string;
+  artworkUrl?: string; //URL to card artwork
+  color?: string; //e.g. 'blue', 'red', 'green'
   type?: string[]; //races - classes - factions
   rarity?: 'bronze' | 'gold'
   tags?: string[]; //mechanical or deck tags for filtering

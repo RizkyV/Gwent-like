@@ -66,28 +66,6 @@ export function canTargetCard(card: CardInstance, state: GameState): boolean {
   return true;
 }
 
-export function triggerHook(
-  hook: HookType,
-  state: GameState,
-  context: EffectContext
-): GameState {
-  let newState = state;
-  const allCards = [...state.players.friendly.rows, ...state.players.enemy.rows].flatMap(row => row.cards);
-
-  for (const card of allCards) {
-    const hookedEffects = card.baseCard.effects?.filter(e => e.hook === hook) || [];
-    for (const { effect } of hookedEffects) {
-      const scopedContext: EffectContext = {
-        ...context,
-        source: card,
-        player: card.baseCard.isToken ? context.player : getCardOwner(state, card),
-      };
-      newState = effect(newState, scopedContext);
-    }
-  }
-  return newState;
-}
-
 export function getCardOwner(state: GameState, card: CardInstance): PlayerRole {
   const cardId = card.instanceId;
   const friendlyHasCard = state.players.friendly.rows.some(row =>
