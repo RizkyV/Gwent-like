@@ -2,7 +2,7 @@ import { getGameState, passTurn } from '../core/state.js';
 import { PlayerController } from '../core/types.js';
 
 export const dummyPlayer: PlayerController = {
-  type: 'human',
+  type: 'scripted',
   makeMove: async (role) => {
     console.log(`It's ${role}'s turn.`);
     console.log('Hand: ', getGameState().players[role].hand.map(c => c.baseCard.name));

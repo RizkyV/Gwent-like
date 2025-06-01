@@ -5,12 +5,16 @@ export type CardProps = {
   card: CardInstance;
   highlight?: boolean;
   onClick?: () => void;
+  showPlayButton?: boolean;
+  showTargetButton?: boolean;
 };
 
 export const Card: React.FC<CardProps> = ({
   card,
   highlight = false,
   onClick,
+  showPlayButton,
+  showTargetButton,
 }) => {
   const [hovered, setHovered] = useState(false);
 
@@ -33,6 +37,12 @@ export const Card: React.FC<CardProps> = ({
       )}
       {hovered && card.baseCard.description && (
         <div className="card__description-tooltip">{card.baseCard.description}</div>
+      )}
+      {showPlayButton && (
+        <button className="card__action-btn">Play</button>
+      )}
+      {showTargetButton && (
+        <button className="card__action-btn">Target</button>
       )}
     </div>
   );

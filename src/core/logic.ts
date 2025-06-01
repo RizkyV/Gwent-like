@@ -19,12 +19,6 @@ export function createCardInstance(def: CardDefinition): CardInstance {
   };
 }
 
-export function resolveCardPlay(card: CardInstance, state: GameState, player: PlayerRole): GameState {
-  const effect = card.baseCard.effects?.find(e => e.hook === 'onPlay')?.effect;
-  if (!effect) return state;
-  return effect(state, { source: card, player });
-}
-
 export function getRows(state: GameState, player: PlayerRole): Row[] {
   return player === 'friendly' ? state.players.friendly.rows : state.players.enemy.rows;
 }
@@ -64,19 +58,6 @@ export function canTargetCard(card: CardInstance, state: GameState): boolean {
     }
   }
   return true;
-}
-
-export function getCardOwner(state: GameState, card: CardInstance): PlayerRole {
-  const cardId = card.instanceId;
-  const friendlyHasCard = state.players.friendly.rows.some(row =>
-    row.cards.some(c => c.instanceId === cardId)
-  );
-  if (friendlyHasCard) return 'friendly';
-  const enemyHasCard = state.players.enemy.rows.some(row =>
-    row.cards.some(c => c.instanceId === cardId)
-  );
-  if (enemyHasCard) return 'enemy';
-  throw new Error(`Could not determine owner of card with instanceId: ${cardId}`);
 }
 
 export function updateCardInState(

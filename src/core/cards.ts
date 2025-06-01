@@ -1,33 +1,33 @@
-import { GameEffect, CardDefinition } from '../core/types.js';
-import { getRows, setRows, getCardOwner, updateCardInState } from './logic.js';
+import { GameEffect, CardDefinition, CardInstance } from '../core/types.js';
+import { dealDamage, getCardController } from './state.js';
 
-export const boostAllFriendlyUnits: GameEffect = (state, context) => {
-  const rows = getRows(state, context.player);
-  const boostedRows = rows.map(row => ({
-    ...row,
-    cards: row.cards.map(card => ({
-      ...card,
-      currentPower: card.currentPower + 1
-    }))
-  }));
-  return setRows(state, context.player, boostedRows);
-};
+export const isSelf: (self: CardInstance, source: CardInstance) => boolean = (self: CardInstance, source: CardInstance) => {
+  return self.instanceId === source.instanceId;
+}
+export const targetsEnemy = (source: CardInstance, target: CardInstance) => {
+  //TODO: also check if it is on the board.
+  if (getCardController(source) !== getCardController(target)) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
-export const boostSelfOnEnemyDamaged: GameEffect = (state, context) => {
-  const { source } = context;
-  const damagedCard = context.metadata?.damagedCard;
-  if (!damagedCard) return state;
+/**
+* Effects
+*/
+//Deals 2 damage to 1 target
+export const dealDamageToEnemy: GameEffect = (context) => {
+  const { self, target, source } = context;
+  //Only if this is the played card.
+  console.log('dealDamageToEnemy called', context);
+  if(!isSelf(self, source)) return;
+  if (!target) {
+    throw new Error('Invalid target for damage effect');
+  }
 
-  const sourceOwner = getCardOwner(state, source);
-  const damagedOwner = getCardOwner(state, damagedCard);
-
-  if (sourceOwner === damagedOwner) return state;
-
-  return updateCardInState(state, source.instanceId, card => ({
-    ...card,
-    currentPower: card.currentPower + 1
-  }));
-};
+  dealDamage(target.instanceId, 2, context);
+}
 
 export const cardDefinitions: CardDefinition[] = [
   {
@@ -119,5 +119,22 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Ten',
+  },
+  {
+    id: 'card11',
+    name: 'Card Eleven',
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
+    description: 'Card Eleven',
+    requiresTarget: true,
+    effects: [
+      {
+        hook: 'onPlay',
+        effect: dealDamageToEnemy,
+        validTargets: targetsEnemy
+      }
+    ]
   }
 ];

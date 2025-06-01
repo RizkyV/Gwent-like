@@ -1,23 +1,21 @@
 import { createRoot } from "react-dom/client";
 import { useEffect, useState } from "react";
-import Hand from "./hand";
-import Row from "./row";
-import { getPlayerPoints, playCard, subscribe } from "../core/state";
+import { subscribe } from "../core/state";
 import { runGame } from "../cli/main";
 
 import "./style.scss";
 import GameInfo from "./game-info";
-import GameBoard from "./game-board";
+import GameController from "./game-controller";
 
 /**
  * TODO:
  * Implement hooks (one at a time)
- * Allow UI to play cards, end turns, pass rounds
- * Allow UI to activate abilities
- * Allow UI to target
- * Cleanup UI code - GameBoard component, GameController component
- * Mulligan
  * Rework card ownership. Turn getCardOwner into getCardController, and in initial game state assign each card an owner
+ * Determine whether players are controllable by the UI - Only allow the active player to do things.
+ * Allow UI to activate abilities
+ * UI Multi targeting
+ * UI Choose row + index to play on
+ * Mulligan
  */
 
 const App = () => {
@@ -40,7 +38,7 @@ const App = () => {
       {false && <h1 className="app__title">GWENT-LIKE</h1>}
 
       <GameInfo gameState={gameState} />
-      <GameBoard gameState={gameState} />
+      <GameController gameState={gameState} />
     </div>
   );
 };

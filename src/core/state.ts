@@ -1,7 +1,6 @@
 import { flipCoin } from '../utils/utils.js';
-import { CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
-import { getCardOwner } from './logic.js';
-import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType } from './types.js';
+import { ALWAYS_ENEMY_START_PLAYER, ALWAYS_FRIENDLY_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
+import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig } from './types.js';
 
 let gameState: GameState | null = null;
 const listeners: Array<(state: GameState | null) => void> = [];
@@ -27,7 +26,7 @@ export function setGameState(newState: GameState) {
   listeners.forEach(listener => listener(gameState));
 }
 
-export function resetGameState(friendlyDeck: CardInstance[], enemyDeck: CardInstance[]) {
+export function resetGameState(friendlyDeck: CardInstance[], enemyDeck: CardInstance[], config: GameConfig) {
   setGameState({
     players: {
       friendly: {
@@ -53,13 +52,14 @@ export function resetGameState(friendlyDeck: CardInstance[], enemyDeck: CardInst
         roundWins: 0
       }
     },
-    currentPlayer: flipCoin() ? 'friendly' : 'enemy',
+    currentPlayer: ALWAYS_FRIENDLY_START_PLAYER ? 'friendly' : ALWAYS_ENEMY_START_PLAYER ? 'enemy' : (flipCoin() ? 'friendly' : 'enemy'),
     currentRound: 0,
     phase: GamePhase.Draw,
     turn: {
       hasActivatedAbility: false,
       hasPlayedCard: false
-    }
+    },
+    GameConfig: config
   });
 }
 
@@ -96,11 +96,7 @@ export function checkState(state: GameState): GameState {
         };
         // Trigger onDeath hooks for each dead card
         for (const deadCard of deadCards) {
-          triggerHook('onDeath', {
-            source: deadCard,
-            player: role,
-            metadata: {}
-          });
+          triggerHook('onDeath', {source: deadCard});
         }
       }
     }
@@ -319,11 +315,21 @@ export function setToPhase(phase: GamePhase) {
   setGameState(newState);
 }
 
-export function playCard(card: CardInstance, player: PlayerRole, row?: 'melee' | 'ranged'): void {
+export function resolveCardPlay(card: CardInstance, player: PlayerRole): void {
+  const effect = card.baseCard.effects?.find(e => e.hook === 'onPlay')?.effect;
+  if (!effect) return;
+  effect({ source: card, player });
+}
+
+export function playCard(card: CardInstance, player: PlayerRole, target?: CardInstance): void {
   //TODO: if it is last card in hand, passTurn for player
   moveToZone(card, player, Zone.RowMelee); // Default to melee row for simplicity
-  triggerHook('onPlay', {source: card, player: player, metadata: {}});
+  const newState = { ...gameState };
+  newState.turn.hasPlayedCard = true;
+  setGameState(newState);
+  triggerHook('onPlay', {source: card, target: target});
 }
+
 
 // Calculate the total points for a row
 export function getRowPoints(row): number {
@@ -337,9 +343,8 @@ export function getPlayerPoints(playerState): number {
 
 export function triggerHook(
   hook: HookType,
-  context: EffectContext
+  context: EffectContext,
 ): void {
-  const newState = { ...gameState };
   const allCards = [...gameState.players.friendly.rows, ...gameState.players.enemy.rows].flatMap(row => row.cards);
 
   for (const card of allCards) {
@@ -347,13 +352,26 @@ export function triggerHook(
     for (const { effect } of hookedEffects) {
       const scopedContext: EffectContext = {
         ...context,
-        source: card,
-        player: card.baseCard.isToken ? context.player : getCardOwner(gameState, card),
+        self: card,
       };
-      effect(newState, scopedContext);
+      effect(scopedContext);
     }
   }
-  setGameState(newState);
+}
+
+export function getCardController(card: CardInstance): PlayerRole {
+  const cardId = card.instanceId;
+  const friendlyHasCard = gameState.players.friendly.rows.some(row =>
+    row.cards.some(c => c.instanceId === cardId)
+  );
+  const friendlyInHand = gameState.players.friendly.hand.some(c => c.instanceId === cardId);
+  if (friendlyHasCard || friendlyInHand) return 'friendly';
+  const enemyHasCard = gameState.players.enemy.rows.some(row =>
+    row.cards.some(c => c.instanceId === cardId)
+  );
+  const enemyInHand = gameState.players.friendly.hand.some(c => c.instanceId === cardId);
+  if (enemyHasCard || enemyInHand) return 'enemy';
+  throw new Error(`Could not determine controller of card with instanceId: ${cardId}`);
 }
 
 /**
@@ -364,11 +382,10 @@ export function triggerHook(
  * @param context The effect context (source, player, etc.)
  */
 export function dealDamage(
-  state: GameState,
   targetId: string,
   amount: number,
   context: EffectContext
-): GameState {
+): void {
   // Find the card and its owner
   let owner: PlayerRole | null = null;
   let rowIdx = -1;
@@ -376,8 +393,8 @@ export function dealDamage(
   let targetCard: CardInstance | null = null;
 
   for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
-    for (let r = 0; r < state.players[role].rows.length; r++) {
-      const row = state.players[role].rows[r];
+    for (let r = 0; r < gameState.players[role].rows.length; r++) {
+      const row = gameState.players[role].rows[r];
       for (let c = 0; c < row.cards.length; c++) {
         if (row.cards[c].instanceId === targetId) {
           owner = role;
@@ -391,7 +408,7 @@ export function dealDamage(
     }
     if (targetCard) break;
   }
-  if (!targetCard || owner === null) return state; // Card not found
+  if (!targetCard || owner === null) return; // Card not found
 
   // Check for immunities, shields, etc. (expand as needed)
   // Example: if (targetCard.statuses.has('immune')) return state;
@@ -401,7 +418,7 @@ export function dealDamage(
   const damagedCard = { ...targetCard, currentPower: newPower };
 
   // Replace the card in state
-  const newRows = state.players[owner].rows.map((row, rIdx) =>
+  const newRows = gameState.players[owner].rows.map((row, rIdx) =>
     rIdx === rowIdx
       ? {
         ...row,
@@ -412,16 +429,16 @@ export function dealDamage(
       : row
   );
   let newState: GameState = {
-    ...state,
+    ...gameState,
     players: {
-      ...state.players,
+      ...gameState.players,
       [owner]: {
-        ...state.players[owner],
+        ...gameState.players[owner],
         rows: newRows,
       },
     },
   };
-
+  //TODO: send along the source
   triggerHook('onDamaged', {
     ...context,
     metadata: {
@@ -429,6 +446,5 @@ export function dealDamage(
       damageAmount: amount,
     }
   });
-
-  return newState;
+  setGameState(newState);
 }

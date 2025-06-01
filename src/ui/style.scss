@@ -15,6 +15,7 @@ html {
   background: $app-bg;
   min-height: 100vh;
   padding: 24px;
+  padding-right: 20%
 }
 
 .app__title {
@@ -104,24 +105,48 @@ html {
     font-size: 0.95em;
     margin-top: 2px;
   }
+
+  &__description-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 10;
+    background: #222;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 6px;
+    padding: 8px;
+    margin-top: 4px;
+    min-width: 180px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    font-size: 0.95em;
+    pointer-events: none;
+  }
+
+  &__action-btn {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: $card-highlight;
+    color: #222;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 18px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    transition: background 0.15s;
+
+    &:hover {
+      background: darken($card-highlight, 10%);
+    }
+  }
 }
 
-.card__description-tooltip {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 10;
-  background: #222;
-  color: #fff;
-  border: 1px solid #555;
-  border-radius: 6px;
-  padding: 8px;
-  margin-top: 4px;
-  min-width: 180px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  font-size: 0.95em;
-  pointer-events: none;
-}
+
 
 .game-info {
   color: $text-color;
@@ -171,5 +196,27 @@ html {
     border-radius: 10px;
     box-shadow: 0 2px 16px 2px rgba(255, 215, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.18);
     letter-spacing: 1px;
+  }
+}
+
+.end-turn-btn {
+  position: fixed;
+  top: 50%;
+  right: 32px;
+  transform: translateY(-50%);
+  background: $card-highlight;
+  color: #222;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 36px;
+  font-size: 1.25em;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: background 0.15s;
+  z-index: 100;
+
+  &:hover {
+    background: darken($card-highlight, 10%);
   }
 }

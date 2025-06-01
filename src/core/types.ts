@@ -26,6 +26,7 @@ export type GameState = {
   currentRound: number;
   phase: GamePhase;
   turn: TurnState;
+  GameConfig: GameConfig;
 };
 
 export enum GamePhase {
@@ -82,6 +83,7 @@ export interface CardDefinition {
   rarity?: 'bronze' | 'gold'
   tags?: string[]; //mechanical or deck tags for filtering
   isToken?: boolean;
+  requiresTarget?: boolean; //Does the card require a target to play? (TODO: rework into a isValidTarget function)
   effects?: HookedEffect[]; //Hooks
 }
 
@@ -93,13 +95,23 @@ export interface CardInstance {
   boosted?: boolean; //certain cached f
 }
 
-export type GameEffect = (state: GameState, context: EffectContext) => GameState;
+export type GameEffect = (context: EffectContext) => void;
 
-export type EffectContext = {
-  source: CardInstance;
-  player: PlayerRole;
-  metadata?: Record<string, any>; // Hook-specific data (e.g., damagedCard)
-};
+export interface EffectContext<Meta = EffectMetadata> {
+  self?: CardInstance; // The card that the hook is being triggered on
+  source?: CardInstance;
+  player?: PlayerRole;
+  target?: CardInstance;
+  row?: Row;
+  gameState?: GameState;
+  metadata?: Meta;
+}
+
+type EffectMetadata =
+  | { damagedCard: CardInstance; damageAmount: number }
+  | { movedFrom: Zone; movedTo: Zone }
+  | { abilityId: string }
+  | Record<string, any>; // fallback
 
 export type StatusId = 'locked' | 'poisoned' | 'veil' | string;
 
@@ -131,4 +143,5 @@ export type HookType =
 export type HookedEffect = {
   hook: HookType;
   effect: GameEffect;
+  validTargets?: (source: CardInstance, target: CardInstance) => boolean; // Optional function to validate targets
 };
