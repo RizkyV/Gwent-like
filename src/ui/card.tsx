@@ -1,23 +1,14 @@
 import React, { useState } from "react";
+import { CardInstance } from "../core/types";
 
 export type CardProps = {
-  name: string;
-  power: number;
-  type?: string[];
-  category?: string;
-  provisionCost?: number;
-  description?: string;
+  card: CardInstance;
   highlight?: boolean;
   onClick?: () => void;
 };
 
 export const Card: React.FC<CardProps> = ({
-  name,
-  power,
-  type,
-  category,
-  provisionCost,
-  description,
+  card,
   highlight = false,
   onClick,
 }) => {
@@ -31,17 +22,17 @@ export const Card: React.FC<CardProps> = ({
       onMouseLeave={() => setHovered(false)}
       style={{ position: "relative" }}
     >
-      <div className="card__name">{name}</div>
+      <div className="card__name">{card.baseCard.name}</div>
       <div className="card__power">
-        Power: <span>{power}</span>
+        Power: <span>{card.currentPower}</span>
       </div>
-      {type && <div className="card__type">Type: {type.join(", ")}</div>}
-      {category && <div className="card__category">Category: {category}</div>}
-      {provisionCost !== undefined && (
-        <div className="card__provision">Provision: {provisionCost}</div>
+      {card.baseCard.type && <div className="card__type">Type: {card.baseCard.type.join(", ")}</div>}
+      {card.baseCard.category && <div className="card__category">Category: {card.baseCard.category}</div>}
+      {card.baseCard.provisionCost !== undefined && (
+        <div className="card__provision">Provision: {card.baseCard.provisionCost}</div>
       )}
-      {hovered && description && (
-        <div className="card__description-tooltip">{description}</div>
+      {hovered && card.baseCard.description && (
+        <div className="card__description-tooltip">{card.baseCard.description}</div>
       )}
     </div>
   );

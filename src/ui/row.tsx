@@ -1,9 +1,10 @@
 import React from "react";
-import Card, { CardProps } from "./card";
+import Card from "./card";
 import { getRowPoints } from "../core/state";
+import { CardInstance } from "../core/types";
 
 export type RowProps = {
-  cards: CardProps[];
+  cards: CardInstance[];
   title?: string;
   rowData?: any; // Pass the actual row object for points calculation
 };
@@ -20,7 +21,7 @@ export const Row: React.FC<RowProps> = ({ cards, title, rowData }) => (
     </div>
     <div className="row__cards">
       {cards.map((card, idx) => (
-        <Card key={idx} {...card} />
+        <Card card={card} key={idx} {...card} />
       ))}
     </div>
   </div>
