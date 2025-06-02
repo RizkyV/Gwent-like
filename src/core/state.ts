@@ -94,9 +94,9 @@ export function checkState(state: GameState): GameState {
             }
           }
         };
-        // Trigger onDeath hooks for each dead card
+        // Trigger onDeath hooks for each dead card - TODO: This has timing issues, and should be done after the card has been removed and the state set.
         for (const deadCard of deadCards) {
-          triggerHook('onDeath', {source: deadCard});
+          triggerHook('onDeath', { source: deadCard });
         }
       }
     }
@@ -162,11 +162,16 @@ export function passTurn(player: PlayerRole) {
   setGameState(newState);
 }
 
+export function startTurn() {
+  triggerHook('onTurnStart', { player: gameState.currentPlayer });
+}
 export function newTurn() {
   const newState = { ...gameState };
   newState.turn = { hasActivatedAbility: false, hasPlayedCard: false };
+  const oldPlayer = newState.currentPlayer;
   newState.currentPlayer = newState.currentPlayer === 'friendly' ? 'enemy' : 'friendly';
   setGameState(newState);
+  triggerHook('onTurnEnd', { player: oldPlayer });
 }
 
 export function checkEndOfRound(): boolean {
@@ -327,7 +332,7 @@ export function playCard(card: CardInstance, player: PlayerRole, target?: CardIn
   const newState = { ...gameState };
   newState.turn.hasPlayedCard = true;
   setGameState(newState);
-  triggerHook('onPlay', {source: card, target: target});
+  triggerHook('onPlay', { source: card, target: target });
 }
 
 
@@ -345,6 +350,7 @@ export function triggerHook(
   hook: HookType,
   context: EffectContext,
 ): void {
+  console.log(`Triggering hook: ${hook}`, context);
   const allCards = [...gameState.players.friendly.rows, ...gameState.players.enemy.rows].flatMap(row => row.cards);
 
   for (const card of allCards) {
@@ -375,17 +381,12 @@ export function getCardController(card: CardInstance): PlayerRole {
 }
 
 /**
- * Deals damage to a card, triggers hooks, and returns the new state.
- * @param state The current game state
+ * Deals damage to a card and triggers hooks
  * @param targetId The instanceId of the card to damage
  * @param amount The amount of damage to deal
  * @param context The effect context (source, player, etc.)
  */
-export function dealDamage(
-  targetId: string,
-  amount: number,
-  context: EffectContext
-): void {
+export function dealDamage(targetId: string, amount: number, context: EffectContext): void {
   // Find the card and its owner
   let owner: PlayerRole | null = null;
   let rowIdx = -1;
@@ -416,6 +417,7 @@ export function dealDamage(
   // Apply damage
   const newPower = Math.max(0, targetCard.currentPower - amount);
   const damagedCard = { ...targetCard, currentPower: newPower };
+  const damagedAmount = targetCard.currentPower - newPower;
 
   // Replace the card in state
   const newRows = gameState.players[owner].rows.map((row, rIdx) =>
@@ -438,13 +440,77 @@ export function dealDamage(
       },
     },
   };
+  setGameState(newState);
   //TODO: send along the source
   triggerHook('onDamaged', {
     ...context,
     metadata: {
       damagedCard: targetCard,
-      damageAmount: amount,
+      damageAmount: damagedAmount,
     }
   });
+}
+
+export function boostCard(targetId: string, amount: number, context: EffectContext): void {
+  // Find the card and its owner
+  let owner: PlayerRole | null = null;
+  let rowIdx = -1;
+  let cardIdx = -1;
+  let targetCard: CardInstance | null = null;
+
+  for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
+    for (let r = 0; r < gameState.players[role].rows.length; r++) {
+      const row = gameState.players[role].rows[r];
+      for (let c = 0; c < row.cards.length; c++) {
+        if (row.cards[c].instanceId === targetId) {
+          owner = role;
+          rowIdx = r;
+          cardIdx = c;
+          targetCard = row.cards[c];
+          break;
+        }
+      }
+      if (targetCard) break;
+    }
+    if (targetCard) break;
+  }
+  if (!targetCard || owner === null) return; // Card not found
+  // Check for immunities, shields, etc. (expand as needed)
+  // Example: if (targetCard.statuses.has('immune')) return state;
+
+  // Apply boost
+  const newPower = targetCard.currentPower + amount;
+  const boostedCard = { ...targetCard, currentPower: newPower };
+  const boostedAmount = newPower - targetCard.currentPower;
+  // Replace the card in state
+  const newRows = gameState.players[owner].rows.map((row, rIdx) =>
+    rIdx === rowIdx
+      ? {
+        ...row,
+        cards: row.cards.map((card, cIdx) =>
+          cIdx === cardIdx ? boostedCard : card
+        ),
+      }
+      : row
+  );
+  let newState: GameState = {
+    ...gameState,
+    players: {
+      ...gameState.players,
+      [owner]: {
+        ...gameState.players[owner],
+        rows: newRows,
+      },
+    },
+  };
   setGameState(newState);
+  //TODO: send along the source
+  triggerHook('onBoosted', {
+    ...context,
+    target: boostedCard,
+    metadata: {
+      boostedCard: targetCard,
+      boostAmount: boostedAmount,
+    }
+  });
 }

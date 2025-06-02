@@ -5,8 +5,6 @@ import {
   PlayerRole,
   Row,
   StatusId,
-  HookType,
-  EffectContext
 } from './types';
 import { statusEffects } from './statuses.js';
 

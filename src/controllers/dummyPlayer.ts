@@ -1,3 +1,4 @@
+import { DUMMY_DELAY } from '../core/constants.js';
 import { getGameState, passTurn } from '../core/state.js';
 import { PlayerController } from '../core/types.js';
 
@@ -11,8 +12,8 @@ export const dummyPlayer: PlayerController = {
       cards: r.cards.map(c => c.baseCard.name)
     })));
     // Wait for 5 seconds before making a move
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, DUMMY_DELAY));
     passTurn(role);
-    return getGameState();
+    return;
   }
 };

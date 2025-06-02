@@ -1,7 +1,7 @@
-import { GameEffect, CardDefinition, CardInstance } from '../core/types.js';
-import { dealDamage, getCardController } from './state.js';
+import { CardDefinition, CardInstance, EffectContext } from '../core/types.js';
+import { boostCard, dealDamage, getCardController } from './state.js';
 
-export const isSelf: (self: CardInstance, source: CardInstance) => boolean = (self: CardInstance, source: CardInstance) => {
+export const sourceIsSelf: (self: CardInstance, source: CardInstance) => boolean = (self: CardInstance, source: CardInstance) => {
   return self.instanceId === source.instanceId;
 }
 export const targetsEnemy = (source: CardInstance, target: CardInstance) => {
@@ -16,18 +16,6 @@ export const targetsEnemy = (source: CardInstance, target: CardInstance) => {
 /**
 * Effects
 */
-//Deals 2 damage to 1 target
-export const dealDamageToEnemy: GameEffect = (context) => {
-  const { self, target, source } = context;
-  //Only if this is the played card.
-  console.log('dealDamageToEnemy called', context);
-  if(!isSelf(self, source)) return;
-  if (!target) {
-    throw new Error('Invalid target for damage effect');
-  }
-
-  dealDamage(target.instanceId, 2, context);
-}
 
 export const cardDefinitions: CardDefinition[] = [
   {
@@ -127,12 +115,40 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
-    description: 'Card Eleven',
+    description: 'Play: Deal 2 damage to an enemy unit.',
     requiresTarget: true,
     effects: [
       {
         hook: 'onPlay',
-        effect: dealDamageToEnemy,
+        effect: (context: EffectContext) => {
+          const { self, target, source } = context;
+          //Only if this is the played card.
+          if (!sourceIsSelf(self, source)) return;
+
+          dealDamage(target.instanceId, 2, context);
+        },
+        validTargets: targetsEnemy
+      }
+    ]
+  },
+  {
+    id: 'card12',
+    name: 'Card Twelve',
+    type: ['warrior'],
+    basePower: 5,
+    category: 'unit',
+    provisionCost: 5,
+    description: 'Turn End: Boost this by 3.',
+    requiresTarget: false,
+    effects: [
+      {
+        hook: 'onTurnEnd',
+        effect: (context: EffectContext) => {
+          const { self, player } = context;
+          const cardController = getCardController(self);
+          if(player !== cardController) return; //Only if it is friendly turn
+          boostCard(self.instanceId, 3, context);
+        },
         validTargets: targetsEnemy
       }
     ]

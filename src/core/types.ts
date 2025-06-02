@@ -2,7 +2,7 @@ export type PlayerRole = 'friendly' | 'enemy';
 
 export type PlayerController = {
   type: 'human' | 'ai' | 'scripted';
-  makeMove: (role: PlayerRole) => Promise<GameState>;
+  makeMove: (role: PlayerRole) => Promise<void>;
 };
 
 export type GameConfig = {
@@ -109,6 +109,7 @@ export interface EffectContext<Meta = EffectMetadata> {
 
 type EffectMetadata =
   | { damagedCard: CardInstance; damageAmount: number }
+  | { boostedCard: CardInstance; boostAmount: number }
   | { movedFrom: Zone; movedTo: Zone }
   | { abilityId: string }
   | Record<string, any>; // fallback
@@ -128,8 +129,8 @@ export type HookType =
   | 'onTargeted'
   | 'onTurnStart'
   | 'onTurnEnd'
-  | 'onAttack'
   | 'onDamaged'
+  | 'onBoosted'
   | 'onDeath'
   | 'onSummoned'
   | 'onDraw'

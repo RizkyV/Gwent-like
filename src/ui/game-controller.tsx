@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import GameBoard from "./game-board";
 import { passTurn, playCard } from "../core/state";
 import { CardInstance, GameState } from "../core/types";
-import { uiPlayerMove } from "../controllers/uiPlayer";
+import { playerEndTurn } from "../controllers/uiPlayer";
 
 type GameControllerProps = {
     gameState: GameState;
@@ -51,10 +51,11 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
         if (!gameState.turn.hasPlayedCard && !gameState.turn.hasActivatedAbility) {
             // No action taken, pass turn
             passTurn(gameState.currentPlayer);
+            playerEndTurn();
         } else {
             // Action taken, end turn and notify uiPlayerMove
             if (gameState.GameConfig.controllers[gameState.currentPlayer].type === 'human') {
-                uiPlayerMove({ ...gameState });
+                playerEndTurn();
             }
         }
     };
