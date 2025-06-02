@@ -90,9 +90,10 @@ export interface CardDefinition {
 export interface CardInstance {
   instanceId: string; //Unique per game instance (e.g. UUID)
   baseCard: CardDefinition; //Reference to static card definition
+  owner: PlayerRole;
   currentPower: number; //Modifiable in-game value
   statuses: Set<StatusId>;
-  boosted?: boolean; //certain cached f
+  boosted?: boolean;
 }
 
 export type GameEffect = (context: EffectContext) => void;
@@ -123,23 +124,23 @@ export type StatusEffect = {
   canBeTargeted?: (card: CardInstance, state: GameState) => boolean;
   // You can add hooks for onTurnStart, onDamageTaken, etc.
 };
-
-export type HookType =
-  | 'onPlay'
-  | 'onTargeted'
-  | 'onTurnStart'
-  | 'onTurnEnd'
-  | 'onDamaged'
-  | 'onBoosted'
-  | 'onDeath'
-  | 'onSummoned'
-  | 'onDraw'
-  | 'onDiscard'
-  | 'onGraveyardEnter'
-  | 'onMoveToRow'
-  | 'onRoundStart'
-  | 'onRoundEnd'
-  | 'onAbilityActivated';
+export enum HookType {
+  OnPlay = 'onPlay',
+  OnTargeted = 'onTargeted',
+  OnTurnStart = 'onTurnStart',
+  OnTurnEnd = 'onTurnEnd',
+  OnDamaged = 'onDamaged',
+  OnBoosted = 'onBoosted',
+  OnDeath = 'onDeath',
+  OnSummoned = 'onSummoned',
+  OnDraw = 'onDraw',
+  OnDiscard = 'onDiscard',
+  OnGraveyardEnter = 'onGraveyardEnter',
+  OnMoveToRow = 'onMoveToRow',
+  OnRoundStart = 'onRoundStart',
+  OnRoundEnd = 'onRoundEnd',
+  OnAbilityActivated = 'onAbilityActivated'
+}
 
 export type HookedEffect = {
   hook: HookType;

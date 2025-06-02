@@ -1,9 +1,14 @@
-import { CardDefinition, CardInstance, EffectContext } from '../core/types.js';
+import { CardDefinition, CardInstance, EffectContext, HookType, PlayerRole } from '../core/types.js';
 import { boostCard, dealDamage, getCardController } from './state.js';
 
-export const sourceIsSelf: (self: CardInstance, source: CardInstance) => boolean = (self: CardInstance, source: CardInstance) => {
+export function sourceIsSelf(self: CardInstance, source: CardInstance): boolean {
   return self.instanceId === source.instanceId;
 }
+export function isFriendlyTurn(self: CardInstance, player: PlayerRole): boolean {
+  const cardController = getCardController(self);
+  return player === cardController;
+}
+
 export const targetsEnemy = (source: CardInstance, target: CardInstance) => {
   //TODO: also check if it is on the board.
   if (getCardController(source) !== getCardController(target)) {
@@ -119,13 +124,10 @@ export const cardDefinitions: CardDefinition[] = [
     requiresTarget: true,
     effects: [
       {
-        hook: 'onPlay',
+        hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
-          const { self, target, source } = context;
-          //Only if this is the played card.
-          if (!sourceIsSelf(self, source)) return;
-
-          dealDamage(target.instanceId, 2, context);
+          if (!sourceIsSelf(context.self, context.source)) return;
+          dealDamage(context.target, 2, {source: context.self});
         },
         validTargets: targetsEnemy
       }
@@ -142,14 +144,11 @@ export const cardDefinitions: CardDefinition[] = [
     requiresTarget: false,
     effects: [
       {
-        hook: 'onTurnEnd',
+        hook: HookType.OnTurnEnd,
         effect: (context: EffectContext) => {
-          const { self, player } = context;
-          const cardController = getCardController(self);
-          if(player !== cardController) return; //Only if it is friendly turn
-          boostCard(self.instanceId, 3, context);
-        },
-        validTargets: targetsEnemy
+          if(!isFriendlyTurn(context.self, context.player)) return;
+          boostCard(context.self, 3, {source: context.self});
+        }
       }
     ]
   }

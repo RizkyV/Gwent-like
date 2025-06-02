@@ -2,7 +2,7 @@ import { GameState, GameConfig, GamePhase } from './types.js';
 import {
   MAX_ROUNDS
 } from './constants.js';
-import { checkEndOfRound, endRound, getGameState, goToNextPhase, mulliganCards, newTurn, setToPhase, startRound, startTurn } from './state.js';
+import { checkEndOfRound, endRound, endTurn, getGameState, mulliganCards, setToPhase, startRound, startTurn } from './state.js';
 //TODO: MOVE TO state.ts
 export function resetForNewRound(state: GameState): GameState {
   state.currentRound += 1;
@@ -48,7 +48,7 @@ export async function gameLoop(config: GameConfig) {
         setToPhase(GamePhase.RoundEnd);
       }
 
-      newTurn();
+      endTurn();
     }
     if (getGameState().phase === GamePhase.RoundEnd) {
       endRound();
