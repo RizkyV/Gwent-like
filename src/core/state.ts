@@ -1,6 +1,6 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
 import { ALWAYS_ENEMY_START_PLAYER, ALWAYS_FRIENDLY_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
-import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition } from './types.js';
+import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck } from './helpers/deck.js';
 
@@ -36,8 +36,8 @@ export function resetGameState(friendlyDeck: CardDefinition[], enemyDeck: CardDe
         deck: buildDeck(friendlyDeck, 'friendly'),
         graveyard: [],
         rows: [
-          { id: 'melee', cards: [] },
-          { id: 'ranged', cards: [] }
+          { id: RowType.Melee, cards: [] },
+          { id: RowType.Ranged, cards: [] }
         ],
         passed: false,
         roundWins: 0
@@ -47,8 +47,8 @@ export function resetGameState(friendlyDeck: CardDefinition[], enemyDeck: CardDe
         deck: buildDeck(enemyDeck, 'enemy'),
         graveyard: [],
         rows: [
-          { id: 'melee', cards: [] },
-          { id: 'ranged', cards: [] }
+          { id: RowType.Melee, cards: [] },
+          { id: RowType.Ranged, cards: [] }
         ],
         passed: false,
         roundWins: 0
@@ -169,15 +169,15 @@ export function startTurn() {
 }
 export function endTurn() {
   const newState = { ...gameState };
-
   const oldPlayer = newState.currentPlayer;
+  const newPlayer = getOtherPlayer(newState.currentPlayer);
+
   //If active player has no cards in hand, pass their turn instead
-  if(getPlayerHandSize(oldPlayer) === 0) {
+  if (getPlayerHandSize(oldPlayer) === 0) {
     console.log(`${oldPlayer} has no cards in hand, passing turn.`);
     newState.players[oldPlayer].passed = true;
   }
 
-  const newPlayer = getOtherPlayer(newState.currentPlayer);
   //If the non-active player has passed, do not flip to them
   if (!newState.players[newPlayer].passed) {
     newState.currentPlayer = newPlayer;
@@ -190,7 +190,7 @@ export function endTurn() {
   triggerHook(HookType.OnTurnEnd, { player: oldPlayer });
 
   //Trigger the Turn hooks for players who have passed and therefore do not get a real turn
-  if (newState.currentPlayer === oldPlayer) { 
+  if (newState.currentPlayer === oldPlayer) {
     triggerHook(HookType.OnTurnStart, { player: newPlayer });
     triggerHook(HookType.OnTurnEnd, { player: newPlayer });
   }
@@ -313,7 +313,9 @@ export function moveToZone(card: CardInstance, player: PlayerRole, zone: Zone) {
     case Zone.RowMelee:
     case Zone.RowRanged:
       newState.players[owner].rows = newState.players[owner].rows.map(row =>
-        row.id === zone ? { ...row, cards: [...row.cards, card] } : row
+        ((zone === Zone.RowMelee && row.id === RowType.Melee) || (zone === Zone.RowRanged && row.id === RowType.Ranged))
+          ? { ...row, cards: [...row.cards, card] }
+          : row
       );
       break;
   }
@@ -326,14 +328,135 @@ export function setToPhase(phase: GamePhase) {
   setGameState(newState);
 }
 
-export function playCard(card: CardInstance, player: PlayerRole, target?: CardInstance): void {
-  moveToZone(card, player, Zone.RowMelee); // Default to melee row for simplicity
+export function playCard(card: CardInstance, player: PlayerRole, rowType: RowType, index: number, target?: CardInstance): void {
+  moveCardToBoard(card, player, rowType, index)
   const newState = { ...gameState };
   newState.turn.hasPlayedCard = true;
   setGameState(newState);
   triggerHook(HookType.OnPlay, { source: card, target: target });
 }
+/**
+ * 
+ * @param card 
+ * @param player - the players row to play it on 
+ * @param rowType
+ * @param index 
+ */
+export function moveCardToBoard(card: CardInstance, player: PlayerRole, rowType: RowType, index: number): void {
+  const newState = { ...gameState };
 
+  const position = getCardPosition(card);
+  if(position) {
+    //Remove card from its current position
+    switch (position.zone) {
+      case Zone.Hand:
+        newState.players[position.player].hand = newState.players[position.player].hand.filter(c => c.instanceId !== card.instanceId);
+        break;
+      case Zone.Deck:
+        newState.players[position.player].deck = newState.players[position.player].deck.filter(c => c.instanceId !== card.instanceId);
+        break;
+      case Zone.Graveyard:
+        newState.players[position.player].graveyard = newState.players[position.player].graveyard.filter(c => c.instanceId !== card.instanceId);
+        break;
+      case Zone.RowMelee:
+        newState.players[position.player].rows = newState.players[position.player].rows.map(row =>
+          row.id === RowType.Melee ? { ...row, cards: row.cards.filter(c => c.instanceId !== card.instanceId) } : row
+        );
+        break; 
+      case Zone.RowRanged:
+        newState.players[position.player].rows = newState.players[position.player].rows.map(row =>
+          row.id === RowType.Ranged ? { ...row, cards: row.cards.filter(c => c.instanceId !== card.instanceId) } : row
+        );
+        break; 
+      default:
+        console.warn(`Unknown zone for card ${card.instanceId}: ${position.zone}`);
+    }
+
+    //Add to the specified row
+    const targetRow = newState.players[player].rows.find(row => row.id === rowType);
+    targetRow.cards.splice(index, 0, card)
+  }
+
+  setGameState(newState)
+}
+export type CardPosition = {
+  card: CardInstance;
+  player: PlayerRole;
+  zone: Zone;
+  rowType?: RowType;
+  index?: number;
+}
+export function getCardPosition(card: CardInstance): CardPosition | null {
+  let foundCard: CardInstance | null = null;
+  let owner: PlayerRole | null = null;
+  let zone: Zone | null = null;
+  let rowType: RowType | null = null;
+  let foundCardIndex = -1;
+
+  // Find the card in rows, hand, or deck
+  for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
+    //Row
+    for (let r = 0; r < gameState.players[role].rows.length; r++) {
+      const row = gameState.players[role].rows[r];
+      for (let c = 0; c < row.cards.length; c++) {
+        if (row.cards[c].instanceId === card.instanceId) {
+          foundCard = row.cards[c];
+          owner = role;
+          zone = row.id === RowType.Melee ? Zone.RowMelee : Zone.RowRanged;
+          rowType = row.id;
+          foundCardIndex = c;
+          break;
+        }
+      }
+      if (owner) break;
+    }
+    //Hand
+    const hand = gameState.players[role].hand;
+    for (let c = 0; c < hand.length; c++) {
+      if (hand[c].instanceId === card.instanceId) {
+        foundCard = hand[c];
+        owner = role;
+        zone = Zone.Hand;
+        foundCardIndex = c;
+        break;
+      }
+    }
+    //Deck
+    const deck = gameState.players[role].deck;
+    for (let c = 0; c < deck.length; c++) {
+      if (deck[c].instanceId === card.instanceId) {
+        foundCard = deck[c];
+        owner = role;
+        zone = Zone.Deck;
+        foundCardIndex = c;
+        break;
+      }
+    }
+    //Graveyard
+    const graveyard = gameState.players[role].graveyard;
+    for (let c = 0; c < graveyard.length; c++) {
+      if (graveyard[c].instanceId === card.instanceId) {
+        foundCard = graveyard[c];
+        owner = role;
+        zone = Zone.Graveyard;
+        foundCardIndex = c;
+        break;
+      }
+    }
+  }
+  //Not found
+  if(!foundCard) return null;
+
+  const cardPosition: CardPosition = {
+    card: foundCard,
+    player: owner,
+    zone: zone,
+    rowType: rowType,
+    index: foundCardIndex
+  }
+
+  return cardPosition
+}
 
 // Calculate the total points for a row
 export function getRowPoints(row): number {

@@ -21,5 +21,5 @@ export const DEFAULT_DECK_SIZE = 25;
  */
 export const ALWAYS_FRIENDLY_START_PLAYER = false; // If true, the friendly player always starts first
 export const ALWAYS_ENEMY_START_PLAYER = true; // If true, the enemy player always starts first
-export const DUMMY_DELAY = 3000; // Delay in milliseconds for dummy player actions
+export const DUMMY_DELAY = 2000; // Delay in milliseconds for dummy player actions
 export const STATE_DELAY = 300; // Delay in milliseconds for state updates

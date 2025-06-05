@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import GameBoard from "./game-board";
 import { passTurn, playCard } from "../core/state";
-import { CardInstance, GameState } from "../core/types";
+import { CardInstance, GameState, PlayerRole, RowType } from "../core/types";
 import { playerEndTurn } from "../controllers/uiPlayer";
 
 type GameControllerProps = {
@@ -11,6 +11,25 @@ type GameControllerProps = {
 const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
     const [selectedHandCard, setSelectedHandCard] = useState<CardInstance | null>(null);
     const [targeting, setTargeting] = useState(false);
+    const [pendingPlacement, setPendingPlacement] = useState<{
+        rowType: RowType;
+        player: PlayerRole;
+        index: number;
+    } | null>(null);
+
+    const handleCardDrop = (card: CardInstance, rowType: RowType, player: PlayerRole, index: number) => {
+        if (!card) return;
+
+        if (card.baseCard.requiresTarget) {
+            setSelectedHandCard(card);
+            setTargeting(true);
+            setPendingPlacement({ rowType, player, index });
+        } else {
+            playCard(card, gameState.currentPlayer, rowType, index);
+            setSelectedHandCard(null);
+            setTargeting(false);
+        }
+    };
 
     // Handler for clicking a card in hand
     const handleHandCardClick = (card: CardInstance) => {
@@ -19,7 +38,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
             setSelectedHandCard(card);
             setTargeting(true);
         } else {
-            playCard(card, gameState.currentPlayer);
+            playCard(card, gameState.currentPlayer, RowType.Ranged, 0);
             setSelectedHandCard(null);
             setTargeting(false);
         }
@@ -29,7 +48,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
     const handleBoardCardClick = (targetCard: CardInstance) => {
         console.log("Card clicked (Board):", targetCard);
         if (targeting && selectedHandCard) {
-            playCard(selectedHandCard, gameState.currentPlayer, targetCard);
+            playCard(selectedHandCard, pendingPlacement.player, pendingPlacement.rowType, pendingPlacement.index, targetCard);
             setSelectedHandCard(null);
             setTargeting(false);
         }
@@ -64,6 +83,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
         <div>
             <GameBoard
                 gameState={gameState}
+                onCardDrop={handleCardDrop}
                 onHandCardClick={handleHandCardClick}
                 onBoardCardClick={handleBoardCardClick}
                 selectedHandCard={selectedHandCard}

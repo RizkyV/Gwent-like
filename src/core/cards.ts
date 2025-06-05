@@ -9,6 +9,10 @@ export function isFriendlyTurn(self: CardInstance, player: PlayerRole): boolean 
   return player === cardController;
 }
 
+export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean {
+  return getCardController(source) === player;
+}
+
 export const targetsEnemy = (source: CardInstance, target: CardInstance) => {
   //TODO: also check if it is on the board.
   if (getCardController(source) !== getCardController(target)) {
@@ -24,13 +28,15 @@ export const targetsEnemy = (source: CardInstance, target: CardInstance) => {
 
 export const cardDefinitions: CardDefinition[] = [
   {
-    id: 'card1',
-    name: 'Card One',
-    type: ['warrior'],
-    basePower: 5,
+    id: 'unit_cow',
+    name: 'Cow',
+    type: ['Cow', 'Token'],
+    rarity: 'bronze',
+    basePower: 1,
     category: 'unit',
-    provisionCost: 5,
-    description: 'Card One',
+    provisionCost: 0,
+    description: '',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card2',
@@ -40,6 +46,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Two',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card3',
@@ -49,6 +56,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Three',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card4',
@@ -58,6 +66,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Four',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card5',
@@ -67,6 +76,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Five',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card6',
@@ -76,6 +86,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Six',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card7',
@@ -85,6 +96,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Seven',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card8',
@@ -94,6 +106,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Eight',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card9',
@@ -103,6 +116,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Nine',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card10',
@@ -112,6 +126,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Card Ten',
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card11',
@@ -122,6 +137,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 5,
     description: 'Play: Deal 2 damage to an enemy unit.',
     requiresTarget: true,
+    artworkUrl: '/assets/cards/card11.png',
     effects: [
       {
         hook: HookType.OnPlay,
@@ -131,7 +147,8 @@ export const cardDefinitions: CardDefinition[] = [
         },
         validTargets: targetsEnemy
       }
-    ]
+    ],
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card12',
@@ -150,6 +167,7 @@ export const cardDefinitions: CardDefinition[] = [
           boostCard(context.self, 3, {source: context.self});
         }
       }
-    ]
+    ],
+    isValidRow: isFriendlyRow
   }
 ];

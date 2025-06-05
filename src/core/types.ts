@@ -46,7 +46,6 @@ export enum Zone {
   Exile = 'exile',
 }
 
-
 export type PlayerState = {
   hand: CardInstance[];
   deck: CardInstance[];
@@ -65,10 +64,15 @@ export type RowEffect = {
 };
 
 export type Row = {
-  id: 'melee' | 'ranged';
+  id: RowType;
   cards: CardInstance[];
   effect?: RowEffect;
 };
+
+export enum RowType {
+  Melee = 'melee',
+  Ranged = 'ranged'
+}
 
 export interface CardDefinition {
   id: string;
@@ -82,9 +86,11 @@ export interface CardDefinition {
   type?: string[]; //races - classes - factions
   rarity?: 'bronze' | 'gold'
   tags?: string[]; //mechanical or deck tags for filtering
+  sets?: string[]; //set groupings
   isToken?: boolean;
   requiresTarget?: boolean; //Does the card require a target to play? (TODO: rework into a isValidTarget function)
   effects?: HookedEffect[]; //Hooks
+  isValidRow: (source: CardInstance, player: PlayerRole, rowId: RowType) => boolean;
 }
 
 export interface CardInstance {
@@ -99,12 +105,10 @@ export interface CardInstance {
 export type GameEffect = (context: EffectContext) => void;
 
 export interface EffectContext<Meta = EffectMetadata> {
-  self?: CardInstance; // The card that the hook is being triggered on
-  source?: CardInstance;
-  player?: PlayerRole;
-  target?: CardInstance;
-  row?: Row;
-  gameState?: GameState;
+  self?: CardInstance; //The card that the hook is being triggered on
+  source?: CardInstance; //The card that triggered the effect
+  target?: CardInstance; //The card that is being targeted by the effect
+  player?: PlayerRole; //The current player
   metadata?: Meta;
 }
 
@@ -120,25 +124,26 @@ export type StatusId = 'locked' | 'poisoned' | 'veil' | string;
 export type StatusEffect = {
   id: StatusId;
   description: string;
-  // For example, a predicate to check if card can be targeted
+  effects?: HookedEffect[]; //Hooks
+    // For example, a predicate to check if card can be targeted
   canBeTargeted?: (card: CardInstance, state: GameState) => boolean;
-  // You can add hooks for onTurnStart, onDamageTaken, etc.
 };
 export enum HookType {
   OnPlay = 'onPlay',
-  OnTargeted = 'onTargeted',
+  OnSummoned = 'onSummoned',
+
   OnTurnStart = 'onTurnStart',
   OnTurnEnd = 'onTurnEnd',
+  OnRoundStart = 'onRoundStart',
+  OnRoundEnd = 'onRoundEnd',
+
+  OnTargeted = 'onTargeted',
   OnDamaged = 'onDamaged',
   OnBoosted = 'onBoosted',
   OnDeath = 'onDeath',
-  OnSummoned = 'onSummoned',
   OnDraw = 'onDraw',
   OnDiscard = 'onDiscard',
-  OnGraveyardEnter = 'onGraveyardEnter',
-  OnMoveToRow = 'onMoveToRow',
-  OnRoundStart = 'onRoundStart',
-  OnRoundEnd = 'onRoundEnd',
+  OnMoved = 'onMoved',
   OnAbilityActivated = 'onAbilityActivated'
 }
 

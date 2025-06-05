@@ -1,5 +1,5 @@
 import React from "react";
-import Card from "./card";
+import HandCard from "./hand-card";
 import { CardInstance } from "../core/types";
 
 export type HandProps = {
@@ -16,7 +16,7 @@ export const Hand: React.FC<HandProps> = ({ cards, title, onCardClick, selectedC
     {title && <h2 className="hand__title">{title}</h2>}
     <div className="hand__cards">
       {cards.map(card => (
-        <Card
+        <HandCard
           key={card.instanceId}
           card={card}
           highlight={selectedCard?.instanceId === card.instanceId}

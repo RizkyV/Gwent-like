@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { CardInstance } from "../core/types";
+import { useDrag } from "react-dnd";
 
 export type CardProps = {
   card: CardInstance;
@@ -9,7 +10,7 @@ export type CardProps = {
   showTargetButton?: boolean;
 };
 
-export const Card: React.FC<CardProps> = ({
+export const HandCard: React.FC<CardProps> = ({
   card,
   highlight = false,
   onClick,
@@ -17,15 +18,26 @@ export const Card: React.FC<CardProps> = ({
   showTargetButton,
 }) => {
   const [hovered, setHovered] = useState(false);
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: 'CARD',
+    item: card,
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  }));
+
+  const divRef = React.useRef<HTMLDivElement>(null);
+  drag(divRef);
 
   return (
-    <div
+    <div ref={divRef}
       className={`card${highlight ? " card--highlight" : ""}`}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ position: "relative" }}
+      style={{ position: "relative", opacity: isDragging ? 0.5 : 1 }}
     >
+      {card.baseCard.artworkUrl && <img className="card__art" src={card.baseCard.artworkUrl} alt={card.baseCard.name}></img>}
       <div className="card__name">{card.baseCard.name}</div>
       <div className="card__power">
         Power: <span>{card.currentPower}</span>
@@ -48,4 +60,4 @@ export const Card: React.FC<CardProps> = ({
   );
 };
 
-export default Card;
+export default HandCard;
