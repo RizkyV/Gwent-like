@@ -8,7 +8,7 @@ export const dummyPlayer: PlayerController = {
     console.log(`It's ${role}'s turn.`);
     console.log('Hand: ', getGameState().players[role].hand.map(c => c.baseCard.name));
     console.log('Rows: ', getGameState().players[role].rows.map(r => ({
-      id: r.id,
+      id: r.type,
       cards: r.cards.map(c => c.baseCard.name)
     })));
     // Wait for 5 seconds before making a move

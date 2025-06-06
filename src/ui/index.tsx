@@ -12,15 +12,13 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 /**
  * TODO:
  * Implement hooks (one at a time)
- * Rework card ownership. Turn getCardOwner into getCardController, and in initial game state assign each card an owner
- * If a player has passed the turn should not turn to them :)
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
- * UI Choose row + index to play on
  * Allow UI to activate abilities
  * UI Multi targeting
  * Mulligan
- * Track UI state via turn state? isTargeting, isChoosingRow, selectedCard etc.
  * Potential hook queueing - potential timing issues
+ * Styling the UI to make it fill the screen correctly - place game-info absolutely in the top right corner
+ * Remove previous play buttons - and rework target button to just use the whole card
 */
 
 const App = () => {

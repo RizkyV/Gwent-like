@@ -19,8 +19,8 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
 
     const handleCardDrop = (card: CardInstance, rowType: RowType, player: PlayerRole, index: number) => {
         if (!card) return;
-
-        if (card.baseCard.requiresTarget) {
+        const onPlayEffect = card.baseCard.effects?.find(e => e.hook === "onPlay");
+        if (onPlayEffect && onPlayEffect.validTargets) {
             setSelectedHandCard(card);
             setTargeting(true);
             setPendingPlacement({ rowType, player, index });
@@ -31,10 +31,10 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
         }
     };
 
-    // Handler for clicking a card in hand
+    // Handler for clicking a card in hand - TODO: REMOVE
     const handleHandCardClick = (card: CardInstance) => {
-        console.log("Card clicked (Hand):", card);
-        if (card.baseCard.requiresTarget) {
+        const onPlayEffect = card.baseCard.effects?.find(e => e.hook === "onPlay");
+        if (onPlayEffect && onPlayEffect.validTargets) {
             setSelectedHandCard(card);
             setTargeting(true);
         } else {

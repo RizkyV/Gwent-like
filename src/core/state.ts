@@ -36,8 +36,8 @@ export function resetGameState(friendlyDeck: CardDefinition[], enemyDeck: CardDe
         deck: buildDeck(friendlyDeck, 'friendly'),
         graveyard: [],
         rows: [
-          { id: RowType.Melee, cards: [] },
-          { id: RowType.Ranged, cards: [] }
+          { type: RowType.Melee, cards: [], player: 'friendly' },
+          { type: RowType.Ranged, cards: [], player: 'friendly' }
         ],
         passed: false,
         roundWins: 0
@@ -47,8 +47,8 @@ export function resetGameState(friendlyDeck: CardDefinition[], enemyDeck: CardDe
         deck: buildDeck(enemyDeck, 'enemy'),
         graveyard: [],
         rows: [
-          { id: RowType.Melee, cards: [] },
-          { id: RowType.Ranged, cards: [] }
+          { type: RowType.Melee, cards: [], player: 'enemy' },
+          { type: RowType.Ranged, cards: [], player: 'enemy' }
         ],
         passed: false,
         roundWins: 0
@@ -313,7 +313,7 @@ export function moveToZone(card: CardInstance, player: PlayerRole, zone: Zone) {
     case Zone.RowMelee:
     case Zone.RowRanged:
       newState.players[owner].rows = newState.players[owner].rows.map(row =>
-        ((zone === Zone.RowMelee && row.id === RowType.Melee) || (zone === Zone.RowRanged && row.id === RowType.Ranged))
+        ((zone === Zone.RowMelee && row.type === RowType.Melee) || (zone === Zone.RowRanged && row.type === RowType.Ranged))
           ? { ...row, cards: [...row.cards, card] }
           : row
       );
@@ -360,12 +360,12 @@ export function moveCardToBoard(card: CardInstance, player: PlayerRole, rowType:
         break;
       case Zone.RowMelee:
         newState.players[position.player].rows = newState.players[position.player].rows.map(row =>
-          row.id === RowType.Melee ? { ...row, cards: row.cards.filter(c => c.instanceId !== card.instanceId) } : row
+          row.type === RowType.Melee ? { ...row, cards: row.cards.filter(c => c.instanceId !== card.instanceId) } : row
         );
         break; 
       case Zone.RowRanged:
         newState.players[position.player].rows = newState.players[position.player].rows.map(row =>
-          row.id === RowType.Ranged ? { ...row, cards: row.cards.filter(c => c.instanceId !== card.instanceId) } : row
+          row.type === RowType.Ranged ? { ...row, cards: row.cards.filter(c => c.instanceId !== card.instanceId) } : row
         );
         break; 
       default:
@@ -373,7 +373,7 @@ export function moveCardToBoard(card: CardInstance, player: PlayerRole, rowType:
     }
 
     //Add to the specified row
-    const targetRow = newState.players[player].rows.find(row => row.id === rowType);
+    const targetRow = newState.players[player].rows.find(row => row.type === rowType);
     targetRow.cards.splice(index, 0, card)
   }
 
@@ -402,8 +402,8 @@ export function getCardPosition(card: CardInstance): CardPosition | null {
         if (row.cards[c].instanceId === card.instanceId) {
           foundCard = row.cards[c];
           owner = role;
-          zone = row.id === RowType.Melee ? Zone.RowMelee : Zone.RowRanged;
-          rowType = row.id;
+          zone = row.type === RowType.Melee ? Zone.RowMelee : Zone.RowRanged;
+          rowType = row.type;
           foundCardIndex = c;
           break;
         }

@@ -10,7 +10,7 @@ export const dummyPlayer2: PlayerController = {
     await new Promise(resolve => setTimeout(resolve, DUMMY_DELAY));
     if (getGameState().players[role].hand.length > 0) {
       console.log(`Playing card: ${getGameState().players[role].hand[0].baseCard.name}`);
-      if (getGameState().players[role].rows.find((row) => row.id === RowType.Melee).cards.length >= MAX_ROW_SIZE) {
+      if (getGameState().players[role].rows.find((row) => row.type === RowType.Melee).cards.length >= MAX_ROW_SIZE) {
         playCard(getGameState().players[role].hand[0], role, RowType.Ranged, 0);
       } else {
         playCard(getGameState().players[role].hand[0], role, RowType.Melee, 0);

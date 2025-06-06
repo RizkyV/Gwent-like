@@ -64,7 +64,8 @@ export type RowEffect = {
 };
 
 export type Row = {
-  id: RowType;
+  type: RowType;
+  player: PlayerRole;
   cards: CardInstance[];
   effect?: RowEffect;
 };
@@ -88,7 +89,6 @@ export interface CardDefinition {
   tags?: string[]; //mechanical or deck tags for filtering
   sets?: string[]; //set groupings
   isToken?: boolean;
-  requiresTarget?: boolean; //Does the card require a target to play? (TODO: rework into a isValidTarget function)
   effects?: HookedEffect[]; //Hooks
   isValidRow: (source: CardInstance, player: PlayerRole, rowId: RowType) => boolean;
 }

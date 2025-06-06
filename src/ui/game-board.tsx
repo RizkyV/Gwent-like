@@ -22,10 +22,7 @@ export const GameInfo: React.FC<BoardProps> = ({
     isTargeting,
     isValidTarget
 }) => {
-    const getRowCards = (player: PlayerRole, rowId: "melee" | "ranged") => {
-        const row = gameState.players[player].rows.find(r => r.id === rowId);
-        return row.cards;
-    };
+
     return (
         <>
             <Hand
@@ -37,36 +34,28 @@ export const GameInfo: React.FC<BoardProps> = ({
                 title="Enemy Hand" />
 
             <Row
-                cards={getRowCards("enemy", "ranged")}
-                player="enemy"
-                rowData={gameState.players.enemy.rows.find(r => r.id === "ranged")}
+                row={gameState.players.enemy.rows.find(r => r.type === RowType.Ranged)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
             />
             <Row
-                cards={getRowCards("enemy", "melee")}
-                player="enemy"
-                rowData={gameState.players.enemy.rows.find(r => r.id === "melee")}
+                row={gameState.players.enemy.rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
             />
             <Row
-                cards={getRowCards("friendly", "melee")}
-                player="friendly"
-                rowData={gameState.players.friendly.rows.find(r => r.id === "melee")}
+                row={gameState.players.friendly.rows.find(r => r.type === RowType.Ranged)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
             />
             <Row
-                cards={getRowCards("friendly", "ranged")}
-                player="friendly"
-                rowData={gameState.players.friendly.rows.find(r => r.id === "ranged")}
+                row={gameState.players.friendly.rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 isTargeting={isTargeting}

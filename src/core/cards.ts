@@ -28,7 +28,7 @@ export const targetsEnemy = (source: CardInstance, target: CardInstance) => {
 
 export const cardDefinitions: CardDefinition[] = [
   {
-    id: 'unit_cow',
+    id: 'token_cow',
     name: 'Cow',
     type: ['Cow', 'Token'],
     rarity: 'bronze',
@@ -136,8 +136,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Play: Deal 2 damage to an enemy unit.',
-    requiresTarget: true,
-    artworkUrl: '/assets/cards/card11.png',
+    //artworkUrl: '/assets/cards/card11.png',
     effects: [
       {
         hook: HookType.OnPlay,
@@ -158,7 +157,6 @@ export const cardDefinitions: CardDefinition[] = [
     category: 'unit',
     provisionCost: 5,
     description: 'Turn End: Boost this by 3.',
-    requiresTarget: false,
     effects: [
       {
         hook: HookType.OnTurnEnd,
