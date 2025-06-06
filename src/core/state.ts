@@ -1,8 +1,8 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
 import { ALWAYS_ENEMY_START_PLAYER, ALWAYS_FRIENDLY_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
-import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType } from './types.js';
+import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
-import { buildDeck } from './helpers/deck.js';
+import { buildDeck, createCardInstance } from './helpers/deck.js';
 
 let gameState: GameState | null = null;
 const listeners: Array<(state: GameState | null) => void> = [];
@@ -346,7 +346,7 @@ export function moveCardToBoard(card: CardInstance, player: PlayerRole, rowType:
   const newState = { ...gameState };
 
   const position = getCardPosition(card);
-  if(position) {
+  if (position) {
     //Remove card from its current position
     switch (position.zone) {
       case Zone.Hand:
@@ -362,12 +362,12 @@ export function moveCardToBoard(card: CardInstance, player: PlayerRole, rowType:
         newState.players[position.player].rows = newState.players[position.player].rows.map(row =>
           row.type === RowType.Melee ? { ...row, cards: row.cards.filter(c => c.instanceId !== card.instanceId) } : row
         );
-        break; 
+        break;
       case Zone.RowRanged:
         newState.players[position.player].rows = newState.players[position.player].rows.map(row =>
           row.type === RowType.Ranged ? { ...row, cards: row.cards.filter(c => c.instanceId !== card.instanceId) } : row
         );
-        break; 
+        break;
       default:
         console.warn(`Unknown zone for card ${card.instanceId}: ${position.zone}`);
     }
@@ -445,7 +445,7 @@ export function getCardPosition(card: CardInstance): CardPosition | null {
     }
   }
   //Not found
-  if(!foundCard) return null;
+  if (!foundCard) return null;
 
   const cardPosition: CardPosition = {
     card: foundCard,
@@ -553,6 +553,17 @@ export function boostCard(target: CardInstance, amount: number, context: EffectC
     }
   });
 }
+
+export function spawnCard(target: CardDefinition, row: Row, index: number, context: EffectContext): void {
+  const newState = { ...gameState };
+  //TODO: check for all sort of stuff
+
+  const newCard = createCardInstance(target, context.player)
+  const targetRow = newState.players[context.player].rows.find(_row => _row.type === row.type);
+  targetRow.cards.splice(index, 0, newCard)
+  setGameState(newState);
+}
+
 /**
  * State builder helpers
  */

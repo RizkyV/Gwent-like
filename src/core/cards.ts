@@ -1,6 +1,9 @@
 import { CardDefinition, CardInstance, EffectContext, HookType, PlayerRole } from '../core/types.js';
-import { boostCard, dealDamage, getCardController } from './state.js';
-
+import { getCardRow, getCardRowIndex } from './helpers/board.js';
+import { boostCard, dealDamage, getCardController, spawnCard, triggerHook } from './state.js';
+/**
+ * Helpers
+ */
 export function sourceIsSelf(self: CardInstance, source: CardInstance): boolean {
   return self.instanceId === source.instanceId;
 }
@@ -13,7 +16,7 @@ export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean
   return getCardController(source) === player;
 }
 
-export const targetsEnemy = (source: CardInstance, target: CardInstance) => {
+export const isEnemy = (source: CardInstance, target: CardInstance) => {
   //TODO: also check if it is on the board.
   if (getCardController(source) !== getCardController(target)) {
     return true;
@@ -25,6 +28,31 @@ export const targetsEnemy = (source: CardInstance, target: CardInstance) => {
 /**
 * Effects
 */
+export function canThrive(context: EffectContext): boolean {
+  if (sourceIsSelf(context.self, context.source)) return false;
+  if (!isFriendlyRow(context.source, getCardController(context.self))) return false;
+  if (context.source.currentPower < context.self.currentPower) return false;
+  return true;
+}
+const thrive1 = {
+  hook: HookType.OnPlay,
+  effect: (context: EffectContext) => {
+    if (canThrive(context)) {
+      boostCard(context.self, 1, { source: context.self });
+      triggerHook(HookType.OnThriveTrigger, { source: context.self });
+    }
+  }
+}
+const thrive2 = {
+  hook: HookType.OnPlay,
+  effect: (context: EffectContext) => {
+    if (canThrive(context)) {
+      boostCard(context.self, 2, { source: context.self });
+      triggerHook(HookType.OnThriveTrigger, { source: context.self });
+    }
+  }
+}
+
 
 export const cardDefinitions: CardDefinition[] = [
   {
@@ -141,10 +169,11 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
-          if (!sourceIsSelf(context.self, context.source)) return;
-          dealDamage(context.target, 2, {source: context.self});
+          if (sourceIsSelf(context.self, context.source)) {
+            dealDamage(context.target, 2, { source: context.self });
+          }
         },
-        validTargets: targetsEnemy
+        validTargets: isEnemy
       }
     ],
     isValidRow: isFriendlyRow
@@ -156,13 +185,36 @@ export const cardDefinitions: CardDefinition[] = [
     basePower: 5,
     category: 'unit',
     provisionCost: 5,
-    description: 'Turn End: Boost this by 3.',
+    description: 'Turn End: Boost this by 1.',
     effects: [
       {
         hook: HookType.OnTurnEnd,
         effect: (context: EffectContext) => {
-          if(!isFriendlyTurn(context.self, context.player)) return;
-          boostCard(context.self, 3, {source: context.self});
+          if (isFriendlyTurn(context.self, context.player)) {
+            boostCard(context.self, 1, { source: context.self });
+          }
+        }
+      }
+    ],
+    isValidRow: isFriendlyRow
+  },
+  {
+    id: 'unit_nekker',
+    name: 'Nekker',
+    type: ['monster'],
+    basePower: 1,
+    category: 'unit',
+    provisionCost: 4,
+    description: 'Thrive. Play: Spawn a base copy of self on this row',
+    effects: [
+      thrive1,
+      {
+        hook: HookType.OnPlay,
+        effect: (context: EffectContext) => {
+          // Spawn a base copy of self on this row
+          if (sourceIsSelf(context.self, context.source)) {
+            spawnCard(context.self.baseCard, getCardRow(context.self), getCardRowIndex(context.self) + 1, { player: getCardController(context.self), source: context.self });
+          }
         }
       }
     ],

@@ -144,7 +144,10 @@ export enum HookType {
   OnDraw = 'onDraw',
   OnDiscard = 'onDiscard',
   OnMoved = 'onMoved',
-  OnAbilityActivated = 'onAbilityActivated'
+  OnAbilityActivated = 'onAbilityActivated',
+
+  //Keyword hooks
+  OnThriveTrigger = 'onThriveTrigger',
 }
 
 export type HookedEffect = {

@@ -6,7 +6,7 @@ import { dummyPlayer2 } from '../controllers/dummyPlayer2.js';
 import { uiPlayer } from '../controllers/uiPlayer.js';
 
 export const runGame = async () => {
-    const testActiveDeck = [cardDefinitions[10], cardDefinitions[11]];
+    const testActiveDeck = [cardDefinitions[10], cardDefinitions[11], cardDefinitions[12]];
     const testPassiveDeck = cardDefinitions.slice(0, 10);
     const config: GameConfig = {
         controllers: {

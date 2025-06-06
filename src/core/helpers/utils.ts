@@ -16,8 +16,8 @@ export function setRows(state: GameState, player: PlayerRole, rows: Row[]): Game
       : { enemyRows: rows })
   };
 }
-export function getRowById(rows: Row[], id: 'melee' | 'ranged'): Row | undefined {
-  return rows.find(row => row.id === id);
+export function getRowById(rows: Row[], type: 'melee' | 'ranged'): Row | undefined {
+  return rows.find(row => row.type === type);
 }
 
 export function canTargetCard(card: CardInstance, state: GameState): boolean {

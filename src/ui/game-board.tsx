@@ -48,14 +48,14 @@ export const GameInfo: React.FC<BoardProps> = ({
                 isValidTarget={isValidTarget}
             />
             <Row
-                row={gameState.players.friendly.rows.find(r => r.type === RowType.Ranged)}
+                row={gameState.players.friendly.rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
             />
             <Row
-                row={gameState.players.friendly.rows.find(r => r.type === RowType.Melee)}
+                row={gameState.players.friendly.rows.find(r => r.type === RowType.Ranged)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 isTargeting={isTargeting}
