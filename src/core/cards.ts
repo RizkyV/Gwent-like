@@ -1,15 +1,15 @@
-import { CardDefinition, CardInstance, EffectContext, HookType, PlayerRole } from '../core/types.js';
+import { CardCategory, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole } from '../core/types.js';
 import { getCardRow, getCardRowIndex } from './helpers/board.js';
 import { boostCard, dealDamage, getCardController, spawnCard, triggerHook } from './state.js';
 /**
  * Helpers
  */
-export function sourceIsSelf(self: CardInstance, source: CardInstance): boolean {
-  return self.instanceId === source.instanceId;
+export function sourceIsSelf(context: EffectContext): boolean {
+  return context.self.instanceId === context.source.instanceId;
 }
-export function isFriendlyTurn(self: CardInstance, player: PlayerRole): boolean {
-  const cardController = getCardController(self);
-  return player === cardController;
+export function isFriendlyTurn(context: EffectContext): boolean {
+  const cardController = getCardController(context.self);
+  return context.player === cardController;
 }
 
 export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean {
@@ -29,7 +29,7 @@ export const isEnemy = (source: CardInstance, target: CardInstance) => {
 * Effects
 */
 export function canThrive(context: EffectContext): boolean {
-  if (sourceIsSelf(context.self, context.source)) return false;
+  if (sourceIsSelf(context)) return false;
   if (!isFriendlyRow(context.source, getCardController(context.self))) return false;
   if (context.source.currentPower < context.self.currentPower) return false;
   return true;
@@ -53,37 +53,47 @@ const thrive2 = {
   }
 }
 
-
 export const cardDefinitions: CardDefinition[] = [
   {
     id: 'token_cow',
     name: 'Cow',
-    type: ['Cow', 'Token'],
-    rarity: 'bronze',
+    category: CardCategory.Unit,
     basePower: 1,
-    category: 'unit',
     provisionCost: 0,
-    description: '',
+    baseArmor: 0,
+    type: ['Cow', 'Token'],
+    rarity: CardRarity.Bronze,
+    color: '',
+    description: 'Doomed.',
+    isToken: true,
     isValidRow: isFriendlyRow
   },
   {
-    id: 'card2',
-    name: 'Card Two',
-    type: ['warrior'],
-    basePower: 5,
-    category: 'unit',
-    provisionCost: 5,
-    description: 'Card Two',
+    id: 'token_sand_soldier',
+    name: 'Sand Soldier',
+    category: CardCategory.Unit,
+    basePower: 1,
+    provisionCost: 0,
+    baseArmor: 1,
+    type: ['Soldier', 'Token'],
+    rarity: CardRarity.Bronze,
+    color: '',
+    description: 'Doomed.',
+    isToken: true,
     isValidRow: isFriendlyRow
   },
   {
-    id: 'card3',
-    name: 'Card Three',
-    type: ['warrior'],
-    basePower: 5,
-    category: 'unit',
-    provisionCost: 5,
-    description: 'Card Three',
+    id: 'token_frog',
+    name: 'Frog',
+    category: CardCategory.Unit,
+    basePower: 1,
+    provisionCost: 0,
+    baseArmor: 0,
+    type: ['Frog', 'Token'],
+    rarity: CardRarity.Bronze,
+    color: '',
+    description: 'Doomed.',
+    isToken: true,
     isValidRow: isFriendlyRow
   },
   {
@@ -91,7 +101,7 @@ export const cardDefinitions: CardDefinition[] = [
     name: 'Card Four',
     type: ['warrior'],
     basePower: 5,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Four',
     isValidRow: isFriendlyRow
@@ -101,7 +111,7 @@ export const cardDefinitions: CardDefinition[] = [
     name: 'Card Five',
     type: ['warrior'],
     basePower: 10,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Five',
     isValidRow: isFriendlyRow
@@ -111,7 +121,7 @@ export const cardDefinitions: CardDefinition[] = [
     name: 'Card Six',
     type: ['warrior'],
     basePower: 6,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Six',
     isValidRow: isFriendlyRow
@@ -121,7 +131,7 @@ export const cardDefinitions: CardDefinition[] = [
     name: 'Card Seven',
     type: ['warrior'],
     basePower: 5,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Seven',
     isValidRow: isFriendlyRow
@@ -131,7 +141,7 @@ export const cardDefinitions: CardDefinition[] = [
     name: 'Card Eight',
     type: ['warrior'],
     basePower: 5,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Eight',
     isValidRow: isFriendlyRow
@@ -141,7 +151,7 @@ export const cardDefinitions: CardDefinition[] = [
     name: 'Card Nine',
     type: ['warrior'],
     basePower: 5,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Nine',
     isValidRow: isFriendlyRow
@@ -151,7 +161,7 @@ export const cardDefinitions: CardDefinition[] = [
     name: 'Card Ten',
     type: ['warrior'],
     basePower: 5,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Ten',
     isValidRow: isFriendlyRow
@@ -161,7 +171,7 @@ export const cardDefinitions: CardDefinition[] = [
     name: 'Card Eleven',
     type: ['warrior'],
     basePower: 5,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Play: Deal 2 damage to an enemy unit.',
     //artworkUrl: '/assets/cards/card11.png',
@@ -169,7 +179,7 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
-          if (sourceIsSelf(context.self, context.source)) {
+          if (sourceIsSelf(context)) {
             dealDamage(context.target, 2, { source: context.self });
           }
         },
@@ -181,16 +191,16 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card12',
     name: 'Card Twelve',
-    type: ['warrior'],
+    type: ['Warrior'],
     basePower: 5,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Turn End: Boost this by 1.',
     effects: [
       {
         hook: HookType.OnTurnEnd,
         effect: (context: EffectContext) => {
-          if (isFriendlyTurn(context.self, context.player)) {
+          if (isFriendlyTurn(context)) {
             boostCard(context.self, 1, { source: context.self });
           }
         }
@@ -201,23 +211,23 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'unit_nekker',
     name: 'Nekker',
-    type: ['monster'],
+    type: ['Monster'],
     basePower: 1,
-    category: 'unit',
+    category: CardCategory.Unit,
     provisionCost: 4,
     description: 'Thrive. Play: Spawn a base copy of self on this row',
+    isValidRow: isFriendlyRow,
     effects: [
       thrive1,
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
           // Spawn a base copy of self on this row
-          if (sourceIsSelf(context.self, context.source)) {
+          if (sourceIsSelf(context)) {
             spawnCard(context.self.baseCard, getCardRow(context.self), getCardRowIndex(context.self) + 1, { player: getCardController(context.self), source: context.self });
           }
         }
       }
-    ],
-    isValidRow: isFriendlyRow
+    ]
   }
 ];

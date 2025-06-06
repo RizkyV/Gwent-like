@@ -47,10 +47,11 @@ export enum Zone {
 }
 
 export type PlayerState = {
+  rows: Row[];
   hand: CardInstance[];
   deck: CardInstance[];
   graveyard: CardInstance[];
-  rows: Row[];
+  //Leader Ability
   passed: boolean;
   roundWins: number;
 };
@@ -64,9 +65,9 @@ export type RowEffect = {
 };
 
 export type Row = {
+  cards: CardInstance[];
   type: RowType;
   player: PlayerRole;
-  cards: CardInstance[];
   effect?: RowEffect;
 };
 
@@ -75,22 +76,35 @@ export enum RowType {
   Ranged = 'ranged'
 }
 
+export enum CardCategory {
+  Unit = 'unit',
+  Special = 'special',
+  Resource = 'resource',
+}
+
+export enum CardRarity {
+  Bronze = 'bronze',
+  Gold = 'gold',
+}
+
 export interface CardDefinition {
   id: string;
   name: string;
+  category: CardCategory;
   basePower: number;
-  category: 'unit' | 'special' | 'resource';
   provisionCost: number;
-  description?: string;
-  artworkUrl?: string; //URL to card artwork
-  color?: string; //e.g. 'blue', 'red', 'green'
+  baseArmor?: number;
   type?: string[]; //races - classes - factions
-  rarity?: 'bronze' | 'gold'
+  rarity?: CardRarity
+  color?: string; //e.g. 'blue', 'red', 'green'
+  description?: string;
+  flavorText?: string;
+  artworkUrl?: string; //URL to card artwork
   tags?: string[]; //mechanical or deck tags for filtering
   sets?: string[]; //set groupings
   isToken?: boolean;
-  effects?: HookedEffect[]; //Hooks
   isValidRow: (source: CardInstance, player: PlayerRole, rowId: RowType) => boolean;
+  effects?: HookedEffect[]; //Hooks
 }
 
 export interface CardInstance {
@@ -98,36 +112,17 @@ export interface CardInstance {
   baseCard: CardDefinition; //Reference to static card definition
   owner: PlayerRole;
   currentPower: number; //Modifiable in-game value
+  currentArmor?: number;
+  currentBasePower?: number; //Base power can change due to effects
   statuses: Set<StatusId>;
-  boosted?: boolean;
 }
 
-export type GameEffect = (context: EffectContext) => void;
-
-export interface EffectContext<Meta = EffectMetadata> {
-  self?: CardInstance; //The card that the hook is being triggered on
-  source?: CardInstance; //The card that triggered the effect
-  target?: CardInstance; //The card that is being targeted by the effect
-  player?: PlayerRole; //The current player
-  metadata?: Meta;
-}
-
-type EffectMetadata =
-  | { damagedCard: CardInstance; damageAmount: number }
-  | { boostedCard: CardInstance; boostAmount: number }
-  | { movedFrom: Zone; movedTo: Zone }
-  | { abilityId: string }
-  | Record<string, any>; // fallback
-
-export type StatusId = 'locked' | 'poisoned' | 'veil' | string;
-
-export type StatusEffect = {
-  id: StatusId;
-  description: string;
-  effects?: HookedEffect[]; //Hooks
-    // For example, a predicate to check if card can be targeted
-  canBeTargeted?: (card: CardInstance, state: GameState) => boolean;
+export type HookedEffect = {
+  hook: HookType;
+  effect: GameEffect;
+  validTargets?: (source: CardInstance, target: CardInstance) => boolean; // Optional function to validate targets
 };
+
 export enum HookType {
   OnPlay = 'onPlay',
   OnSummoned = 'onSummoned',
@@ -147,11 +142,33 @@ export enum HookType {
   OnAbilityActivated = 'onAbilityActivated',
 
   //Keyword hooks
+  OnDemiseTrigger = 'onDemiseTrigger',
   OnThriveTrigger = 'onThriveTrigger',
 }
 
-export type HookedEffect = {
-  hook: HookType;
-  effect: GameEffect;
-  validTargets?: (source: CardInstance, target: CardInstance) => boolean; // Optional function to validate targets
+export type GameEffect = (context: EffectContext) => void;
+
+export interface EffectContext {
+  self?: CardInstance; //The card that the hook is being triggered on
+  source?: CardInstance; //The card that triggered the effect
+  target?: CardInstance; //The card that is being targeted by the effect
+  player?: PlayerRole; //The relevant player (ie. the one whos turn has started/ended)
+  metadata?: EffectMetadata;
+}
+
+type EffectMetadata =
+  | { damagedCard: CardInstance; damageAmount: number }
+  | { boostedCard: CardInstance; boostAmount: number }
+  | { movedFrom: Zone; movedTo: Zone }
+  | { abilityId: string }
+  | Record<string, any>; // fallback
+
+export type StatusId = 'locked' | 'poisoned' | 'veil' | string;
+
+export type StatusEffect = {
+  id: StatusId;
+  description: string;
+  effects?: HookedEffect[]; //Hooks
+  // For example, a predicate to check if card can be targeted
+  canBeTargeted?: (card: CardInstance, state: GameState) => boolean;
 };

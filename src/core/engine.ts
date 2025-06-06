@@ -1,31 +1,10 @@
-import { GameState, GameConfig, GamePhase } from './types.js';
+import { GameConfig, GamePhase } from './types.js';
 import {
   MAX_ROUNDS
 } from './constants.js';
 import { checkEndOfRound, endRound, endTurn, getGameState, mulliganCards, setToPhase, startRound, startTurn } from './state.js';
-//TODO: MOVE TO state.ts
-export function resetForNewRound(state: GameState): GameState {
-  state.currentRound += 1;
-  state.phase = GamePhase.Draw;
-  state.players.friendly.passed = false;
-  state.players.enemy.passed = false;
-  return state;
-}
 
 export async function gameLoop(config: GameConfig) {
-  /**
-   * Start: Round 1 - Draw Phase
-   * startRound() - draws cards for both players
-   * nextPhase() - sets phase to Mulligan
-   * mulligan() - allows players to mulligan cards
-   * nextPhase() - sets phase to Play
-   * makeMove() - wait for UI input from player
-   * checkEndOfRound() - checks if both players passed - or if both hands are empty
-   * nextPhase() - sets phase to RoundEnd
-   * endRound() - calculates round winner, updates round wins - cleans up state for next round
-   * startRound() - ↻ loops back to the start of the next round
-   */
-
   while (getGameState().phase !== GamePhase.GameOver) {
     if (getGameState().phase === GamePhase.Draw) {
       // Reset the turn state for the new round
