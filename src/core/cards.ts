@@ -1,4 +1,4 @@
-import { CardCategory, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole } from '../core/types.js';
+import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole, StatusType } from '../core/types.js';
 import { getCardRow, getCardRowIndex } from './helpers/board.js';
 import { boostCard, dealDamage, getCardController, spawnCard, triggerHook } from './state.js';
 /**
@@ -16,13 +16,34 @@ export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean
   return getCardController(source) === player;
 }
 
+export const isFriendly = (source: CardInstance, target: CardInstance) => {
+  //TODO: also check if it is on the board.
+  return getCardController(source) === getCardController(target);
+}
 export const isEnemy = (source: CardInstance, target: CardInstance) => {
   //TODO: also check if it is on the board.
-  if (getCardController(source) !== getCardController(target)) {
-    return true;
-  } else {
-    return false;
+  return getCardController(source) !== getCardController(target)
+}
+
+/**
+ * Color helpers
+*/
+function getColorCounts(card: CardDefinition): Record<CardColor, number> {
+  const counts: Record<CardColor, number> = {
+    [CardColor.White]: 0,
+    [CardColor.Blue]: 0,
+    [CardColor.Black]: 0,
+    [CardColor.Red]: 0,
+    [CardColor.Green]: 0,
+  };
+  for (const color of card.colors ?? []) {
+    counts[color]++;
   }
+  return counts;
+}
+function cardHasColor(card: CardDefinition, color: CardColor): boolean {
+  //TODO: maybe rework to cardIsColor and cardIsPrimaryColor - primary means its the majority
+  return (card.colors ?? []).includes(color);
 }
 
 /**
@@ -38,7 +59,7 @@ const thrive1 = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
     if (canThrive(context)) {
-      boostCard(context.self, 1, { source: context.self });
+      boostCard(context.self, 1, context.self);
       triggerHook(HookType.OnThriveTrigger, { source: context.self });
     }
   }
@@ -47,7 +68,7 @@ const thrive2 = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
     if (canThrive(context)) {
-      boostCard(context.self, 2, { source: context.self });
+      boostCard(context.self, 2, context.self);
       triggerHook(HookType.OnThriveTrigger, { source: context.self });
     }
   }
@@ -58,43 +79,43 @@ export const cardDefinitions: CardDefinition[] = [
     id: 'token_cow',
     name: 'Cow',
     category: CardCategory.Unit,
-    basePower: 1,
     provisionCost: 0,
+    basePower: 1,
     baseArmor: 0,
     type: ['Cow', 'Token'],
     rarity: CardRarity.Bronze,
-    color: '',
     description: 'Doomed.',
     isToken: true,
-    isValidRow: isFriendlyRow
+    isValidRow: isFriendlyRow,
+    innateStatuses: [StatusType.Doomed]
   },
   {
     id: 'token_sand_soldier',
     name: 'Sand Soldier',
     category: CardCategory.Unit,
-    basePower: 1,
     provisionCost: 0,
+    basePower: 1,
     baseArmor: 1,
     type: ['Soldier', 'Token'],
     rarity: CardRarity.Bronze,
-    color: '',
     description: 'Doomed.',
     isToken: true,
-    isValidRow: isFriendlyRow
+    isValidRow: isFriendlyRow,
+    innateStatuses: [StatusType.Doomed]
   },
   {
     id: 'token_frog',
     name: 'Frog',
     category: CardCategory.Unit,
-    basePower: 1,
     provisionCost: 0,
+    basePower: 1,
     baseArmor: 0,
     type: ['Frog', 'Token'],
     rarity: CardRarity.Bronze,
-    color: '',
     description: 'Doomed.',
     isToken: true,
-    isValidRow: isFriendlyRow
+    isValidRow: isFriendlyRow,
+    innateStatuses: [StatusType.Doomed]
   },
   {
     id: 'card4',
@@ -169,10 +190,12 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card11',
     name: 'Card Eleven',
-    type: ['warrior'],
-    basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,
+    basePower: 5,
+    baseArmor: 0,
+    type: ['Warrior'],
+    rarity: CardRarity.Bronze,
     description: 'Play: Deal 2 damage to an enemy unit.',
     //artworkUrl: '/assets/cards/card11.png',
     effects: [
@@ -180,7 +203,7 @@ export const cardDefinitions: CardDefinition[] = [
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
           if (sourceIsSelf(context)) {
-            dealDamage(context.target, 2, { source: context.self });
+            dealDamage(context.target, 2, context.self);
           }
         },
         validTargets: isEnemy
@@ -191,17 +214,19 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card12',
     name: 'Card Twelve',
-    type: ['Warrior'],
-    basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,
+    basePower: 5,
+    baseArmor: 0,
+    type: ['Warrior'],
+    rarity: CardRarity.Bronze,
     description: 'Turn End: Boost this by 1.',
     effects: [
       {
         hook: HookType.OnTurnEnd,
         effect: (context: EffectContext) => {
           if (isFriendlyTurn(context)) {
-            boostCard(context.self, 1, { source: context.self });
+            boostCard(context.self, 1, context.self);
           }
         }
       }
@@ -211,11 +236,16 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'unit_nekker',
     name: 'Nekker',
-    type: ['Monster'],
-    basePower: 1,
     category: CardCategory.Unit,
     provisionCost: 4,
+    basePower: 1,
+    baseArmor: 1,
+    type: ['Monster'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.Green],
     description: 'Thrive. Play: Spawn a base copy of self on this row',
+    tags: ['Thrive'],
+    sets: ['Witcher'],
     isValidRow: isFriendlyRow,
     effects: [
       thrive1,
@@ -224,9 +254,39 @@ export const cardDefinitions: CardDefinition[] = [
         effect: (context: EffectContext) => {
           // Spawn a base copy of self on this row
           if (sourceIsSelf(context)) {
-            spawnCard(context.self.baseCard, getCardRow(context.self), getCardRowIndex(context.self) + 1, { player: getCardController(context.self), source: context.self });
+            spawnCard(context.self.baseCard, getCardRow(context.self), getCardRowIndex(context.self) + 1, context.self);
           }
         }
+      }
+    ]
+  },
+  {
+    id: 'unit_squire',
+    name: 'Squire',
+    category: CardCategory.Unit,
+    provisionCost: 4,
+    basePower: 2,
+    baseArmor: 0,
+    type: ['Human', 'Soldier'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.White],
+    description: 'Play: Boost a friendly unit by 2. If it has armor, boost it by 4 instead',
+    tags: ['Armor'],
+    sets: ['Base'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      {
+        hook: HookType.OnPlay,
+        effect: (context: EffectContext) => {
+          if (sourceIsSelf(context)) {
+            if (context.target.currentArmor > 0) {
+              boostCard(context.target, 4, context.self);
+            } else {
+              boostCard(context.target, 2, context.self);
+            }
+          }
+        },
+        validTargets: isFriendly
       }
     ]
   }

@@ -13,6 +13,8 @@ import { HTML5Backend } from "react-dnd-html5-backend";
  * TODO:
  * Implement hooks (one at a time)
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
+ * Playing special cards
+ * Playing resource cards 
  * Allow UI to activate abilities
  * UI Multi targeting
  * Mulligan

@@ -1,15 +1,9 @@
 import { SHUFFLE_DECKS } from "../constants";
-import { CardDefinition, CardInstance, PlayerRole, StatusId } from "../types";
+import { CardDefinition, CardInstance, PlayerRole, StatusType } from "../types";
 
 export function buildDeck(deck: CardDefinition[], owner: PlayerRole): CardInstance[] {
-    const gameDeck: CardInstance[] = deck.map(cardDef => ({
-        instanceId: crypto.randomUUID(),
-        baseCard: cardDef,
-        owner,
-        currentPower: cardDef.basePower,
-        statuses: new Set(),
-    }));
-    if(SHUFFLE_DECKS) {
+    const gameDeck: CardInstance[] = deck.map(cardDef => createCardInstance(cardDef, owner));
+    if (SHUFFLE_DECKS) {
         shuffleDeck(gameDeck);
     }
     return gameDeck;
@@ -30,6 +24,7 @@ export function createCardInstance(def: CardDefinition, player: PlayerRole): Car
         baseCard: def,
         owner: player,
         currentPower: def.basePower,
-        statuses: new Set<StatusId>(),
+        currentArmor: def.baseArmor,
+        statuses: new Set<StatusType>(def.innateStatuses ?? []),
     };
 }

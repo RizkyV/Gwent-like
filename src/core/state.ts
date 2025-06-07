@@ -3,6 +3,7 @@ import { ALWAYS_ENEMY_START_PLAYER, ALWAYS_FRIENDLY_START_PLAYER, CARDS_DRAWN_RO
 import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
+import { getStatusEffect } from './helpers/status.js';
 
 let gameState: GameState | null = null;
 const listeners: Array<(state: GameState | null) => void> = [];
@@ -334,6 +335,8 @@ export function playCard(card: CardInstance, player: PlayerRole, rowType: RowTyp
   newState.turn.hasPlayedCard = true;
   setGameState(newState);
   triggerHook(HookType.OnPlay, { source: card, target: target });
+  triggerHook(HookType.OnSummoned, {source: card, player: player})
+  //TODO: also trigger the onSummoned hook?
 }
 /**
  * 
@@ -477,6 +480,9 @@ export function triggerHook(
 
   for (const card of allCards) {
     const hookedEffects = card.baseCard.effects?.filter(e => e.hook === hook) || [];
+    const statuses = card.statuses ? Array.from(card.statuses).flatMap(status => getStatusEffect(status).effects?.filter(e => e.hook === hook) || []) : [];
+    hookedEffects.push(...statuses)
+    //TODO: ORDER ORDER ORDER
     for (const { effect } of hookedEffects) {
       const scopedContext: EffectContext = {
         ...context,
@@ -508,7 +514,7 @@ export function getCardController(card: CardInstance): PlayerRole {
  * @param amount The amount of damage to deal
  * @param context The effect context (source, player, etc.)
  */
-export function dealDamage(target: CardInstance, amount: number, context: EffectContext): void {
+export function dealDamage(target: CardInstance, amount: number, source: CardInstance): void {
   const newState = { ...gameState };
   //Find the target card in the game state
   const targetCard = findCardOnBoard(newState, target.instanceId);
@@ -523,7 +529,7 @@ export function dealDamage(target: CardInstance, amount: number, context: Effect
   setGameState(newState);
   //TODO: send along the source
   triggerHook(HookType.OnDamaged, {
-    ...context,
+    source: source,
     metadata: {
       damagedCard: targetCard,
       damageAmount: damagedAmount,
@@ -531,7 +537,7 @@ export function dealDamage(target: CardInstance, amount: number, context: Effect
   });
 }
 
-export function boostCard(target: CardInstance, amount: number, context: EffectContext): void {
+export function boostCard(target: CardInstance, amount: number, source: CardInstance): void {
   const newState = { ...gameState };
   //Find the target card in the game state
   const targetCard = findCardOnBoard(newState, target.instanceId);
@@ -545,7 +551,7 @@ export function boostCard(target: CardInstance, amount: number, context: EffectC
   setGameState(newState);
   //TODO: send along the source
   triggerHook(HookType.OnBoosted, {
-    ...context,
+    source: source,
     target: targetCard,
     metadata: {
       boostedCard: targetCard,
@@ -554,14 +560,18 @@ export function boostCard(target: CardInstance, amount: number, context: EffectC
   });
 }
 
-export function spawnCard(target: CardDefinition, row: Row, index: number, context: EffectContext): void {
+export function spawnCard(target: CardDefinition, row: Row, index: number, source: CardInstance): void {
   const newState = { ...gameState };
   //TODO: check for all sort of stuff
-
-  const newCard = createCardInstance(target, context.player)
-  const targetRow = newState.players[context.player].rows.find(_row => _row.type === row.type);
+  const player = getCardController(source);
+  const newCard = createCardInstance(target, player)
+  const targetRow = newState.players[player].rows.find(_row => _row.type === row.type);
   targetRow.cards.splice(index, 0, newCard)
   setGameState(newState);
+  triggerHook(HookType.OnSummoned, {
+    source: source,
+    player: player
+  })
 }
 
 /**

@@ -15,7 +15,7 @@ export const uiPlayer: PlayerController = {
   type: 'human',
   makeMove: async (_role: PlayerRole) => {
     console.log(`It's your turn. Waiting for your move...`);
-    // Wait for the UI to call uiPlayerMove with the new state
+    // Wait for the UI to end the turn
     return await new Promise<void>(resolve => {
       resolveMove = resolve;
     });

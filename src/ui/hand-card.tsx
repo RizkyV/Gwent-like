@@ -42,6 +42,12 @@ export const HandCard: React.FC<CardProps> = ({
       <div className="card__power">
         Power: <span>{card.currentPower}</span>
       </div>
+      {card.currentArmor > 0 &&
+        <div className="card__armor">
+          Armor: <span>{card.currentArmor}</span>
+        </div>
+      }
+
       {card.baseCard.type && <div className="card__type">Type: {card.baseCard.type.join(", ")}</div>}
       {card.baseCard.category && <div className="card__category">Category: {card.baseCard.category}</div>}
       {card.baseCard.provisionCost !== undefined && (

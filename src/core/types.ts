@@ -86,17 +86,23 @@ export enum CardRarity {
   Bronze = 'bronze',
   Gold = 'gold',
 }
-
+export enum CardColor {
+  White = 'W',
+  Blue = 'U',
+  Black = 'B',
+  Red = 'R',
+  Green = 'G',
+}
 export interface CardDefinition {
   id: string;
   name: string;
   category: CardCategory;
-  basePower: number;
   provisionCost: number;
+  basePower: number;
   baseArmor?: number;
   type?: string[]; //races - classes - factions
   rarity?: CardRarity
-  color?: string; //e.g. 'blue', 'red', 'green'
+  colors?: CardColor[];
   description?: string;
   flavorText?: string;
   artworkUrl?: string; //URL to card artwork
@@ -104,17 +110,19 @@ export interface CardDefinition {
   sets?: string[]; //set groupings
   isToken?: boolean;
   isValidRow: (source: CardInstance, player: PlayerRole, rowId: RowType) => boolean;
+  innateStatuses?: StatusType[];
   effects?: HookedEffect[]; //Hooks
+  predicates?: Predicate[]; //Predicates
 }
 
 export interface CardInstance {
-  instanceId: string; //Unique per game instance (e.g. UUID)
+  instanceId: string; //Unique ID per game instance
   baseCard: CardDefinition; //Reference to static card definition
   owner: PlayerRole;
   currentPower: number; //Modifiable in-game value
   currentArmor?: number;
   currentBasePower?: number; //Base power can change due to effects
-  statuses: Set<StatusId>;
+  statuses: Set<StatusType>;
 }
 
 export type HookedEffect = {
@@ -163,12 +171,26 @@ type EffectMetadata =
   | { abilityId: string }
   | Record<string, any>; // fallback
 
-export type StatusId = 'locked' | 'poisoned' | 'veil' | string;
+export enum PredicateType {
+  canBeTargeted = 'canBeTargeted',
+  canBeDamaged = 'canBeDamaged',
+}
+export type Predicate = {
+  type: PredicateType;
+  check: (context: EffectContext) => boolean;
+};
+export enum StatusType {
+  Locked = 'locked',
+  Poisoned = 'poisoned',
+  Veil = 'veil',
+  Shield = 'shield',
+  Doomed = 'doomed',
+  //add more as needed
+}
 
 export type StatusEffect = {
-  id: StatusId;
+  type: StatusType;
   description: string;
   effects?: HookedEffect[]; //Hooks
-  // For example, a predicate to check if card can be targeted
-  canBeTargeted?: (card: CardInstance, state: GameState) => boolean;
+  predicates?: Predicate; // Optional predicates for additional logic
 };

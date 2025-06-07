@@ -1,6 +1,6 @@
 import { CardInstance, PlayerRole, Row, GameState } from "../types";
-import { statusEffects } from '../statuses.js';
 import { getGameState } from "../state";
+import { getStatusEffect } from "./status";
 
 export function flipCoin(): boolean {
   return Math.random() < 0.5;
@@ -22,10 +22,10 @@ export function getRowById(rows: Row[], type: 'melee' | 'ranged'): Row | undefin
 
 export function canTargetCard(card: CardInstance, state: GameState): boolean {
   for (const status of Array.from(card.statuses)) {
-    const effect = statusEffects[status];
-    if (effect?.canBeTargeted && !effect.canBeTargeted(card, state)) {
+    const effect = getStatusEffect(status);
+/*     if (effect?.canBeTargeted && !effect.canBeTargeted(card, state)) {
       return false;
-    }
+    } */
   }
   return true;
 }
