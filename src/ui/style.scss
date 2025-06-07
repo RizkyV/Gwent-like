@@ -6,53 +6,85 @@ $card-border: #333;
 $card-highlight: gold;
 $text-color: #fff;
 
-body,
-html {
+html, body {
   margin: 0;
   padding: 0;
   background: $app-bg;
+  width: 100vw;
+  height: 100vh;
+  min-width: 100vw;
+  min-height: 100vh;
+  overflow: hidden;
 }
 
 .app {
   background: $app-bg;
   min-height: 100vh;
-  padding: 24px;
-  padding-right: 20%
+  min-width: 100vw;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: 0;
 }
 
-.app__title {
-  color: $text-color;
-  text-align: center;
-  font-size: 3em;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  margin: 32px 0 24px 0;
-  text-shadow: 0 4px 24px rgba(255, 215, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.25);
+.board {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
 }
 
 .hand {
-  margin: 16px 0;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 
   &__title {
     color: $text-color;
+    font-size: 1em;
+    margin-bottom: 2px;
+    text-align: center;
   }
 
   &__cards {
     display: flex;
     flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0.4em;
+    width: 100vw;
+    min-height: 100px;
+    margin: 0 auto;
+    padding: 0;
   }
 }
 
-
 .row {
+  width: 100vw;
+  min-height: 90px;
+  max-height: 120px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin: 18px 0 32px 0;
-  padding: 16px 32px;
+  margin: 8px 0 8px 0;
+  padding: 8px 18px;
   background: linear-gradient(120deg, #2d2d2d 80%, #232323 100%);
-  border-radius: 18px;
-  box-shadow: 0 2px 16px 2px rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px 2px rgba(0, 0, 0, 0.10);
   border: 2px solid #444;
 
   &--friendly {
@@ -69,12 +101,12 @@ html {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
-    padding: 0 8px;
+    margin-bottom: 4px;
+    padding: 0 6px;
   }
 
   &__title {
-    font-size: 1.1em;
+    font-size: 1em;
     font-weight: bold;
     color: #e0e0e0;
     text-transform: capitalize;
@@ -82,7 +114,7 @@ html {
   }
 
   &__points {
-    font-size: 1em;
+    font-size: 0.95em;
     color: #ffd700;
     font-weight: bold;
     letter-spacing: 1px;
@@ -92,18 +124,19 @@ html {
     display: flex;
     flex-direction: row;
     align-items: flex-end;
-    min-height: 140px;
-    padding: 8px 0;
-    gap: 0.5em;
+    min-height: 60px;
+    padding: 2px 0;
+    gap: 0.3em;
     position: relative;
-    justify-content: center; // Center cards in the row
+    justify-content: center;
+    width: 100vw;
   }
 
   &__drop-zone {
-    width: 32px;
-    height: 120px;
-    margin: 0 2px;
-    border-radius: 8px;
+    width: 22px;
+    height: 60px;
+    margin: 0 1px;
+    border-radius: 6px;
     background: transparent;
     border: 2px dashed transparent;
     transition: background 0.2s, border-color 0.2s;
@@ -125,39 +158,54 @@ html {
 
 .card {
   border: 1px solid $card-border;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 6px;
+  padding: 6px;
   background: $card-bg;
   color: $text-color;
-  width: 160px;
-  margin: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  cursor: default;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  height: 110px;
+  min-height: 110px;
+  max-height: 110px;
+  margin: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.13);
+  cursor: pointer;
   user-select: none;
   transition: box-shadow 0.18s, border-color 0.18s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 
   &--highlight {
     border: 2px solid $card-highlight;
-    box-shadow: 0 0 12px 2px $card-highlight;
+    box-shadow: 0 0 8px 1px $card-highlight;
   }
 
   &__art {
-    width: 70px;
-    height: 70px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     border-radius: 6px;
-    margin-bottom: 8px;
+    margin: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
   }
 
   &__name {
     font-weight: bold;
-    font-size: 1.2em;
+    font-size: 0.95em;
   }
 
   &__power,
   &__armor {
     font-weight: normal;
-
+    font-size: 0.95em;
     span {
       font-weight: bold;
     }
@@ -165,43 +213,55 @@ html {
 
   &__type,
   &__category,
-  &__provision {
-    font-size: 0.95em;
-    margin-top: 2px;
+  &__provision,
+  &__description {
+    font-size: 0.85em;
+    margin-top: 1px;
   }
 
+   // Make sure content overlays (like tooltip) are above the image
   &__description-tooltip {
     position: absolute;
-    top: 100%;
     left: 0;
     z-index: 10;
     background: #222;
     color: #fff;
     border: 1px solid #555;
     border-radius: 6px;
-    padding: 8px;
-    margin-top: 4px;
-    min-width: 180px;
+    padding: 6px;
+    min-width: 120px;
+    max-width: 220px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    font-size: 0.95em;
+    font-size: 0.85em;
     pointer-events: none;
+    // Default: open downward
+    top: 100%;
+    margin-top: 2px;
+
+    // Open upward if .card--tooltip-upwards is present
+    .card--tooltip-upwards & {
+      top: auto;
+      bottom: 100%;
+      margin-top: 0;
+      margin-bottom: 2px;
+    }
   }
 
   &__action-btn {
     position: absolute;
-    bottom: 8px;
+    bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
     background: $card-highlight;
     color: #222;
     border: none;
-    border-radius: 6px;
-    padding: 6px 18px;
-    font-size: 1em;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 0.95em;
     font-weight: bold;
     cursor: pointer;
     z-index: 2;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.13);
     transition: background 0.15s;
 
     &:hover {
@@ -210,23 +270,25 @@ html {
   }
 }
 
-
-
 .game-info {
+  position: absolute;
+  top: 24px;
+  right: 32px;
   color: $text-color;
-  background: rgba(34, 34, 51, 0.95);
+  background: rgba(34, 34, 51, 0.97);
   border: 2px solid $card-highlight;
   border-radius: 10px;
-  padding: 18px 28px;
-  margin: 24px auto 32px auto;
-  font-size: 1.35em;
+  padding: 10px 18px;
+  font-size: 1em;
   font-weight: bold;
-  box-shadow: 0 2px 16px 2px rgba(255, 215, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.25);
-  max-width: 480px;
-  text-align: center;
+  box-shadow: 0 2px 8px 2px rgba(255, 215, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.13);
+  min-width: 180px;
+  max-width: 340px;
+  text-align: left;
+  z-index: 200;
 
   div {
-    margin: 6px 0;
+    margin: 2px 0;
   }
 
   span {
@@ -234,31 +296,31 @@ html {
   }
 
   .player-points {
-    margin: 12px 0 0 0;
-    font-size: 1.35em;
+    margin: 6px 0 0 0;
+    font-size: 1em;
     font-weight: bold;
     color: $card-highlight;
-    text-shadow: 0 2px 8px rgba(255, 215, 0, 0.10);
+    text-shadow: 0 2px 6px rgba(255, 215, 0, 0.10);
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-end;
 
     .player-points__enemy,
     .player-points__friendly {
-      margin: 2px 0;
+      margin: 1px 0;
     }
   }
 
   .game-over-banner {
-    margin-top: 18px;
-    padding: 14px 0;
-    font-size: 1.5em;
+    margin-top: 6px;
+    padding: 6px 0;
+    font-size: 1.05em;
     font-weight: bold;
     color: $card-highlight;
     background: rgba(40, 40, 20, 0.95);
     border: 2px solid $card-highlight;
-    border-radius: 10px;
-    box-shadow: 0 2px 16px 2px rgba(255, 215, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.18);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px 2px rgba(255, 215, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.13);
     letter-spacing: 1px;
   }
 }
@@ -266,17 +328,17 @@ html {
 .end-turn-btn {
   position: fixed;
   top: 50%;
-  right: 32px;
+  right: 24px;
   transform: translateY(-50%);
   background: $card-highlight;
   color: #222;
   border: none;
   border-radius: 8px;
-  padding: 16px 36px;
-  font-size: 1.25em;
+  padding: 10px 24px;
+  font-size: 1em;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.13);
   transition: background 0.15s;
   z-index: 100;
 

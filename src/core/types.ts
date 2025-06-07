@@ -129,6 +129,7 @@ export type HookedEffect = {
   hook: HookType;
   effect: GameEffect;
   validTargets?: (source: CardInstance, target: CardInstance) => boolean; // Optional function to validate targets
+  zone?: Zone | ((context: EffectContext) => boolean); //Optional zones to trigger hook in - defaults to RowMelee and RowRanged
 };
 
 export enum HookType {

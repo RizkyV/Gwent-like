@@ -1,5 +1,6 @@
-import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole, StatusType } from '../core/types.js';
+import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole, StatusType, Zone } from '../core/types.js';
 import { getCardRow, getCardRowIndex } from './helpers/board.js';
+import { removeStatus } from './helpers/status.js';
 import { boostCard, dealDamage, getCardController, spawnCard, triggerHook } from './state.js';
 /**
  * Helpers
@@ -16,12 +17,14 @@ export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean
   return getCardController(source) === player;
 }
 
-export const isFriendly = (source: CardInstance, target: CardInstance) => {
+export const isFriendlyUnit = (source: CardInstance, target: CardInstance) => {
   //TODO: also check if it is on the board.
+  if (target.baseCard.category !== CardCategory.Unit) return;
   return getCardController(source) === getCardController(target);
 }
-export const isEnemy = (source: CardInstance, target: CardInstance) => {
+export const isEnemyUnit = (source: CardInstance, target: CardInstance) => {
   //TODO: also check if it is on the board.
+  if (target.baseCard.category !== CardCategory.Unit) return;
   return getCardController(source) !== getCardController(target)
 }
 
@@ -178,14 +181,20 @@ export const cardDefinitions: CardDefinition[] = [
     isValidRow: isFriendlyRow
   },
   {
-    id: 'card10',
-    name: 'Card Ten',
-    type: ['warrior'],
-    basePower: 5,
+    id: 'unit_olaf_champion_of_skellige',
+    name: 'Olaf, Champion of Skellige',
     category: CardCategory.Unit,
-    provisionCost: 5,
-    description: 'Card Ten',
-    isValidRow: isFriendlyRow
+    provisionCost: 11,
+    basePower: 15,
+    baseArmor: 0,
+    type: ['Bear'],
+    rarity: CardRarity.Gold,
+    colors: [CardColor.Green, CardColor.Green, CardColor.Green],
+    description: '',
+    artworkUrl: '/assets/cards/unit_olaf_champion_of_skellige.png',
+    tags: ['Tall', 'Dominance'],
+    sets: ['Witcher'],
+    isValidRow: isFriendlyRow,
   },
   {
     id: 'card11',
@@ -206,7 +215,7 @@ export const cardDefinitions: CardDefinition[] = [
             dealDamage(context.target, 2, context.self);
           }
         },
-        validTargets: isEnemy
+        validTargets: isEnemyUnit
       }
     ],
     isValidRow: isFriendlyRow
@@ -247,6 +256,7 @@ export const cardDefinitions: CardDefinition[] = [
     tags: ['Thrive'],
     sets: ['Witcher'],
     isValidRow: isFriendlyRow,
+    innateStatuses: [StatusType.Locked],
     effects: [
       thrive1,
       {
@@ -286,7 +296,62 @@ export const cardDefinitions: CardDefinition[] = [
             }
           }
         },
-        validTargets: isFriendly
+        validTargets: isFriendlyUnit
+      }
+    ]
+  },
+  {
+    id: 'resource_barracks',
+    name: 'Barracks',
+    category: CardCategory.Resource,
+    provisionCost: 5,
+    basePower: 0,
+    baseArmor: 0,
+    type: ['Location'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.White],
+    description: 'Whenever you play a Soldier, boost it by 1.',
+    tags: ['Soldier', 'Location', 'Inspired'],
+    sets: ['Base'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      {
+        hook: HookType.OnPlay,
+        effect: (context: EffectContext) => {
+          if (!sourceIsSelf(context)) {
+            if (context.source.baseCard.type.includes('Soldier')) {
+              boostCard(context.source, 1, context.self);
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: 'special_pardon',
+    name: 'Pardon',
+    category: CardCategory.Special,
+    provisionCost: 4,
+    basePower: 0,
+    baseArmor: 0,
+    type: ['Tactic', 'Noble'],
+    rarity: CardRarity.Bronze,
+    colors: [],
+    description: 'Remove a unit\'s lock and boost it by 5',
+    tags: ['Lock', 'Noble'],
+    sets: ['Base'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      {
+        hook: HookType.OnPlay,
+        effect: (context: EffectContext) => {
+          if (sourceIsSelf(context)) {
+            removeStatus(context.target, StatusType.Locked);
+            boostCard(context.target, 5, context.self);
+          }
+        },
+        validTargets: isFriendlyUnit,
+        zone: Zone.Graveyard
       }
     ]
   }

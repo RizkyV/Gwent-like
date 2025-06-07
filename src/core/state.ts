@@ -1,6 +1,6 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
 import { ALWAYS_ENEMY_START_PLAYER, ALWAYS_FRIENDLY_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
-import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row } from './types.js';
+import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
 import { getStatusEffect } from './helpers/status.js';
@@ -76,8 +76,8 @@ export function checkState(state: GameState): GameState {
   for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
     for (let rowIdx = 0; rowIdx < newState.players[role].rows.length; rowIdx++) {
       const row = newState.players[role].rows[rowIdx];
-      // Find dead cards (power <= 0)
-      const deadCards = row.cards.filter(card => card.currentPower <= 0);
+      // Find dead units (unit power <= 0)
+      const deadCards = row.cards.filter(card => card.currentPower <= 0 && card.baseCard.category === CardCategory.Unit);
       if (deadCards.length > 0) {
         // Remove dead cards from the row
         const survivingCards = row.cards.filter(card => card.currentPower > 0);
@@ -241,6 +241,7 @@ export function endRound() {
 // Moves a card to a specified zone for its owner
 //TODO: parameter for triggerHook
 export function moveToZone(card: CardInstance, player: PlayerRole, zone: Zone) {
+  //TODO: FIX THIS
   let owner: PlayerRole | null = null;
   let rowIdx = -1;
   let cardIdx = -1;
@@ -330,12 +331,16 @@ export function setToPhase(phase: GamePhase) {
 }
 
 export function playCard(card: CardInstance, player: PlayerRole, rowType: RowType, index: number, target?: CardInstance): void {
-  moveCardToBoard(card, player, rowType, index)
+  if (card.baseCard.category !== CardCategory.Special) {
+    moveCardToBoard(card, player, rowType, index)
+  } else {
+    moveToZone(card, player, Zone.Graveyard);
+  }
   const newState = { ...gameState };
   newState.turn.hasPlayedCard = true;
   setGameState(newState);
   triggerHook(HookType.OnPlay, { source: card, target: target });
-  triggerHook(HookType.OnSummoned, {source: card, player: player})
+  triggerHook(HookType.OnSummoned, { source: card, player: player })
   //TODO: also trigger the onSummoned hook?
 }
 /**
@@ -476,37 +481,54 @@ export function triggerHook(
   context: EffectContext,
 ): void {
   console.info(`Triggering hook: ${hook}`, context);
-  const allCards = [...gameState.players.friendly.rows, ...gameState.players.enemy.rows].flatMap(row => row.cards);
+  const allCards = [
+    ...gameState.players.friendly.rows.flatMap(row => row.cards),
+    ...gameState.players.enemy.rows.flatMap(row => row.cards),
+    ...gameState.players.friendly.hand,
+    ...gameState.players.enemy.hand,
+    ...gameState.players.friendly.deck,
+    ...gameState.players.enemy.deck,
+    ...gameState.players.friendly.graveyard,
+    ...gameState.players.enemy.graveyard,
+  ];
+  //TODO: ORDER ORDER ORDER
 
   for (const card of allCards) {
     const hookedEffects = card.baseCard.effects?.filter(e => e.hook === hook) || [];
     const statuses = card.statuses ? Array.from(card.statuses).flatMap(status => getStatusEffect(status).effects?.filter(e => e.hook === hook) || []) : [];
     hookedEffects.push(...statuses)
-    //TODO: ORDER ORDER ORDER
-    for (const { effect } of hookedEffects) {
+    for (const effect of hookedEffects) {
+      // Default: only trigger if card is on board, unless effect.zone says otherwise
+      const zoneCheck =
+        typeof effect.zone === 'function'
+          ? effect.zone(context)
+          : effect.zone
+            ? isCardInZone(card, effect.zone)
+            : isCardInZone(card, Zone.RowMelee) || isCardInZone(card, Zone.RowRanged);
+      if (!zoneCheck) continue;
       const scopedContext: EffectContext = {
         ...context,
         self: card,
       };
-      effect(scopedContext);
+      effect.effect(scopedContext);
     }
   }
 }
 
 export function getCardController(card: CardInstance): PlayerRole {
-  const cardId = card.instanceId;
-  const friendlyHasCard = gameState.players.friendly.rows.some(row =>
-    row.cards.some(c => c.instanceId === cardId)
-  );
-  const friendlyInHand = gameState.players.friendly.hand.some(c => c.instanceId === cardId);
-  if (friendlyHasCard || friendlyInHand) return 'friendly';
-  const enemyHasCard = gameState.players.enemy.rows.some(row =>
-    row.cards.some(c => c.instanceId === cardId)
-  );
-  const enemyInHand = gameState.players.friendly.hand.some(c => c.instanceId === cardId);
-  if (enemyHasCard || enemyInHand) return 'enemy';
-  throw new Error(`Could not determine controller of card with instanceId: ${cardId}`);
+  const position = getCardPosition(card);
+  return position.player
 }
+
+export function getCardZone(card: CardInstance): Zone {
+  const position = getCardPosition(card);
+  return position.zone;
+}
+
+export function isCardInZone(card: CardInstance, zone: Zone): boolean {
+  return getCardZone(card) === zone;
+}
+
 
 /**
  * Deals damage to a card and triggers hooks

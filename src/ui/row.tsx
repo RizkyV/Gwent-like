@@ -44,12 +44,9 @@ export const Row: React.FC<RowProps> = ({
   return (
     <div className="row">
       <div className="row__header">
-        {row.player && <h3 className="row__title">{row.player} {row.type} Row</h3>}
-        {row && (
-          <span className="row__points">
-            Points: <strong>{getRowPoints(row)}</strong>
-          </span>
-        )}
+        <span className="row__title">
+          {row.player} {row.type} Row <span className="row__points">({getRowPoints(row)})</span>
+        </span>
       </div>
       <div className="row__cards">
         {row.cards.map((card, idx) => (

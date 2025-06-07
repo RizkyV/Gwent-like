@@ -5,6 +5,7 @@ import {
 import { checkEndOfRound, endRound, endTurn, getGameState, mulliganCards, setToPhase, startRound, startTurn } from './state.js';
 
 export async function gameLoop(config: GameConfig) {
+  console.log('Game starting...');
   while (getGameState().phase !== GamePhase.GameOver) {
     if (getGameState().phase === GamePhase.Draw) {
       // Reset the turn state for the new round

@@ -18,6 +18,21 @@ export const HandCard: React.FC<CardProps> = ({
   showTargetButton,
 }) => {
   const [hovered, setHovered] = useState(false);
+  const [shouldOpenUpwards, setShouldOpenUpwards] = useState(false);
+  const cardRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (hovered && cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const tooltipHeight = 120; // Estimate or measure your tooltip height
+      if (rect.bottom + tooltipHeight > window.innerHeight) {
+        setShouldOpenUpwards(true);
+      } else {
+        setShouldOpenUpwards(false);
+      }
+    }
+  }, [hovered]);
+  
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'CARD',
     item: card,
@@ -26,41 +41,97 @@ export const HandCard: React.FC<CardProps> = ({
     }),
   }));
 
-  const divRef = React.useRef<HTMLDivElement>(null);
-  drag(divRef);
+  const combinedRef = (node: HTMLDivElement | null) => {
+    cardRef.current = node;
+    drag(node);
+  };
+
+  const hasArt = !!card.baseCard.artworkUrl;
 
   return (
-    <div ref={divRef}
-      className={`card${highlight ? " card--highlight" : ""}`}
+    <div
+      ref={combinedRef}
+      className={`card${highlight ? " card--highlight" : ""}${shouldOpenUpwards ? " card--tooltip-upwards" : ""}`}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{ position: "relative", opacity: isDragging ? 0.5 : 1 }}
     >
-      {card.baseCard.artworkUrl && <img className="card__art" src={card.baseCard.artworkUrl} alt={card.baseCard.name}></img>}
-      <div className="card__name">{card.baseCard.name}</div>
-      <div className="card__power">
-        Power: <span>{card.currentPower}</span>
-      </div>
-      {card.currentArmor > 0 &&
-        <div className="card__armor">
-          Armor: <span>{card.currentArmor}</span>
-        </div>
-      }
-
-      {card.baseCard.type && <div className="card__type">Type: {card.baseCard.type.join(", ")}</div>}
-      {card.baseCard.category && <div className="card__category">Category: {card.baseCard.category}</div>}
-      {card.baseCard.provisionCost !== undefined && (
-        <div className="card__provision">Provision: {card.baseCard.provisionCost}</div>
-      )}
-      {hovered && card.baseCard.description && (
-        <div className="card__description-tooltip">{card.baseCard.description}</div>
-      )}
-      {showPlayButton && (
-        <button className="card__action-btn">Play</button>
-      )}
-      {showTargetButton && (
-        <button className="card__action-btn">Target</button>
+      {hasArt ? (
+        <>
+          <img className="card__art" src={card.baseCard.artworkUrl!} alt={card.baseCard.name} />
+          {hovered && (
+            <div className="card__description-tooltip" style={{ zIndex: 10 }}>
+              <div className="card__name">{card.baseCard.name}</div>
+              <div className="card__power">
+                Power: <span>{card.currentPower}</span>
+              </div>
+              {card.currentArmor > 0 && (
+                <div className="card__armor">
+                  Armor: <span>{card.currentArmor}</span>
+                </div>
+              )}
+              {card.baseCard.type && (
+                <div className="card__type">Type: {card.baseCard.type.join(", ")}</div>
+              )}
+              {card.statuses && card.statuses.size > 0 && (
+                <div className="card__statuses">
+                  Statuses: {[...card.statuses].join(", ")}
+                </div>
+              )}
+              {card.baseCard.category && (
+                <div className="card__category">Category: {card.baseCard.category}</div>
+              )}
+              {card.baseCard.provisionCost !== undefined && (
+                <div className="card__provision">Provision: {card.baseCard.provisionCost}</div>
+              )}
+              {card.baseCard.description && (
+                <div className="card__description">{card.baseCard.description}</div>
+              )}
+              {showPlayButton && (
+                <button className="card__action-btn">Play</button>
+              )}
+              {showTargetButton && (
+                <button className="card__action-btn">Target</button>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="card__name">{card.baseCard.name}</div>
+          <div className="card__power">
+            Power: <span>{card.currentPower}</span>
+          </div>
+          {card.currentArmor > 0 && (
+            <div className="card__armor">
+              Armor: <span>{card.currentArmor}</span>
+            </div>
+          )}
+          {card.baseCard.type && (
+            <div className="card__type">Type: {card.baseCard.type.join(", ")}</div>
+          )}
+          {card.statuses && card.statuses.size > 0 && (
+            <div className="card__statuses">
+              Statuses: {[...card.statuses].join(", ")}
+            </div>
+          )}
+          {card.baseCard.category && (
+            <div className="card__category">Category: {card.baseCard.category}</div>
+          )}
+          {card.baseCard.provisionCost !== undefined && (
+            <div className="card__provision">Provision: {card.baseCard.provisionCost}</div>
+          )}
+          {hovered && card.baseCard.description && (
+            <div className="card__description">{card.baseCard.description}</div>
+          )}
+          {showPlayButton && (
+            <button className="card__action-btn">Play</button>
+          )}
+          {showTargetButton && (
+            <button className="card__action-btn">Target</button>
+          )}
+        </>
       )}
     </div>
   );

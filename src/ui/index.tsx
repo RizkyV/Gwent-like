@@ -16,6 +16,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
  * Playing special cards
  * Playing resource cards 
  * Allow UI to activate abilities
+ * If no legal targets - just play without triggering the effect
  * UI Multi targeting
  * Mulligan
  * Potential hook queueing - potential timing issues

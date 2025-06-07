@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import GameBoard from "./game-board";
 import { passTurn, playCard } from "../core/state";
-import { CardInstance, GameState, PlayerRole, RowType } from "../core/types";
+import { CardCategory, CardInstance, GameState, PlayerRole, RowType } from "../core/types";
 import { playerEndTurn } from "../controllers/uiPlayer";
 
 type GameControllerProps = {
