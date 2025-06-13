@@ -4,6 +4,8 @@ import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, Ho
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
 import { getStatusEffect } from './helpers/status.js';
+import { getCardIdInstancesForPlayer } from './helpers/board.js';
+import { cardDefinitions } from './cards.js';
 
 let gameState: GameState | null = null;
 const listeners: Array<(state: GameState | null) => void> = [];
@@ -34,28 +36,28 @@ export function resetGameState(friendlyDeck: CardDefinition[], enemyDeck: CardDe
     players: {
       friendly: {
         hand: [],
-        deck: buildDeck(friendlyDeck, 'friendly'),
+        deck: buildDeck(friendlyDeck, PlayerRole.Friendly),
         graveyard: [],
         rows: [
-          { type: RowType.Melee, cards: [], player: 'friendly' },
-          { type: RowType.Ranged, cards: [], player: 'friendly' }
+          { type: RowType.Melee, cards: [], player: PlayerRole.Friendly },
+          { type: RowType.Ranged, cards: [], player: PlayerRole.Friendly }
         ],
         passed: false,
         roundWins: 0
       },
       enemy: {
         hand: [],
-        deck: buildDeck(enemyDeck, 'enemy'),
+        deck: buildDeck(enemyDeck, PlayerRole.Enemy),
         graveyard: [],
         rows: [
-          { type: RowType.Melee, cards: [], player: 'enemy' },
-          { type: RowType.Ranged, cards: [], player: 'enemy' }
+          { type: RowType.Melee, cards: [], player: PlayerRole.Enemy },
+          { type: RowType.Ranged, cards: [], player: PlayerRole.Enemy }
         ],
         passed: false,
         roundWins: 0
       }
     },
-    currentPlayer: ALWAYS_FRIENDLY_START_PLAYER ? 'friendly' : ALWAYS_ENEMY_START_PLAYER ? 'enemy' : (flipCoin() ? 'friendly' : 'enemy'),
+    currentPlayer: ALWAYS_FRIENDLY_START_PLAYER ? PlayerRole.Friendly : ALWAYS_ENEMY_START_PLAYER ? PlayerRole.Enemy : (flipCoin() ? PlayerRole.Friendly : PlayerRole.Enemy),
     currentRound: 0,
     phase: GamePhase.Draw,
     turn: {
@@ -495,7 +497,7 @@ export function triggerHook(
 
   for (const card of allCards) {
     const hookedEffects = card.baseCard.effects?.filter(e => e.hook === hook) || [];
-    const statuses = card.statuses ? Array.from(card.statuses).flatMap(status => getStatusEffect(status).effects?.filter(e => e.hook === hook) || []) : [];
+    const statuses = card.statuses ? Array.from(card.statuses).flatMap(status => getStatusEffect(status[0]).effects?.filter(e => e.hook === hook) || []) : [];
     hookedEffects.push(...statuses)
     for (const effect of hookedEffects) {
       // Default: only trigger if card is on board, unless effect.zone says otherwise
@@ -529,6 +531,15 @@ export function isCardInZone(card: CardInstance, zone: Zone): boolean {
   return getCardZone(card) === zone;
 }
 
+export function isBonded(card: CardInstance): boolean {
+  const controller = getCardController(card);
+  const cardCount = getCardIdInstancesForPlayer(card, controller);
+  return cardCount > 1;
+}
+
+export function getCardBasePower(card: CardInstance): number {
+  return card.currentBasePower ?? card.baseCard.basePower;
+}
 
 /**
  * Deals damage to a card and triggers hooks
@@ -613,3 +624,20 @@ export function findCardOnBoard(state: GameState, targetId: string): CardInstanc
   }
   return null; // Card not found
 }
+
+/**
+ * Console Commands
+ */
+export function addCardToPlayerHand(index: number): CardInstance | null {
+  const cardDef = cardDefinitions[index];
+  if (!cardDef) {
+    console.warn("No card at index", index);
+    return null;
+  }
+  const newState = { ...gameState };
+  const newCard = createCardInstance(cardDef, PlayerRole.Friendly);
+  newState.players.friendly.hand = [...newState.players.friendly.hand, newCard];
+  setGameState(newState);
+  return newCard;
+}
+(window as any).addCardToPlayerHand = addCardToPlayerHand;

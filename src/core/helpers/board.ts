@@ -1,10 +1,10 @@
 import { getGameState } from "../state";
-import { CardInstance, PlayerRole, Row, RowType } from "../types";
+import { CardDefinition, CardInstance, PlayerRole, Row, RowType } from "../types";
 
 export function getAdjacentCards(card: CardInstance): CardInstance[] {
-    const adjacentCards: CardInstance[] = [];
+  const adjacentCards: CardInstance[] = [];
 
-    return adjacentCards;
+  return adjacentCards;
 }
 
 export function getCardRow(card: CardInstance): Row | null {
@@ -46,4 +46,18 @@ export function findCardOnBoard(targetId: string): CardInstance | null {
     }
   }
   return null; // Card not found
+}
+
+export function getCardIdInstancesForPlayer(card: CardInstance, player: PlayerRole): number {
+  const cards = [];
+
+  for (let r = 0; r < getGameState().players[player].rows.length; r++) {
+    const row = getGameState().players[player].rows[r];
+    for (let c = 0; c < row.cards.length; c++) {
+      if (row.cards[c].baseCard.id === card.baseCard.id) {
+        cards.push(row.cards[c]);
+      }
+    }
+  }
+  return cards.length;
 }

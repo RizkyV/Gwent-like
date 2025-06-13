@@ -7,7 +7,7 @@ import { uiPlayer } from '../controllers/uiPlayer.js';
 import { DEFAULT_DECK_SIZE } from '../core/constants.js';
 
 export const runGame = async () => {
-    const activeCardPool = [cardDefinitions[9], cardDefinitions[10], cardDefinitions[11], cardDefinitions[12], cardDefinitions[13], cardDefinitions[14], cardDefinitions[15]];
+    const activeCardPool = [cardDefinitions[9], cardDefinitions[16]];
     const passiveCardPool = cardDefinitions.slice(0, 10);
 
     const testActiveDeck: CardDefinition[] = Array.from({ length: 10/* DEFAULT_DECK_SIZE */ }, (_, i) => activeCardPool[i % activeCardPool.length]);

@@ -22,8 +22,8 @@ export function getRowById(rows: Row[], type: 'melee' | 'ranged'): Row | undefin
 
 export function canTargetCard(card: CardInstance, state: GameState): boolean {
   for (const status of Array.from(card.statuses)) {
-    const effect = getStatusEffect(status);
-/*     if (effect?.canBeTargeted && !effect.canBeTargeted(card, state)) {
+   /*  const effect = getStatusEffect(status);
+    if (effect?.canBeTargeted && !effect.canBeTargeted(card, state)) {
       return false;
     } */
   }

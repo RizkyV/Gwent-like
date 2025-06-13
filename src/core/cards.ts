@@ -1,7 +1,7 @@
 import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole, StatusType, Zone } from '../core/types.js';
 import { getCardRow, getCardRowIndex } from './helpers/board.js';
-import { removeStatus } from './helpers/status.js';
-import { boostCard, dealDamage, getCardController, spawnCard, triggerHook } from './state.js';
+import { addStatus, removeStatus } from './helpers/status.js';
+import { boostCard, dealDamage, getCardBasePower, getCardController, isBonded, spawnCard, triggerHook } from './state.js';
 /**
  * Helpers
  */
@@ -352,6 +352,36 @@ export const cardDefinitions: CardDefinition[] = [
         },
         validTargets: isFriendlyUnit,
         zone: Zone.Graveyard
+      }
+    ]
+  },
+  {
+    id: 'unit_plumard',
+    name: 'Plumard',
+    category: CardCategory.Unit,
+    provisionCost: 4,
+    basePower: 5,
+    baseArmor: 0,
+    type: ['Vampire'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.Black],
+    description: 'Play: Give an enemy unit Decay (2). Bonded: Give an enemy unit Decay (X), where X is it\'s base power instead',
+    tags: ['Decay', 'Bonded'],
+    sets: ['Witcher'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      {
+        hook: HookType.OnPlay,
+        effect: (context: EffectContext) => {
+          if (sourceIsSelf(context)) {
+            if (isBonded(context.self)) {
+              addStatus(context.target, StatusType.Decay, getCardBasePower(context.target));
+            } else {
+              addStatus(context.target, StatusType.Decay, 2);
+            }
+          }
+        },
+        validTargets: isEnemyUnit
       }
     ]
   }

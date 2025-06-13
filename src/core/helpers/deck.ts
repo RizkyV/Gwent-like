@@ -10,7 +10,7 @@ export function buildDeck(deck: CardDefinition[], owner: PlayerRole): CardInstan
 }
 
 export function shuffleDeck(deck: CardInstance[]): CardInstance[] {
-    // Fisher-Yates shuffle
+    //Fisher-Yates shuffle
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -25,6 +25,10 @@ export function createCardInstance(def: CardDefinition, player: PlayerRole): Car
         owner: player,
         currentPower: def.basePower,
         currentArmor: def.baseArmor,
-        statuses: new Set<StatusType>(def.innateStatuses ?? []),
+        statuses: new Map(
+            (def.innateStatuses ?? []).map(status =>
+                Array.isArray(status) ? [status[0], status[1]] : [status, true]
+            )
+        ),
     };
 }

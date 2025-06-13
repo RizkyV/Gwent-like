@@ -4,7 +4,7 @@ import { PlayerController, PlayerRole } from '../core/types.js';
 let resolveMove: (() => void) = null;
 
 // Call this from your UI when the player completes their move (play card, target, or pass)
-export function playerEndTurn() {
+export function playerMadeMove() {
   if (resolveMove) {
     resolveMove();
     resolveMove = null;

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import GameBoard from "./game-board";
 import { passTurn, playCard } from "../core/state";
-import { CardCategory, CardInstance, GameState, PlayerRole, RowType } from "../core/types";
-import { playerEndTurn } from "../controllers/uiPlayer";
+import { CardInstance, GameState, PlayerRole, RowType } from "../core/types";
+import { playerMadeMove } from "../controllers/uiPlayer";
 
 type GameControllerProps = {
     gameState: GameState;
@@ -16,6 +16,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
         player: PlayerRole;
         index: number;
     } | null>(null);
+    const hasTakenAction = gameState.turn.hasPlayedCard || gameState.turn.hasActivatedAbility;
 
     const handleCardDrop = (card: CardInstance, rowType: RowType, player: PlayerRole, index: number) => {
         if (!card) return;
@@ -67,14 +68,16 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
 
     // Handler for End Turn / Pass Turn button
     const handleEndOrPassTurn = () => {
-        if (!gameState.turn.hasPlayedCard && !gameState.turn.hasActivatedAbility) {
+        if (hasTakenAction) {
+            // Action taken, end turn
+            if (gameState.GameConfig.controllers[gameState.currentPlayer].type === 'human') {
+                playerMadeMove();
+            }
+        } else {
             // No action taken, pass turn
             passTurn(gameState.currentPlayer);
-            playerEndTurn();
-        } else {
-            // Action taken, end turn and notify uiPlayerMove
             if (gameState.GameConfig.controllers[gameState.currentPlayer].type === 'human') {
-                playerEndTurn();
+                playerMadeMove();
             }
         }
     };
@@ -91,7 +94,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
                 isValidTarget={isValidTarget}
             />
             <button className="end-turn-btn" onClick={handleEndOrPassTurn}>
-                {(!gameState.turn.hasPlayedCard && !gameState.turn.hasActivatedAbility) ? "Pass Turn" : "End Turn"}
+                {hasTakenAction ? "End Turn" : "Pass Turn"}
             </button>
         </div>
     );
