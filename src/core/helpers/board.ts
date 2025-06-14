@@ -48,7 +48,7 @@ export function findCardOnBoard(targetId: string): CardInstance | null {
   return null; // Card not found
 }
 
-export function getCardIdInstancesForPlayer(card: CardInstance, player: PlayerRole): number {
+export function getCardDefCountForPlayer(card: CardInstance, player: PlayerRole): number {
   const cards = [];
 
   for (let r = 0; r < getGameState().players[player].rows.length; r++) {

@@ -1,80 +1,107 @@
 import React, { useState } from "react";
 import GameBoard from "./game-board";
-import { passTurn, playCard } from "../core/state";
-import { CardInstance, GameState, PlayerRole, RowType } from "../core/types";
+import { passTurn, playCard, activateAbility, canActivateAbility } from "../core/state";
+import { CardInstance, GameState, PlayerRole, RowType, HookType } from "../core/types";
 import { playerMadeMove } from "../controllers/uiPlayer";
 
 type GameControllerProps = {
     gameState: GameState;
 };
 
+type PendingAction =
+    | { type: "play"; card: CardInstance; rowType: RowType; player: PlayerRole; index: number }
+    | { type: "ability"; card: CardInstance };
+
 const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
     const [selectedHandCard, setSelectedHandCard] = useState<CardInstance | null>(null);
     const [targeting, setTargeting] = useState(false);
-    const [pendingPlacement, setPendingPlacement] = useState<{
-        rowType: RowType;
-        player: PlayerRole;
-        index: number;
-    } | null>(null);
+    const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+
     const hasTakenAction = gameState.turn.hasPlayedCard || gameState.turn.hasActivatedAbility;
 
+    // Handler for dropping a card to play
     const handleCardDrop = (card: CardInstance, rowType: RowType, player: PlayerRole, index: number) => {
         if (!card) return;
-        const onPlayEffect = card.baseCard.effects?.find(e => e.hook === "onPlay");
+        if (gameState.turn.hasPlayedCard) {
+            console.warn('A card has already been played this turn');
+            return;
+        } 
+        const onPlayEffect = card.baseCard.effects?.find(e => e.hook === HookType.OnPlay);
         if (onPlayEffect && onPlayEffect.validTargets) {
             setSelectedHandCard(card);
             setTargeting(true);
-            setPendingPlacement({ rowType, player, index });
+            setPendingAction({ type: "play", card, rowType, player, index });
         } else {
             playCard(card, gameState.currentPlayer, rowType, index);
             setSelectedHandCard(null);
             setTargeting(false);
+            setPendingAction(null);
         }
     };
 
-    // Handler for clicking a card in hand - TODO: REMOVE
-    const handleHandCardClick = (card: CardInstance) => {
-        const onPlayEffect = card.baseCard.effects?.find(e => e.hook === "onPlay");
-        if (onPlayEffect && onPlayEffect.validTargets) {
-            setSelectedHandCard(card);
+    // Handler for activating an ability on a board card
+    const handleAbilityActivate = (card: CardInstance) => {
+        if (!canActivateAbility(card)) {
+            console.warn('Cards ability was not ready to be activated')
+            return;
+        }
+        const onAbilityEffect = card.baseCard.effects?.find(e => e.hook === HookType.OnAbilityActivated);
+        if (onAbilityEffect && onAbilityEffect.validTargets) {
             setTargeting(true);
+            setPendingAction({ type: "ability", card });
         } else {
-            playCard(card, gameState.currentPlayer, RowType.Ranged, 0);
-            setSelectedHandCard(null);
+            activateAbility(card);
             setTargeting(false);
+            setPendingAction(null);
         }
     };
 
-    // Handler for clicking a target on the board
+    // Handler for clicking a target on the board (for both play and ability)
     const handleBoardCardClick = (targetCard: CardInstance) => {
-        console.log("Card clicked (Board):", targetCard);
-        if (targeting && selectedHandCard) {
-            playCard(selectedHandCard, pendingPlacement.player, pendingPlacement.rowType, pendingPlacement.index, targetCard);
-            setSelectedHandCard(null);
-            setTargeting(false);
+        if (!targeting || !pendingAction) return;
+
+        if (pendingAction.type === "play") {
+            playCard(
+                pendingAction.card,
+                pendingAction.player,
+                pendingAction.rowType,
+                pendingAction.index,
+                targetCard
+            );
+        } else if (pendingAction.type === "ability") {
+            activateAbility(pendingAction.card, targetCard);
         }
+
+        setSelectedHandCard(null);
+        setTargeting(false);
+        setPendingAction(null);
     };
 
-    // Helper to determine if a card is a valid target
+    // Helper to determine if a card is a valid target (for both play and ability)
     const isValidTarget = (card: CardInstance): boolean => {
-        if (!targeting || !selectedHandCard) return false;
-        const onPlayEffect = selectedHandCard.baseCard.effects?.find(e => e.hook === "onPlay" && typeof e.validTargets === "function");
-        if (onPlayEffect && typeof onPlayEffect.validTargets === "function") {
-            return onPlayEffect.validTargets(selectedHandCard, card);
-        } else {
-            return false;
+        if (!targeting || !pendingAction) return false;
+
+        if (pendingAction.type === "play") {
+            const onPlayEffect = pendingAction.card.baseCard.effects?.find(
+                e => e.hook === HookType.OnPlay && typeof e.validTargets === "function"
+            );
+            return !!onPlayEffect?.validTargets?.(pendingAction.card, card);
+        } else if (pendingAction.type === "ability") {
+            const onAbilityEffect = pendingAction.card.baseCard.effects?.find(
+                e => e.hook === HookType.OnAbilityActivated && typeof e.validTargets === "function"
+            );
+            return !!onAbilityEffect?.validTargets?.(pendingAction.card, card);
         }
+        return false;
     };
 
     // Handler for End Turn / Pass Turn button
     const handleEndOrPassTurn = () => {
         if (hasTakenAction) {
-            // Action taken, end turn
             if (gameState.GameConfig.controllers[gameState.currentPlayer].type === 'human') {
                 playerMadeMove();
             }
         } else {
-            // No action taken, pass turn
             passTurn(gameState.currentPlayer);
             if (gameState.GameConfig.controllers[gameState.currentPlayer].type === 'human') {
                 playerMadeMove();
@@ -87,8 +114,8 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
             <GameBoard
                 gameState={gameState}
                 onCardDrop={handleCardDrop}
-                onHandCardClick={handleHandCardClick}
                 onBoardCardClick={handleBoardCardClick}
+                onAbilityActivate={handleAbilityActivate}
                 selectedHandCard={selectedHandCard}
                 isTargeting={targeting}
                 isValidTarget={isValidTarget}

@@ -6,8 +6,8 @@ import Row from "./row";
 export type BoardProps = {
     gameState: GameState;
     onCardDrop: (card: CardInstance, rowType: RowType, player: PlayerRole, index: number) => void;
-    onHandCardClick: (card: CardInstance) => void;
     onBoardCardClick: (card: CardInstance) => void;
+    onAbilityActivate: (card: CardInstance) => void;
     selectedHandCard: CardInstance | null;
     isTargeting: boolean;
     isValidTarget: (card: CardInstance) => boolean;
@@ -16,8 +16,8 @@ export type BoardProps = {
 export const GameInfo: React.FC<BoardProps> = ({
     gameState,
     onCardDrop,
-    onHandCardClick,
     onBoardCardClick,
+    onAbilityActivate,
     selectedHandCard,
     isTargeting,
     isValidTarget
@@ -27,16 +27,16 @@ export const GameInfo: React.FC<BoardProps> = ({
         <>
             <Hand
                 cards={gameState.players.enemy.hand}
-                onCardClick={onHandCardClick}
                 selectedCard={selectedHandCard}
                 isTargeting={isTargeting}
-                canPlay={false}
+                isValidTarget={isValidTarget}
                 title="Enemy Hand" />
 
             <Row
                 row={gameState.players.enemy.rows.find(r => r.type === RowType.Ranged)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
+                onAbilityActivate={onAbilityActivate}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
             />
@@ -44,6 +44,7 @@ export const GameInfo: React.FC<BoardProps> = ({
                 row={gameState.players.enemy.rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
+                onAbilityActivate={onAbilityActivate}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
             />
@@ -51,6 +52,7 @@ export const GameInfo: React.FC<BoardProps> = ({
                 row={gameState.players.friendly.rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
+                onAbilityActivate={onAbilityActivate}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
             />
@@ -58,16 +60,16 @@ export const GameInfo: React.FC<BoardProps> = ({
                 row={gameState.players.friendly.rows.find(r => r.type === RowType.Ranged)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
+                onAbilityActivate={onAbilityActivate}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
             />
 
             <Hand
                 cards={gameState.players.friendly.hand}
-                onCardClick={onHandCardClick}
                 selectedCard={selectedHandCard}
                 isTargeting={isTargeting}
-                canPlay={gameState.currentPlayer === 'friendly' && !gameState.turn.hasPlayedCard}
+                isValidTarget={isValidTarget}
                 title="Friendly Hand" />
         </>
     );

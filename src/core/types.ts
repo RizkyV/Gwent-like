@@ -31,13 +31,16 @@ export enum HookType {
   OnDiscard = 'onDiscard',
   OnMoved = 'onMoved',
   OnAbilityActivated = 'onAbilityActivated',
+
   //Keyword hooks
   OnDemiseTrigger = 'onDemiseTrigger',
   OnThriveTrigger = 'onThriveTrigger',
+  OnExposedTrigger = 'onExposedTrigger'
 }
 export enum PredicateType {
   canBeTargeted = 'canBeTargeted',
   canBeDamaged = 'canBeDamaged',
+  affectedBySummoningSickness = 'affectedBySummoningSickness'
 }
 
 // === PLAYER & GAME STATE ===
@@ -72,6 +75,7 @@ export type GameState = {
   currentRound: number;
   phase: GamePhase;
   turn: TurnState;
+  currentTurn: number;
   GameConfig: GameConfig;
 };
 
@@ -99,6 +103,10 @@ export interface CardInstance {
   currentArmor?: number;
   currentBasePower?: number; //Base power can change due to effects
   statuses: Map<StatusType, CardStatus>;
+  enteredTurn?: number;
+  abilityCooldown: number;
+  abilityCharges: number;
+  abilityCounter: number;
 }
 export interface CardDefinition {
   id: string;
@@ -119,6 +127,8 @@ export interface CardDefinition {
   isValidRow: (source: CardInstance, player: PlayerRole, rowId: RowType) => boolean;
   innateStatuses?: StatusType[];
   effects?: HookedEffect[];
+  abilityInitialCharges?: number;
+  abilityMaxCounter?: number;
   predicates?: Predicate[];
 }
 export interface CardStatus {

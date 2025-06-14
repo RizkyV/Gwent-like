@@ -5,13 +5,12 @@ import { CardInstance } from "../core/types";
 export type HandProps = {
   cards: CardInstance[];
   title?: string;
-  onCardClick: (card: CardInstance) => void;
   selectedCard?: CardInstance | null;
   isTargeting?: boolean;
-  canPlay?: boolean;
+  isValidTarget: (card: CardInstance) => boolean;
 };
 
-export const Hand: React.FC<HandProps> = ({ cards, title, onCardClick, selectedCard, isTargeting, canPlay }) => (
+export const Hand: React.FC<HandProps> = ({ cards, title, selectedCard, isTargeting, isValidTarget }) => (
   <div className="hand">
     {title && <h2 className="hand__title">{title}</h2>}
     <div className="hand__cards">
@@ -20,9 +19,7 @@ export const Hand: React.FC<HandProps> = ({ cards, title, onCardClick, selectedC
           key={card.instanceId}
           card={card}
           highlight={selectedCard?.instanceId === card.instanceId}
-          onClick={() => canPlay && onCardClick(card)}
-          showPlayButton={canPlay && !isTargeting}
-          showTargetButton={false}
+          showTargetButton={isTargeting && isValidTarget(card)}
         />
       ))}
     </div>

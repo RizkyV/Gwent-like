@@ -11,17 +11,13 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 
 /**
  * TODO:
+ * Implement summoning sickness
  * Implement hooks (one at a time)
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
- * Playing special cards
- * Playing resource cards 
- * Allow UI to activate abilities
  * If no legal targets - just play without triggering the effect
  * UI Multi targeting
  * Mulligan
  * Potential hook queueing - potential timing issues
- * Styling the UI to make it fill the screen correctly - place game-info absolutely in the top right corner
- * Remove previous play buttons - and rework target button to just use the whole card
 */
 
 const App = () => {

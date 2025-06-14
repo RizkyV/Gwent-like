@@ -1,5 +1,5 @@
 import { SHUFFLE_DECKS } from "../constants";
-import { CardDefinition, CardInstance, PlayerRole, StatusType } from "../types";
+import { CardDefinition, CardInstance, PlayerRole } from "../types";
 
 export function buildDeck(deck: CardDefinition[], owner: PlayerRole): CardInstance[] {
     const gameDeck: CardInstance[] = deck.map(cardDef => createCardInstance(cardDef, owner));
@@ -25,10 +25,14 @@ export function createCardInstance(def: CardDefinition, player: PlayerRole): Car
         owner: player,
         currentPower: def.basePower,
         currentArmor: def.baseArmor,
+        currentBasePower: def.basePower,
         statuses: new Map(
             (def.innateStatuses ?? []).map(status =>
                 Array.isArray(status) ? [status[0], status[1]] : [status, true]
             )
         ),
+        abilityCharges: def.abilityInitialCharges,
+        abilityCounter: 0,
+        abilityCooldown: 0
     };
 }

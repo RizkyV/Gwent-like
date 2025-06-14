@@ -1,7 +1,7 @@
-import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole, StatusType, Zone } from '../core/types.js';
+import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole, PredicateType, StatusType, Zone } from '../core/types.js';
 import { getCardRow, getCardRowIndex } from './helpers/board.js';
 import { addStatus, removeStatus } from './helpers/status.js';
-import { boostCard, dealDamage, getCardBasePower, getCardController, isBonded, spawnCard, triggerHook } from './state.js';
+import { activatedAbility, boostCard, dealDamage, decrementCooldown, getCardBasePower, getCardController, getCardPosition, isBonded, spawnCard, triggerHook } from './state.js';
 /**
  * Helpers
  */
@@ -17,14 +17,16 @@ export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean
   return getCardController(source) === player;
 }
 
-export const isFriendlyUnit = (source: CardInstance, target: CardInstance) => {
-  //TODO: also check if it is on the board.
-  if (target.baseCard.category !== CardCategory.Unit) return;
+export const isFriendlyUnit = (source: CardInstance, target: CardInstance): boolean => {
+  if (target.baseCard.category !== CardCategory.Unit) return false;
+  const position = getCardPosition(target);
+  if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
   return getCardController(source) === getCardController(target);
 }
-export const isEnemyUnit = (source: CardInstance, target: CardInstance) => {
-  //TODO: also check if it is on the board.
-  if (target.baseCard.category !== CardCategory.Unit) return;
+export const isEnemyUnit = (source: CardInstance, target: CardInstance): boolean => {
+  if (target.baseCard.category !== CardCategory.Unit) return false;
+  const position = getCardPosition(target);
+  if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
   return getCardController(source) !== getCardController(target)
 }
 
@@ -77,6 +79,22 @@ const thrive2 = {
   }
 }
 
+const handleCooldown = {
+  hook: HookType.OnTurnEnd,
+  effect: (context: EffectContext) => {
+    if (isFriendlyTurn(context)) {
+      decrementCooldown(context.self);
+    }
+  }
+}
+
+/**
+ * Predicates
+ */
+const zeal = {
+  type: PredicateType.affectedBySummoningSickness,
+  check: (context) => false
+}
 export const cardDefinitions: CardDefinition[] = [
   {
     id: 'token_cow',
@@ -383,6 +401,93 @@ export const cardDefinitions: CardDefinition[] = [
         },
         validTargets: isEnemyUnit
       }
+    ]
+  },
+  {
+    id: 'unit_mortar',
+    name: 'Mortar',
+    category: CardCategory.Unit,
+    provisionCost: 4,
+    basePower: 5,
+    baseArmor: 0,
+    type: ['Vampire'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.Black],
+    description: 'Activate: Deal 2 damage to an enemy unit. Cooldown: 2.',
+    tags: ['Decay', 'Bonded'],
+    sets: ['Witcher'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      {
+        hook: HookType.OnAbilityActivated,
+        effect: (context: EffectContext) => {
+          if (sourceIsSelf(context)) {
+            dealDamage(context.target, 2, context.self);
+            activatedAbility(context.self, 2);
+          }
+        },
+        validTargets: isEnemyUnit
+      },
+      handleCooldown
+    ]
+  },
+  {
+    id: 'unit_trebuchet',
+    name: 'Trebuchet',
+    category: CardCategory.Unit,
+    provisionCost: 4,
+    basePower: 5,
+    baseArmor: 0,
+    type: ['Vampire'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.Black],
+    description: 'Activate: Deal 2 damage to an enemy unit',
+    tags: ['Decay', 'Bonded'],
+    sets: ['Witcher'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      {
+        hook: HookType.OnAbilityActivated,
+        effect: (context: EffectContext) => {
+          if (sourceIsSelf(context)) {
+            dealDamage(context.target, 2, context.self);
+            activatedAbility(context.self);
+          }
+        },
+        validTargets: isEnemyUnit
+      }
+    ],
+    abilityMaxCounter: 1
+  },
+  {
+    id: 'unit_catapult',
+    name: 'Catapult',
+    category: CardCategory.Unit,
+    provisionCost: 4,
+    basePower: 5,
+    baseArmor: 0,
+    type: ['Vampire'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.Black],
+    description: 'Zeal. Activate: Deal 2 damage to an enemy unit. Charges: 3.',
+    tags: ['Decay', 'Bonded'],
+    sets: ['Witcher'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      {
+        hook: HookType.OnAbilityActivated,
+        effect: (context: EffectContext) => {
+          if (sourceIsSelf(context)) {
+            dealDamage(context.target, 2, context.self);
+            activatedAbility(context.self);
+          }
+        },
+        validTargets: isEnemyUnit
+      }
+    ],
+    abilityInitialCharges: 3,
+    predicates: [
+      zeal
     ]
   }
 ];

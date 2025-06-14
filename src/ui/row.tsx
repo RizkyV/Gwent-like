@@ -9,6 +9,7 @@ export type RowProps = {
   row: RowData;
   onCardClick: (card: CardInstance) => void;
   onCardDrop: (card: CardInstance, rowType: RowType, player: PlayerRole, index: number) => void;
+  onAbilityActivate: (card: CardInstance) => void;
   isTargeting: boolean;
   isValidTarget: (card: CardInstance) => boolean;
 };
@@ -16,6 +17,7 @@ export const Row: React.FC<RowProps> = ({
   row,
   onCardClick,
   onCardDrop,
+  onAbilityActivate,
   isTargeting,
   isValidTarget,
 }) => {
@@ -56,7 +58,13 @@ export const Row: React.FC<RowProps> = ({
               key={card.instanceId}
               card={card}
               highlight={isTargeting && isValidTarget(card)}
-              onClick={() => isTargeting && isValidTarget(card) && onCardClick(card)}
+              onClick={() => {
+                if (isTargeting && isValidTarget(card)) {
+                  onCardClick(card);
+                } else {
+                  onAbilityActivate(card);
+                }
+              }}
               showTargetButton={isTargeting && isValidTarget(card)}
             />
           </React.Fragment>

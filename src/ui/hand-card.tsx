@@ -24,7 +24,7 @@ export const HandCard: React.FC<CardProps> = ({
   React.useEffect(() => {
     if (hovered && cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();
-      const tooltipHeight = 120; // Estimate or measure your tooltip height
+      const tooltipHeight = 200; // Estimate or measure your tooltip height
       if (rect.bottom + tooltipHeight > window.innerHeight) {
         setShouldOpenUpwards(true);
       } else {
@@ -32,7 +32,7 @@ export const HandCard: React.FC<CardProps> = ({
       }
     }
   }, [hovered]);
-  
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'CARD',
     item: card,
@@ -76,7 +76,13 @@ export const HandCard: React.FC<CardProps> = ({
               )}
               {card.statuses && card.statuses.size > 0 && (
                 <div className="card__statuses">
-                  Statuses: {[...card.statuses].join(", ")}
+                  Statuses: {[...card.statuses.values()]
+                    .map(statusObj =>
+                      statusObj.duration !== undefined
+                        ? `${statusObj.type} (${statusObj.duration})`
+                        : statusObj.type
+                    )
+                    .join(", ")}
                 </div>
               )}
               {card.baseCard.category && (
@@ -123,7 +129,9 @@ export const HandCard: React.FC<CardProps> = ({
             <div className="card__provision">Provision: {card.baseCard.provisionCost}</div>
           )}
           {hovered && card.baseCard.description && (
-            <div className="card__description">{card.baseCard.description}</div>
+            <div className="card__description-tooltip" style={{ zIndex: 10 }}>
+              <div className="card__description">{card.baseCard.description}</div>
+            </div>
           )}
           {showPlayButton && (
             <button className="card__action-btn">Play</button>

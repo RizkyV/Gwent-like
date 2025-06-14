@@ -1,10 +1,10 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
 import { ALWAYS_ENEMY_START_PLAYER, ALWAYS_FRIENDLY_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
-import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory } from './types.js';
+import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
 import { getStatusEffect } from './helpers/status.js';
-import { getCardIdInstancesForPlayer } from './helpers/board.js';
+import { getCardDefCountForPlayer } from './helpers/board.js';
 import { cardDefinitions } from './cards.js';
 
 let gameState: GameState | null = null;
@@ -64,6 +64,7 @@ export function resetGameState(friendlyDeck: CardDefinition[], enemyDeck: CardDe
       hasActivatedAbility: false,
       hasPlayedCard: false
     },
+    currentTurn: 0,
     GameConfig: config
   });
 }
@@ -189,6 +190,7 @@ export function endTurn() {
   }
 
   newState.turn = { hasActivatedAbility: false, hasPlayedCard: false };
+  newState.currentTurn += 1;
   setGameState(newState);
   triggerHook(HookType.OnTurnEnd, { player: oldPlayer });
 
@@ -345,6 +347,53 @@ export function playCard(card: CardInstance, player: PlayerRole, rowType: RowTyp
   triggerHook(HookType.OnSummoned, { source: card, player: player })
   //TODO: also trigger the onSummoned hook?
 }
+
+export function activateAbility(card: CardInstance, target?: CardInstance): void {
+  const newState = { ...gameState };
+  newState.turn.hasActivatedAbility = true;
+  setGameState(newState);
+  triggerHook(HookType.OnAbilityActivated, { source: card, target: target });
+  //TODO: also trigger the onSummoned hook?
+}
+
+export function activatedAbility(card: CardInstance, cooldown?: number): void {
+  const newState = { ...gameState };
+  const _card = findCardOnBoard(newState, card.instanceId);
+  _card.abilityCounter += 1;
+  _card.abilityCooldown = cooldown ?? 0;
+  if (_card.abilityCharges > 0) _card.abilityCharges -= 1;
+  setGameState(newState);
+}
+
+export function canActivateAbility(card: CardInstance): boolean {
+  console.log(card);
+  if (card.enteredTurn && card.enteredTurn === gameState.currentTurn) {
+    if(checkPredicate(card, PredicateType.affectedBySummoningSickness)) {
+      return false;
+    }
+  }
+  if (card.abilityCounter !== undefined && card.abilityCounter >= card.baseCard.abilityMaxCounter) return false;
+  if (card.abilityCooldown !== undefined && card.abilityCooldown > 0) return false;
+  if (card.abilityCharges !== undefined && card.abilityCharges === 0) return false;
+  return true;
+}
+//returns true if default behavior (predicate doesnt change anything)
+export function checkPredicate(card: CardInstance, predicateType: PredicateType, context?: EffectContext): boolean {
+  const predicate = card.baseCard?.predicates?.find(predicate => predicate.type === predicateType);
+  if (predicate) {
+    return predicate.check(context);
+  }
+  return true;
+}
+
+export function decrementCooldown(card: CardInstance): void {
+  const newState = { ...gameState };
+  const _card = findCardOnBoard(newState, card.instanceId);
+  if (_card.abilityCooldown !== undefined && _card.abilityCooldown > 0) {
+    _card.abilityCooldown -= 1;
+    setGameState(newState);
+  }
+}
 /**
  * 
  * @param card 
@@ -381,7 +430,7 @@ export function moveCardToBoard(card: CardInstance, player: PlayerRole, rowType:
       default:
         console.warn(`Unknown zone for card ${card.instanceId}: ${position.zone}`);
     }
-
+    card.enteredTurn = gameState.currentTurn;
     //Add to the specified row
     const targetRow = newState.players[player].rows.find(row => row.type === rowType);
     targetRow.cards.splice(index, 0, card)
@@ -533,7 +582,7 @@ export function isCardInZone(card: CardInstance, zone: Zone): boolean {
 
 export function isBonded(card: CardInstance): boolean {
   const controller = getCardController(card);
-  const cardCount = getCardIdInstancesForPlayer(card, controller);
+  const cardCount = getCardDefCountForPlayer(card, controller);
   return cardCount > 1;
 }
 
@@ -554,6 +603,7 @@ export function dealDamage(target: CardInstance, amount: number, source: CardIns
 
   // Check for immunities, shields, etc. (expand as needed)
   // Example: if (targetCard.statuses.has('immune')) return state;
+  // Check for armor
 
   // Apply damage
   const newPower = Math.max(0, targetCard.currentPower - amount);
@@ -640,4 +690,4 @@ export function addCardToPlayerHand(index: number): CardInstance | null {
   setGameState(newState);
   return newCard;
 }
-(window as any).addCardToPlayerHand = addCardToPlayerHand;
+(window as any).addCardToPlayerHand = addCardToPlayerHand; //Expose it to the console
