@@ -1,10 +1,10 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
 import { ALWAYS_ENEMY_START_PLAYER, ALWAYS_FRIENDLY_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
-import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType } from './types.js';
+import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
 import { getStatusEffect } from './helpers/status.js';
-import { getCardDefCountForPlayer } from './helpers/board.js';
+import { getCardController, getCardDefCountForPlayer, isCardInZone } from './helpers/board.js';
 import { cardDefinitions } from './cards.js';
 
 let gameState: GameState | null = null;
@@ -137,7 +137,7 @@ export function startRound() {
           : CARDS_DRAWN_ROUND_3;
     drawCards(cardsToDraw, role);
   });
-  //TODO: Trigger onRoundStart hooks for each player
+  triggerHook(HookType.OnRoundStart, {});
 }
 
 export function drawCards(count: number, player: PlayerRole) {
@@ -148,9 +148,8 @@ export function drawCards(count: number, player: PlayerRole) {
   newState.players[player].deck = newDeck;
   newState.players[player].hand = [...playerState.hand, ...drawn];
   console.log(`${player} drew ${drawn.length} cards.`);
-  //TODO: Trigger onDraw hooks for each drawn card
+  //TODO: Trigger onDraw hooks for each drawn card - do foreach count and then set state and trigger hook
   setGameState(newState);
-
 }
 
 export function mulliganCards() {
@@ -367,7 +366,9 @@ export function activatedAbility(card: CardInstance, cooldown?: number): void {
 
 export function canActivateAbility(card: CardInstance): boolean {
   console.log(card);
+  //if played this turn
   if (card.enteredTurn && card.enteredTurn === gameState.currentTurn) {
+    //check whether affected by summoning sickness
     if(checkPredicate(card, PredicateType.affectedBySummoningSickness)) {
       return false;
     }
@@ -379,6 +380,7 @@ export function canActivateAbility(card: CardInstance): boolean {
 }
 //returns true if default behavior (predicate doesnt change anything)
 export function checkPredicate(card: CardInstance, predicateType: PredicateType, context?: EffectContext): boolean {
+  //TODO: also check statuses like hook trigger
   const predicate = card.baseCard?.predicates?.find(predicate => predicate.type === predicateType);
   if (predicate) {
     return predicate.check(context);
@@ -393,6 +395,12 @@ export function decrementCooldown(card: CardInstance): void {
     _card.abilityCooldown -= 1;
     setGameState(newState);
   }
+}
+
+
+
+export function getPlayerCards(player: PlayerRole): CardInstance[] {
+  return gameState.players[player].rows.flatMap(row => row.cards);
 }
 /**
  * 
@@ -566,28 +574,54 @@ export function triggerHook(
   }
 }
 
-export function getCardController(card: CardInstance): PlayerRole {
-  const position = getCardPosition(card);
-  return position.player
+export function addStatus(card: CardInstance, status: StatusType, duration?: number): void {
+  const newState = { ...getGameState() }
+  const targetCard = findCardOnBoard(newState, card.instanceId);
+  const newStatuses = new Map(targetCard.statuses);
+
+  //Decay/Vitality interaction
+  if (status === StatusType.Decay || status === StatusType.Vitality) {
+    const opposite = status === StatusType.Decay ? StatusType.Vitality : StatusType.Decay;
+    if (newStatuses.has(status)) {
+      // If same status exists, add to duration
+      const prev = newStatuses.get(status);
+      const prevDuration = prev?.duration ?? 0;
+      newStatuses.set(status, { type: status, duration: (prevDuration || 0) + (duration || 0) });
+    } else if (newStatuses.has(opposite)) {
+      // If opposite status exists, cancel out
+      const prev = newStatuses.get(opposite);
+      const prevDuration = prev?.duration ?? 0;
+      const diff = (prevDuration || 0) - (duration || 0);
+      if (diff > 0) {
+        // Opposite remains with reduced duration
+        newStatuses.set(opposite, { type: opposite, duration: diff });
+      } else if (diff < 0) {
+        // New status remains with leftover duration
+        newStatuses.delete(opposite);
+        newStatuses.set(status, { type: status, duration: -diff });
+      } else {
+        // Both cancel out
+        newStatuses.delete(opposite);
+      }
+    } else {
+      // No existing, just add
+      newStatuses.set(status, { type: status, duration });
+    }
+  } else {
+    // Non-duration or non-interacting status
+    newStatuses.set(status, { type: status, duration });
+  }
+  targetCard.statuses = newStatuses;
+  setGameState(newState);
 }
 
-export function getCardZone(card: CardInstance): Zone {
-  const position = getCardPosition(card);
-  return position.zone;
-}
-
-export function isCardInZone(card: CardInstance, zone: Zone): boolean {
-  return getCardZone(card) === zone;
-}
-
-export function isBonded(card: CardInstance): boolean {
-  const controller = getCardController(card);
-  const cardCount = getCardDefCountForPlayer(card, controller);
-  return cardCount > 1;
-}
-
-export function getCardBasePower(card: CardInstance): number {
-  return card.currentBasePower ?? card.baseCard.basePower;
+export function removeStatus(card: CardInstance, status: StatusType): void {
+  const newState = { ...getGameState() }
+  const targetCard = findCardOnBoard(newState, card.instanceId);
+  const newStatuses = new Map(targetCard.statuses);
+  newStatuses.delete(status);
+  targetCard.statuses = newStatuses;
+  setGameState(newState);
 }
 
 /**

@@ -1,5 +1,6 @@
-import { boostCard, dealDamage, findCardOnBoard, getCardController, getGameState, setGameState } from "../state";
+import { boostCard, dealDamage } from "../state";
 import { CardInstance, HookType, StatusEffect, StatusType } from "../types";
+import { getCardController } from "./board";
 
 export const statusEffects: Record<StatusType, StatusEffect> = {
   decay: {
@@ -75,56 +76,6 @@ export function getStatusEffect(status: StatusType): StatusEffect {
   return statusEffects[status];
 }
 
-export function addStatus(card: CardInstance, status: StatusType, duration?: number): void {
-  const newState = { ...getGameState() }
-  const targetCard = findCardOnBoard(newState, card.instanceId);
-  const newStatuses = new Map(targetCard.statuses);
-
-  //Decay/Vitality interaction
-  if (status === StatusType.Decay || status === StatusType.Vitality) {
-    const opposite = status === StatusType.Decay ? StatusType.Vitality : StatusType.Decay;
-    if (newStatuses.has(status)) {
-      // If same status exists, add to duration
-      const prev = newStatuses.get(status);
-      const prevDuration = prev?.duration ?? 0;
-      newStatuses.set(status, { type: status, duration: (prevDuration || 0) + (duration || 0) });
-    } else if (newStatuses.has(opposite)) {
-      // If opposite status exists, cancel out
-      const prev = newStatuses.get(opposite);
-      const prevDuration = prev?.duration ?? 0;
-      const diff = (prevDuration || 0) - (duration || 0);
-      if (diff > 0) {
-        // Opposite remains with reduced duration
-        newStatuses.set(opposite, { type: opposite, duration: diff });
-      } else if (diff < 0) {
-        // New status remains with leftover duration
-        newStatuses.delete(opposite);
-        newStatuses.set(status, { type: status, duration: -diff });
-      } else {
-        // Both cancel out
-        newStatuses.delete(opposite);
-      }
-    } else {
-      // No existing, just add
-      newStatuses.set(status, { type: status, duration });
-    }
-  } else {
-    // Non-duration or non-interacting status
-    newStatuses.set(status, { type: status, duration });
-  }
-  targetCard.statuses = newStatuses;
-  setGameState(newState);
-}
-
-export function removeStatus(card: CardInstance, status: StatusType): void {
-  const newState = { ...getGameState() }
-  const targetCard = findCardOnBoard(newState, card.instanceId);
-  const newStatuses = new Map(targetCard.statuses);
-  newStatuses.delete(status);
-  targetCard.statuses = newStatuses;
-  setGameState(newState);
-}
-
 export function hasStatus(card: CardInstance, status: StatusType): boolean {
   return card.statuses.has(status);
 }
@@ -134,6 +85,7 @@ export function getStatusDuration(card: CardInstance, status: StatusType): numbe
 }
 
 export function tickStatusDurations(card: CardInstance): void {
+  //TODO: Needs to go through setGameState
   let changed = false;
   const newStatuses = new Map(card.statuses);
   for (const [status, statusObj] of card.statuses.entries()) {

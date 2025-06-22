@@ -1,7 +1,7 @@
 import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole, PredicateType, StatusType, Zone } from '../core/types.js';
-import { getCardRow, getCardRowIndex } from './helpers/board.js';
-import { addStatus, removeStatus } from './helpers/status.js';
-import { activatedAbility, boostCard, dealDamage, decrementCooldown, getCardBasePower, getCardController, getCardPosition, isBonded, spawnCard, triggerHook } from './state.js';
+import { getCardController, getCardRow, getCardRowIndex } from './helpers/board.js';
+import { cardIsType, getCardBasePower, getCardTypes, isBonded } from './helpers/card.js';
+import { activatedAbility, addStatus, boostCard, dealDamage, decrementCooldown, getCardPosition, getPlayerCards, removeStatus, spawnCard, triggerHook } from './state.js';
 /**
  * Helpers
  */
@@ -12,43 +12,25 @@ export function isFriendlyTurn(context: EffectContext): boolean {
   const cardController = getCardController(context.self);
   return context.player === cardController;
 }
-
+export function isFriendly(source: CardInstance, target: CardInstance): boolean {
+  return getCardController(source) === getCardController(target);
+}
 export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean {
   return getCardController(source) === player;
 }
+
 
 export const isFriendlyUnit = (source: CardInstance, target: CardInstance): boolean => {
   if (target.baseCard.category !== CardCategory.Unit) return false;
   const position = getCardPosition(target);
   if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
-  return getCardController(source) === getCardController(target);
+  return isFriendly(source, target);
 }
 export const isEnemyUnit = (source: CardInstance, target: CardInstance): boolean => {
   if (target.baseCard.category !== CardCategory.Unit) return false;
   const position = getCardPosition(target);
   if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
-  return getCardController(source) !== getCardController(target)
-}
-
-/**
- * Color helpers
-*/
-function getColorCounts(card: CardDefinition): Record<CardColor, number> {
-  const counts: Record<CardColor, number> = {
-    [CardColor.White]: 0,
-    [CardColor.Blue]: 0,
-    [CardColor.Black]: 0,
-    [CardColor.Red]: 0,
-    [CardColor.Green]: 0,
-  };
-  for (const color of card.colors ?? []) {
-    counts[color]++;
-  }
-  return counts;
-}
-function cardHasColor(card: CardDefinition, color: CardColor): boolean {
-  //TODO: maybe rework to cardIsColor and cardIsPrimaryColor - primary means its the majority
-  return (card.colors ?? []).includes(color);
+  return !isFriendly(source, target);
 }
 
 /**
@@ -65,7 +47,7 @@ const thrive1 = {
   effect: (context: EffectContext) => {
     if (canThrive(context)) {
       boostCard(context.self, 1, context.self);
-      triggerHook(HookType.OnThriveTrigger, { source: context.self });
+      triggerHook(HookType.OnThriveTrigger, { source: context.self, trigger: context.source });
     }
   }
 }
@@ -74,7 +56,43 @@ const thrive2 = {
   effect: (context: EffectContext) => {
     if (canThrive(context)) {
       boostCard(context.self, 2, context.self);
-      triggerHook(HookType.OnThriveTrigger, { source: context.self });
+      triggerHook(HookType.OnThriveTrigger, { source: context.self, trigger: context.source });
+    }
+  }
+}
+export function triggersHarmony(card: CardInstance): boolean {
+  const player = getCardController(card);
+  const types = getCardTypes(card);
+  //get all cards minus the card itself
+  const friendlyCards = getPlayerCards(player).filter((_card) => _card.instanceId !== card.instanceId);
+  for (let type of types) {
+    let typeIsUnique = true;
+    for (let card of friendlyCards) {
+      if(cardIsType(card, type)) typeIsUnique = false;
+    }
+    if(typeIsUnique) return true;
+  }
+  return false;
+}
+const harmony1 = {
+  hook: HookType.OnPlay,
+  effect: (context: EffectContext) => {
+    if (!sourceIsSelf(context) && isFriendly(context.source, context.self)) {
+      if (triggersHarmony(context.source)) {
+        boostCard(context.self, 1, context.self);
+        triggerHook(HookType.OnHarmonyTrigger, { source: context.self, trigger: context.source });
+      }
+    }
+  }
+}
+const harmony2 = {
+  hook: HookType.OnPlay,
+  effect: (context: EffectContext) => {
+    if (!sourceIsSelf(context) && isFriendly(context.source, context.self)) {
+      if (triggersHarmony(context.source)) {
+        boostCard(context.self, 2, context.self);
+        triggerHook(HookType.OnHarmonyTrigger, { source: context.self, trigger: context.source });
+      }
     }
   }
 }
@@ -93,7 +111,7 @@ const handleCooldown = {
  */
 const zeal = {
   type: PredicateType.affectedBySummoningSickness,
-  check: (context) => false
+  check: (context: EffectContext) => false
 }
 export const cardDefinitions: CardDefinition[] = [
   {
@@ -103,7 +121,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 0,
     basePower: 1,
     baseArmor: 0,
-    type: ['Cow', 'Token'],
+    types: ['Cow', 'Token'],
     rarity: CardRarity.Bronze,
     description: 'Doomed.',
     isToken: true,
@@ -117,7 +135,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 0,
     basePower: 1,
     baseArmor: 1,
-    type: ['Soldier', 'Token'],
+    types: ['Soldier', 'Token'],
     rarity: CardRarity.Bronze,
     description: 'Doomed.',
     isToken: true,
@@ -131,7 +149,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 0,
     basePower: 1,
     baseArmor: 0,
-    type: ['Frog', 'Token'],
+    types: ['Frog', 'Token'],
     rarity: CardRarity.Bronze,
     description: 'Doomed.',
     isToken: true,
@@ -141,7 +159,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card4',
     name: 'Card Four',
-    type: ['warrior'],
+    types: ['warrior'],
     basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -151,7 +169,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card5',
     name: 'Card Five',
-    type: ['warrior'],
+    types: ['warrior'],
     basePower: 10,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -161,7 +179,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card6',
     name: 'Card Six',
-    type: ['warrior'],
+    types: ['warrior'],
     basePower: 6,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -171,7 +189,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card7',
     name: 'Card Seven',
-    type: ['warrior'],
+    types: ['warrior'],
     basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -181,7 +199,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card8',
     name: 'Card Eight',
-    type: ['warrior'],
+    types: ['warrior'],
     basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -191,7 +209,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card9',
     name: 'Card Nine',
-    type: ['warrior'],
+    types: ['warrior'],
     basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -205,7 +223,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 11,
     basePower: 15,
     baseArmor: 0,
-    type: ['Bear'],
+    types: ['Bear'],
     rarity: CardRarity.Gold,
     colors: [CardColor.Green, CardColor.Green, CardColor.Green],
     description: '',
@@ -221,7 +239,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 5,
     basePower: 5,
     baseArmor: 0,
-    type: ['Warrior'],
+    types: ['Warrior'],
     rarity: CardRarity.Bronze,
     description: 'Play: Deal 2 damage to an enemy unit.',
     //artworkUrl: '/assets/cards/card11.png',
@@ -245,7 +263,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 5,
     basePower: 5,
     baseArmor: 0,
-    type: ['Warrior'],
+    types: ['Warrior'],
     rarity: CardRarity.Bronze,
     description: 'Turn End: Boost this by 1.',
     effects: [
@@ -267,7 +285,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 1,
     baseArmor: 1,
-    type: ['Monster'],
+    types: ['Monster'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Green],
     description: 'Thrive. Play: Spawn a base copy of self on this row',
@@ -295,7 +313,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 2,
     baseArmor: 0,
-    type: ['Human', 'Soldier'],
+    types: ['Human', 'Soldier'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.White],
     description: 'Play: Boost a friendly unit by 2. If it has armor, boost it by 4 instead',
@@ -325,7 +343,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 5,
     basePower: 0,
     baseArmor: 0,
-    type: ['Location'],
+    types: ['Location'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.White],
     description: 'Whenever you play a Soldier, boost it by 1.',
@@ -337,7 +355,7 @@ export const cardDefinitions: CardDefinition[] = [
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
           if (!sourceIsSelf(context)) {
-            if (context.source.baseCard.type.includes('Soldier')) {
+            if (cardIsType(context.source, 'Soldier')) {
               boostCard(context.source, 1, context.self);
             }
           }
@@ -352,7 +370,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 0,
     baseArmor: 0,
-    type: ['Tactic', 'Noble'],
+    types: ['Tactic', 'Noble'],
     rarity: CardRarity.Bronze,
     colors: [],
     description: 'Remove a unit\'s lock and boost it by 5',
@@ -380,7 +398,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 5,
     baseArmor: 0,
-    type: ['Vampire'],
+    types: ['Vampire'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
     description: 'Play: Give an enemy unit Decay (2). Bonded: Give an enemy unit Decay (X), where X is it\'s base power instead',
@@ -410,7 +428,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 5,
     baseArmor: 0,
-    type: ['Vampire'],
+    types: ['Vampire'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
     description: 'Activate: Deal 2 damage to an enemy unit. Cooldown: 2.',
@@ -438,7 +456,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 5,
     baseArmor: 0,
-    type: ['Vampire'],
+    types: ['Vampire'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
     description: 'Activate: Deal 2 damage to an enemy unit',
@@ -466,7 +484,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 5,
     baseArmor: 0,
-    type: ['Vampire'],
+    types: ['Vampire'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
     description: 'Zeal. Activate: Deal 2 damage to an enemy unit. Charges: 3.',
@@ -488,6 +506,24 @@ export const cardDefinitions: CardDefinition[] = [
     abilityInitialCharges: 3,
     predicates: [
       zeal
+    ]
+  },
+  {
+    id: 'unit_volo_guide_to_monsters',
+    name: 'Volo, Guide To Monsters',
+    category: CardCategory.Unit,
+    provisionCost: 7,
+    basePower: 3,
+    baseArmor: 0,
+    types: ['Human', 'Mage'],
+    rarity: CardRarity.Gold,
+    colors: [CardColor.Green, CardColor.Green],
+    description: 'Harmony 2.',
+    tags: ['Harmony'],
+    sets: ['Dungeons & Dragons'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      harmony2
     ]
   }
 ];

@@ -71,8 +71,8 @@ export const HandCard: React.FC<CardProps> = ({
                   Armor: <span>{card.currentArmor}</span>
                 </div>
               )}
-              {card.baseCard.type && (
-                <div className="card__type">Type: {card.baseCard.type.join(", ")}</div>
+              {card.baseCard.types && (
+                <div className="card__type">Type: {card.baseCard.types.join(", ")}</div>
               )}
               {card.statuses && card.statuses.size > 0 && (
                 <div className="card__statuses">
@@ -114,13 +114,19 @@ export const HandCard: React.FC<CardProps> = ({
               Armor: <span>{card.currentArmor}</span>
             </div>
           )}
-          {card.baseCard.type && (
-            <div className="card__type">Type: {card.baseCard.type.join(", ")}</div>
+          {card.baseCard.types && (
+            <div className="card__type">Type: {card.baseCard.types.join(", ")}</div>
           )}
           {card.statuses && card.statuses.size > 0 && (
-            <div className="card__statuses">
-              Statuses: {[...card.statuses].join(", ")}
-            </div>
+                <div className="card__statuses">
+                  Statuses: {[...card.statuses.values()]
+                    .map(statusObj =>
+                      statusObj.duration !== undefined
+                        ? `${statusObj.type} (${statusObj.duration})`
+                        : statusObj.type
+                    )
+                    .join(", ")}
+                </div>
           )}
           {card.baseCard.category && (
             <div className="card__category">Category: {card.baseCard.category}</div>

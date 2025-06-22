@@ -1,10 +1,32 @@
-import { getGameState } from "../state";
-import { CardDefinition, CardInstance, PlayerRole, Row, RowType } from "../types";
+import { getCardPosition, getGameState } from "../state";
+import { CardInstance, PlayerRole, Row, Zone } from "../types";
 
-export function getAdjacentCards(card: CardInstance): CardInstance[] {
-  const adjacentCards: CardInstance[] = [];
+export function getCardController(card: CardInstance): PlayerRole {
+  const position = getCardPosition(card);
+  return position.player
+}
 
-  return adjacentCards;
+export function getCardZone(card: CardInstance): Zone {
+  const position = getCardPosition(card);
+  return position.zone;
+}
+
+export function isCardInZone(card: CardInstance, zone: Zone): boolean {
+  return getCardZone(card) === zone;
+}
+
+export function getCardDefCountForPlayer(card: CardInstance, player: PlayerRole): number {
+  const cards = [];
+
+  for (let r = 0; r < getGameState().players[player].rows.length; r++) {
+    const row = getGameState().players[player].rows[r];
+    for (let c = 0; c < row.cards.length; c++) {
+      if (row.cards[c].baseCard.id === card.baseCard.id) {
+        cards.push(row.cards[c]);
+      }
+    }
+  }
+  return cards.length;
 }
 
 export function getCardRow(card: CardInstance): Row | null {
@@ -46,18 +68,4 @@ export function findCardOnBoard(targetId: string): CardInstance | null {
     }
   }
   return null; // Card not found
-}
-
-export function getCardDefCountForPlayer(card: CardInstance, player: PlayerRole): number {
-  const cards = [];
-
-  for (let r = 0; r < getGameState().players[player].rows.length; r++) {
-    const row = getGameState().players[player].rows[r];
-    for (let c = 0; c < row.cards.length; c++) {
-      if (row.cards[c].baseCard.id === card.baseCard.id) {
-        cards.push(row.cards[c]);
-      }
-    }
-  }
-  return cards.length;
 }

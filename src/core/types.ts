@@ -35,7 +35,8 @@ export enum HookType {
   //Keyword hooks
   OnDemiseTrigger = 'onDemiseTrigger',
   OnThriveTrigger = 'onThriveTrigger',
-  OnExposedTrigger = 'onExposedTrigger'
+  OnExposedTrigger = 'onExposedTrigger',
+  OnHarmonyTrigger = 'onHarmonyTrigger'
 }
 export enum PredicateType {
   canBeTargeted = 'canBeTargeted',
@@ -115,7 +116,7 @@ export interface CardDefinition {
   provisionCost: number;
   basePower: number;
   baseArmor?: number;
-  type?: string[]; //races - classes - factions
+  types?: string[]; //races - classes - factions
   rarity?: CardRarity;
   colors?: CardColor[];
   description?: string;
@@ -164,6 +165,7 @@ export interface EffectContext {
   self?: CardInstance;
   source?: CardInstance;
   target?: CardInstance;
+  trigger?: CardInstance; //the card that triggered the effect on the source card (ie. an Elf triggering a Dwarf with Harmony - Elf would be trigger - Dwarf would be source)
   player?: PlayerRole;
   metadata?: EffectMetadata;
 }

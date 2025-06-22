@@ -1,0 +1,50 @@
+import { CardColor, CardDefinition, CardInstance } from "../types";
+import { getCardController, getCardDefCountForPlayer } from "./board";
+
+export function getCardTypes(card: CardInstance): string[] {
+  return card.baseCard.types;
+}
+
+export function cardIsType(card: CardInstance, type: string): boolean {
+  return card.baseCard.types.includes(type);
+}
+
+export function getCardBasePower(card: CardInstance): number {
+  return card.currentBasePower ?? card.baseCard.basePower;
+}
+
+export function cardIsColor(card: CardDefinition, color: CardColor): boolean {
+  return (card.colors ?? []).includes(color);
+}
+export function cardIsPrimaryColor(card: CardDefinition, color: CardColor): boolean {
+  const colors = getColorCounts(card);
+  return isMajorityEntry(colors, color);
+}
+
+export function isBonded(card: CardInstance): boolean {
+  const controller = getCardController(card);
+  const cardCount = getCardDefCountForPlayer(card, controller);
+  return cardCount > 1;
+}
+
+export function getColorCounts(card: CardDefinition): Record<CardColor, number> {
+  const counts: Record<CardColor, number> = {
+    [CardColor.White]: 0,
+    [CardColor.Blue]: 0,
+    [CardColor.Black]: 0,
+    [CardColor.Red]: 0,
+    [CardColor.Green]: 0,
+  };
+  for (const color of card.colors ?? []) {
+    counts[color]++;
+  }
+  return counts;
+}
+export function isMajorityEntry<T extends string | number | symbol>(
+  record: Record<T, number>,
+  key: T
+): boolean {
+  const total = Number(Object.values(record).reduce((sum: number, val: number) => sum + Number(val), 0));
+  const value = Number(record[key] ?? 0);
+  return value > total / 2;
+}
