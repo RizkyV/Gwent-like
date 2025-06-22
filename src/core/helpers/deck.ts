@@ -31,6 +31,7 @@ export function createCardInstance(def: CardDefinition, player: PlayerRole): Car
                 Array.isArray(status) ? [status[0], status[1]] : [status, true]
             )
         ),
+        abilityUsed: false,
         abilityCharges: def.abilityInitialCharges,
         abilityCounter: 0,
         abilityCooldown: 0

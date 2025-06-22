@@ -62,7 +62,7 @@ const thrive2 = {
 }
 export function triggersHarmony(card: CardInstance): boolean {
   const player = getCardController(card);
-  const types = getCardTypes(card);
+  const types = getCardTypes(card); //TODO: only look at race types
   //get all cards minus the card itself
   const friendlyCards = getPlayerCards(player).filter((_card) => _card.instanceId !== card.instanceId);
   for (let type of types) {
@@ -475,7 +475,7 @@ export const cardDefinitions: CardDefinition[] = [
         validTargets: isEnemyUnit
       }
     ],
-    abilityMaxCounter: 1
+    abilityOneTimeUse: true
   },
   {
     id: 'unit_catapult',

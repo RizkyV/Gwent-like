@@ -27,7 +27,7 @@ export function getGameState(): GameState | null {
 
 export function setGameState(newState: GameState) {
   console.info('Setting new game state:', newState);
-  gameState = checkState(newState);
+  gameState = newState;
   listeners.forEach(listener => listener(gameState));
 }
 
@@ -70,11 +70,11 @@ export function resetGameState(friendlyDeck: CardDefinition[], enemyDeck: CardDe
 }
 
 /**
- * Checks for dead cards, triggers onDeath hooks, and moves them to graveyard.
- * Returns the updated state.
+ * Checks that the state is valid (no 0 power units, etc.) - and cleans up if it isnt
  */
-export function checkState(state: GameState): GameState {
-  let newState = state;
+export function checkState(): void {
+  //TODO: reset instance ability state - like cooldown, charges, ability used - BUT NOT COUNTER
+  let newState = { ...gameState };
 
   for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
     for (let rowIdx = 0; rowIdx < newState.players[role].rows.length; rowIdx++) {
@@ -100,15 +100,14 @@ export function checkState(state: GameState): GameState {
             }
           }
         };
-        // Trigger onDeath hooks for each dead card - TODO: This has timing issues, and should be done after the card has been removed and the state set.
+        // Trigger onDeath hooks for each dead card
         for (const deadCard of deadCards) {
           triggerHook(HookType.OnDeath, { source: deadCard });
         }
       }
     }
   }
-
-  return newState;
+  setGameState(newState);
 }
 
 /* 
@@ -135,21 +134,11 @@ export function startRound() {
         : gameState.currentRound === 2
           ? CARDS_DRAWN_ROUND_2
           : CARDS_DRAWN_ROUND_3;
-    drawCards(cardsToDraw, role);
+    for (var i = 0; i < cardsToDraw; i++) {
+      drawCard(role);
+    }
   });
   triggerHook(HookType.OnRoundStart, {});
-}
-
-export function drawCards(count: number, player: PlayerRole) {
-  const newState = { ...gameState };
-  const playerState = gameState.players[player];
-  const drawn = playerState.deck.slice(0, count);
-  const newDeck = playerState.deck.slice(count);
-  newState.players[player].deck = newDeck;
-  newState.players[player].hand = [...playerState.hand, ...drawn];
-  console.log(`${player} drew ${drawn.length} cards.`);
-  //TODO: Trigger onDraw hooks for each drawn card - do foreach count and then set state and trigger hook
-  setGameState(newState);
 }
 
 export function mulliganCards() {
@@ -160,15 +149,17 @@ export function mulliganCards() {
   setGameState(newState);
 }
 
+export function startTurn() {
+  triggerHook(HookType.OnTurnStart, { player: gameState.currentPlayer });
+}
 export function passTurn(player: PlayerRole) {
   const newState = { ...gameState };
   newState.players[player].passed = true;
   console.log(`${player} passed their turn.`);
   setGameState(newState);
-}
-
-export function startTurn() {
-  triggerHook(HookType.OnTurnStart, { player: gameState.currentPlayer });
+  triggerHook(HookType.OnTurnPass, { player: player })
+  triggerHook(HookType.OnTurnEnd, { player: player })
+  checkState();
 }
 export function endTurn() {
   const newState = { ...gameState };
@@ -198,6 +189,7 @@ export function endTurn() {
     triggerHook(HookType.OnTurnStart, { player: newPlayer });
     triggerHook(HookType.OnTurnEnd, { player: newPlayer });
   }
+  checkState();
 }
 
 export function checkEndOfRound(): boolean {
@@ -343,8 +335,8 @@ export function playCard(card: CardInstance, player: PlayerRole, rowType: RowTyp
   newState.turn.hasPlayedCard = true;
   setGameState(newState);
   triggerHook(HookType.OnPlay, { source: card, target: target });
-  triggerHook(HookType.OnSummoned, { source: card, player: player })
-  //TODO: also trigger the onSummoned hook?
+  triggerHook(HookType.OnSummoned, { source: card, player: player });
+  checkState();
 }
 
 export function activateAbility(card: CardInstance, target?: CardInstance): void {
@@ -352,12 +344,13 @@ export function activateAbility(card: CardInstance, target?: CardInstance): void
   newState.turn.hasActivatedAbility = true;
   setGameState(newState);
   triggerHook(HookType.OnAbilityActivated, { source: card, target: target });
-  //TODO: also trigger the onSummoned hook?
+  checkState();
 }
 
 export function activatedAbility(card: CardInstance, cooldown?: number): void {
   const newState = { ...gameState };
-  const _card = findCardOnBoard(newState, card.instanceId);
+  const _card = findCardOnBoardInState(newState, card.instanceId);
+  _card.abilityUsed = true;
   _card.abilityCounter += 1;
   _card.abilityCooldown = cooldown ?? 0;
   if (_card.abilityCharges > 0) _card.abilityCharges -= 1;
@@ -369,10 +362,11 @@ export function canActivateAbility(card: CardInstance): boolean {
   //if played this turn
   if (card.enteredTurn && card.enteredTurn === gameState.currentTurn) {
     //check whether affected by summoning sickness
-    if(checkPredicate(card, PredicateType.affectedBySummoningSickness)) {
+    if (checkPredicate(card, PredicateType.affectedBySummoningSickness)) {
       return false;
     }
   }
+  if (card.baseCard.abilityOneTimeUse && card.abilityUsed) return false;
   if (card.abilityCounter !== undefined && card.abilityCounter >= card.baseCard.abilityMaxCounter) return false;
   if (card.abilityCooldown !== undefined && card.abilityCooldown > 0) return false;
   if (card.abilityCharges !== undefined && card.abilityCharges === 0) return false;
@@ -390,7 +384,7 @@ export function checkPredicate(card: CardInstance, predicateType: PredicateType,
 
 export function decrementCooldown(card: CardInstance): void {
   const newState = { ...gameState };
-  const _card = findCardOnBoard(newState, card.instanceId);
+  const _card = findCardOnBoardInState(newState, card.instanceId);
   if (_card.abilityCooldown !== undefined && _card.abilityCooldown > 0) {
     _card.abilityCooldown -= 1;
     setGameState(newState);
@@ -576,7 +570,7 @@ export function triggerHook(
 
 export function addStatus(card: CardInstance, status: StatusType, duration?: number): void {
   const newState = { ...getGameState() }
-  const targetCard = findCardOnBoard(newState, card.instanceId);
+  const targetCard = findCardOnBoardInState(newState, card.instanceId);
   const newStatuses = new Map(targetCard.statuses);
 
   //Decay/Vitality interaction
@@ -617,7 +611,7 @@ export function addStatus(card: CardInstance, status: StatusType, duration?: num
 
 export function removeStatus(card: CardInstance, status: StatusType): void {
   const newState = { ...getGameState() }
-  const targetCard = findCardOnBoard(newState, card.instanceId);
+  const targetCard = findCardOnBoardInState(newState, card.instanceId);
   const newStatuses = new Map(targetCard.statuses);
   newStatuses.delete(status);
   targetCard.statuses = newStatuses;
@@ -633,7 +627,7 @@ export function removeStatus(card: CardInstance, status: StatusType): void {
 export function dealDamage(target: CardInstance, amount: number, source: CardInstance): void {
   const newState = { ...gameState };
   //Find the target card in the game state
-  const targetCard = findCardOnBoard(newState, target.instanceId);
+  const targetCard = findCardOnBoardInState(newState, target.instanceId);
 
   // Check for immunities, shields, etc. (expand as needed)
   // Example: if (targetCard.statuses.has('immune')) return state;
@@ -647,17 +641,15 @@ export function dealDamage(target: CardInstance, amount: number, source: CardIns
   //TODO: send along the source
   triggerHook(HookType.OnDamaged, {
     source: source,
-    metadata: {
-      damagedCard: targetCard,
-      damageAmount: damagedAmount,
-    }
+    target: targetCard,
+    amount: damagedAmount
   });
 }
 
 export function boostCard(target: CardInstance, amount: number, source: CardInstance): void {
   const newState = { ...gameState };
   //Find the target card in the game state
-  const targetCard = findCardOnBoard(newState, target.instanceId);
+  const targetCard = findCardOnBoardInState(newState, target.instanceId);
 
   //TODO: check for all sort of stuff
 
@@ -670,10 +662,7 @@ export function boostCard(target: CardInstance, amount: number, source: CardInst
   triggerHook(HookType.OnBoosted, {
     source: source,
     target: targetCard,
-    metadata: {
-      boostedCard: targetCard,
-      boostAmount: boostedAmount,
-    }
+    amount: boostedAmount
   });
 }
 
@@ -691,11 +680,27 @@ export function spawnCard(target: CardDefinition, row: Row, index: number, sourc
   })
 }
 
+export function drawCard(player: PlayerRole, source?: CardInstance) {
+  const newState = { ...gameState };
+  const playerState = gameState.players[player];
+  const drawn = playerState.deck[0];
+  if (drawn) {
+    const newDeck = playerState.deck.slice(1);
+    newState.players[player].deck = newDeck;
+    newState.players[player].hand = [...playerState.hand, drawn];
+    console.log(`${player} drew a card.`);
+    setGameState(newState);
+    triggerHook(HookType.OnDraw, { source: drawn, trigger: source });
+  } else {
+    console.log(`${player}'s deck is empty - cannot draw a card`);
+  }
+}
+
 /**
  * State builder helpers
  */
 
-export function findCardOnBoard(state: GameState, targetId: string): CardInstance | null {
+export function findCardOnBoardInState(state: GameState, targetId: string): CardInstance | null {
   for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
     for (let r = 0; r < state.players[role].rows.length; r++) {
       const row = state.players[role].rows[r];
@@ -712,10 +717,10 @@ export function findCardOnBoard(state: GameState, targetId: string): CardInstanc
 /**
  * Console Commands
  */
-export function addCardToPlayerHand(index: number): CardInstance | null {
-  const cardDef = cardDefinitions[index];
+export function addCardToPlayerHand(cardId: string): CardInstance | null {
+  const cardDef = cardDefinitions.find(card => card.id === cardId);
   if (!cardDef) {
-    console.warn("No card at index", index);
+    console.warn("No card with id", cardId);
     return null;
   }
   const newState = { ...gameState };

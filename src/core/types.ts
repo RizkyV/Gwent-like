@@ -21,6 +21,7 @@ export enum HookType {
   OnSummoned = 'onSummoned',
   OnTurnStart = 'onTurnStart',
   OnTurnEnd = 'onTurnEnd',
+  OnTurnPass = 'onTurnPass',
   OnRoundStart = 'onRoundStart',
   OnRoundEnd = 'onRoundEnd',
   OnTargeted = 'onTargeted',
@@ -105,6 +106,7 @@ export interface CardInstance {
   currentBasePower?: number; //Base power can change due to effects
   statuses: Map<StatusType, CardStatus>;
   enteredTurn?: number;
+  abilityUsed: boolean;
   abilityCooldown: number;
   abilityCharges: number;
   abilityCounter: number;
@@ -116,7 +118,7 @@ export interface CardDefinition {
   provisionCost: number;
   basePower: number;
   baseArmor?: number;
-  types?: string[]; //races - classes - factions
+  types?: string[]; //races - classes - factions (creeds)
   rarity?: CardRarity;
   colors?: CardColor[];
   description?: string;
@@ -128,6 +130,7 @@ export interface CardDefinition {
   isValidRow: (source: CardInstance, player: PlayerRole, rowId: RowType) => boolean;
   innateStatuses?: StatusType[];
   effects?: HookedEffect[];
+  abilityOneTimeUse?: boolean;
   abilityInitialCharges?: number;
   abilityMaxCounter?: number;
   predicates?: Predicate[];
@@ -167,11 +170,10 @@ export interface EffectContext {
   target?: CardInstance;
   trigger?: CardInstance; //the card that triggered the effect on the source card (ie. an Elf triggering a Dwarf with Harmony - Elf would be trigger - Dwarf would be source)
   player?: PlayerRole;
+  amount?: number; //The relevant amount (ie. damage amount, boost amount etc.)
   metadata?: EffectMetadata;
 }
 type EffectMetadata =
-  | { damagedCard: CardInstance; damageAmount: number }
-  | { boostedCard: CardInstance; boostAmount: number }
   | { movedFrom: Zone; movedTo: Zone }
   | { abilityId: string }
   | Record<string, any>; // fallback
