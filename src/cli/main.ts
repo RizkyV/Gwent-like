@@ -5,8 +5,13 @@ import { resetGameState } from '../core/state.js';
 import { dummyPlayer2 } from '../controllers/dummyPlayer2.js';
 import { uiPlayer } from '../controllers/uiPlayer.js';
 import { DEFAULT_DECK_SIZE } from '../core/constants.js';
+import { TypeCategoryMap } from '../core/helpers/card.js';
 
 export const runGame = async () => {
+    const types = cardDefinitions.flatMap(c => c.types);
+    const typesMissingCat = types.filter(t => !TypeCategoryMap[t]);
+    typesMissingCat ?? console.warn('Types still missing a category!', typesMissingCat);
+
     const activeCardPool = [cardDefinitions[9], cardDefinitions[16], cardDefinitions[19], cardDefinitions[20]];
     const passiveCardPool = cardDefinitions.slice(0, 10);
 

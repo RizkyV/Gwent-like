@@ -4,7 +4,7 @@ import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, Ho
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
 import { getStatusEffect } from './helpers/status.js';
-import { getCardController, getCardDefCountForPlayer, isCardInZone } from './helpers/board.js';
+import { getCardController, isCardInZone } from './helpers/board.js';
 import { cardDefinitions } from './cards.js';
 
 let gameState: GameState | null = null;
@@ -158,6 +158,7 @@ export function passTurn(player: PlayerRole) {
   console.log(`${player} passed their turn.`);
   setGameState(newState);
   triggerHook(HookType.OnTurnPass, { player: player })
+  //TODO: Dont trigger turn end if it ends the round - therefore move this check to after the checkEndRound in engine - same as endTurn as it passes automatically
   triggerHook(HookType.OnTurnEnd, { player: player })
   checkState();
 }
@@ -167,6 +168,7 @@ export function endTurn() {
   const newPlayer = getOtherPlayer(newState.currentPlayer);
 
   //If active player has no cards in hand, pass their turn instead
+  //TODO: actually call passTurn to trigger the correct hooks
   if (getPlayerHandSize(oldPlayer) === 0) {
     console.log(`${oldPlayer} has no cards in hand, passing turn.`);
     newState.players[oldPlayer].passed = true;
@@ -638,10 +640,10 @@ export function dealDamage(target: CardInstance, amount: number, source: CardIns
   targetCard.currentPower = newPower;
   const damagedAmount = targetCard.currentPower - newPower;
   setGameState(newState);
-  //TODO: send along the source
+  //TODO: source: target - target: null - trigger: source
   triggerHook(HookType.OnDamaged, {
-    source: source,
-    target: targetCard,
+    source: target,
+    trigger: source,
     amount: damagedAmount
   });
 }
@@ -699,7 +701,6 @@ export function drawCard(player: PlayerRole, source?: CardInstance) {
 /**
  * State builder helpers
  */
-
 export function findCardOnBoardInState(state: GameState, targetId: string): CardInstance | null {
   for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
     for (let r = 0; r < state.players[role].rows.length; r++) {

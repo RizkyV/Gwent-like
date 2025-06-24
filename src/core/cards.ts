@@ -1,4 +1,4 @@
-import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, EffectContext, HookType, PlayerRole, PredicateType, StatusType, Zone } from '../core/types.js';
+import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, CardTypeCategory, EffectContext, HookType, PlayerRole, PredicateType, StatusType, Zone } from '../core/types.js';
 import { getCardController, getCardRow, getCardRowIndex } from './helpers/board.js';
 import { cardIsType, getCardBasePower, getCardTypes, isBonded } from './helpers/card.js';
 import { activatedAbility, addStatus, boostCard, dealDamage, decrementCooldown, getCardPosition, getPlayerCards, removeStatus, spawnCard, triggerHook } from './state.js';
@@ -62,7 +62,7 @@ const thrive2 = {
 }
 export function triggersHarmony(card: CardInstance): boolean {
   const player = getCardController(card);
-  const types = getCardTypes(card); //TODO: only look at race types
+  const types = getCardTypes(card, CardTypeCategory.Race); //TODO: only look at race types
   //get all cards minus the card itself
   const friendlyCards = getPlayerCards(player).filter((_card) => _card.instanceId !== card.instanceId);
   for (let type of types) {
@@ -121,7 +121,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 0,
     basePower: 1,
     baseArmor: 0,
-    types: ['Cow', 'Token'],
+    types: ['Cow'],
     rarity: CardRarity.Bronze,
     description: 'Doomed.',
     isToken: true,
@@ -135,7 +135,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 0,
     basePower: 1,
     baseArmor: 1,
-    types: ['Soldier', 'Token'],
+    types: ['Soldier'],
     rarity: CardRarity.Bronze,
     description: 'Doomed.',
     isToken: true,
@@ -149,7 +149,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 0,
     basePower: 1,
     baseArmor: 0,
-    types: ['Frog', 'Token'],
+    types: ['Frog'],
     rarity: CardRarity.Bronze,
     description: 'Doomed.',
     isToken: true,
@@ -159,7 +159,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card4',
     name: 'Card Four',
-    types: ['warrior'],
+    types: ['Warrior'],
     basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -169,7 +169,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card5',
     name: 'Card Five',
-    types: ['warrior'],
+    types: ['Warrior'],
     basePower: 10,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -179,7 +179,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card6',
     name: 'Card Six',
-    types: ['warrior'],
+    types: ['Warrior'],
     basePower: 6,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -189,7 +189,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card7',
     name: 'Card Seven',
-    types: ['warrior'],
+    types: ['Warrior'],
     basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -199,7 +199,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card8',
     name: 'Card Eight',
-    types: ['warrior'],
+    types: ['Warrior'],
     basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,
@@ -209,7 +209,7 @@ export const cardDefinitions: CardDefinition[] = [
   {
     id: 'card9',
     name: 'Card Nine',
-    types: ['warrior'],
+    types: ['Warrior'],
     basePower: 5,
     category: CardCategory.Unit,
     provisionCost: 5,

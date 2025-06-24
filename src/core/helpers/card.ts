@@ -1,7 +1,31 @@
-import { CardColor, CardDefinition, CardInstance } from "../types";
+import { CardColor, CardDefinition, CardInstance, CardTypeCategory } from "../types";
 import { getCardController, getCardDefCountForPlayer } from "./board";
 
-export function getCardTypes(card: CardInstance): string[] {
+export const TypeCategoryMap: Record<string, CardTypeCategory> = {
+  Human: CardTypeCategory.Race,
+  Monster: CardTypeCategory.Race,
+  Vampire: CardTypeCategory.Race,
+
+  //Fauna
+  Cow: CardTypeCategory.Race,
+  Frog: CardTypeCategory.Race,
+  Bear: CardTypeCategory.Race,
+
+  //Classes
+  Soldier: CardTypeCategory.Class,
+  Mage: CardTypeCategory.Class,
+  Warrior: CardTypeCategory.Class,
+  Noble: CardTypeCategory.Class,
+  //Special types
+  Tactic: CardTypeCategory.Class,
+  //Resource types
+  Location: CardTypeCategory.Class
+};
+
+export function getCardTypes(card: CardInstance, category?: CardTypeCategory): string[] {
+  if(category) {
+    return card.baseCard.types.filter((type) => TypeCategoryMap[type] === category)
+  }
   return card.baseCard.types;
 }
 

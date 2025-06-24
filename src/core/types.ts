@@ -6,6 +6,7 @@ export enum RowType { Melee = 'melee', Ranged = 'ranged' }
 export enum CardCategory { Unit = 'unit', Special = 'special', Resource = 'resource' }
 export enum CardRarity { Bronze = 'bronze', Gold = 'gold' }
 export enum CardColor { White = 'W', Blue = 'U', Black = 'B', Red = 'R', Green = 'G' }
+export enum CardTypeCategory { Race = 'race', Class = 'class', Faction = 'faction' }
 export enum StatusType {
   Decay = 'decay',
   Vitality = 'vitality',
