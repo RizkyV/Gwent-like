@@ -6,7 +6,8 @@ $card-border: #333;
 $card-highlight: gold;
 $text-color: #fff;
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   background: $app-bg;
@@ -74,14 +75,14 @@ html, body {
 }
 
 .row {
-  width: 100vw;
+  margin: 8px 0 8px 220px;
+  width: calc(100vw - 220px - 220px);
   min-height: 90px;
   max-height: 120px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin: 8px 0 8px 0;
-  padding: 8px 18px;
+  padding: 8px 18px 8px 0;
   background: linear-gradient(120deg, #2d2d2d 80%, #232323 100%);
   border-radius: 12px;
   box-shadow: 0 2px 8px 2px rgba(0, 0, 0, 0.10);
@@ -129,7 +130,7 @@ html, body {
     gap: 0.3em;
     position: relative;
     justify-content: center;
-    width: 100vw;
+    width: 100%;
   }
 
   &__drop-zone {
@@ -206,6 +207,7 @@ html, body {
   &__armor {
     font-weight: normal;
     font-size: 0.95em;
+
     span {
       font-weight: bold;
     }
@@ -219,7 +221,7 @@ html, body {
     margin-top: 1px;
   }
 
-   // Make sure content overlays (like tooltip) are above the image
+  // Make sure content overlays (like tooltip) are above the image
   &__description-tooltip {
     position: absolute;
     left: 0;
@@ -270,25 +272,79 @@ html, body {
   }
 }
 
+.zone-preview {
+  position: absolute;
+  width: 60px;
+  height: 80px;
+  background: #333;
+  border-radius: 8px;
+  border: 2px solid #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  z-index: 20;
+  transition: box-shadow 0.18s, border-color 0.18s;
+}
+
+.zone-preview__tooltip {
+  position: absolute;
+  background: #222;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 8px;
+  min-width: 120px;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-line;
+  z-index: 100;
+  left: 0;
+  top: 100%;
+  margin-top: 2px;
+}
+
+.zone-preview--upwards .zone-preview__tooltip {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+
+.zone-preview--left .zone-preview__tooltip {
+  left: auto;
+  right: 0;
+}
+
 .game-info {
   position: absolute;
-  top: 24px;
-  right: 32px;
+  top: calc(50% - 65px);
+  left: 10px;
+  transform: translateY(-50%);
   color: $text-color;
   background: rgba(34, 34, 51, 0.97);
   border: 2px solid $card-highlight;
   border-radius: 10px;
-  padding: 10px 18px;
-  font-size: 1em;
+  padding: 8px 10px;
+  font-size: 0.97em;
   font-weight: bold;
   box-shadow: 0 2px 8px 2px rgba(255, 215, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.13);
-  min-width: 180px;
-  max-width: 340px;
+  min-width: 140px;
+  max-width: 200px;
+  width: 180px;
   text-align: left;
   z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 
   div {
-    margin: 2px 0;
+    margin: 0;
+    line-height: 1.25;
+    font-size: 0.97em;
+    text-align: left;
   }
 
   span {
@@ -296,8 +352,8 @@ html, body {
   }
 
   .player-points {
-    margin: 6px 0 0 0;
-    font-size: 1em;
+    margin: 4px 0 0 0;
+    font-size: 0.97em;
     font-weight: bold;
     color: $card-highlight;
     text-shadow: 0 2px 6px rgba(255, 215, 0, 0.10);
@@ -307,14 +363,19 @@ html, body {
 
     .player-points__enemy,
     .player-points__friendly {
-      margin: 1px 0;
+      margin: 0;
+      font-size: 0.96em;
+      text-align: left;
+      align-items: flex-start;
+      width: 100%;
+      display: flex;
     }
   }
 
   .game-over-banner {
     margin-top: 6px;
-    padding: 6px 0;
-    font-size: 1.05em;
+    padding: 4px 0;
+    font-size: 1em;
     font-weight: bold;
     color: $card-highlight;
     background: rgba(40, 40, 20, 0.95);
@@ -322,6 +383,7 @@ html, body {
     border-radius: 8px;
     box-shadow: 0 2px 8px 2px rgba(255, 215, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.13);
     letter-spacing: 1px;
+    text-align: center;
   }
 }
 

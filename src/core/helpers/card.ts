@@ -2,24 +2,38 @@ import { CardColor, CardDefinition, CardInstance, CardTypeCategory } from "../ty
 import { getCardController, getCardDefCountForPlayer } from "./board";
 
 export const TypeCategoryMap: Record<string, CardTypeCategory> = {
+  /**
+   * Races
+   */
   Human: CardTypeCategory.Race,
   Monster: CardTypeCategory.Race,
   Vampire: CardTypeCategory.Race,
+  God: CardTypeCategory.Race,
 
   //Fauna
   Cow: CardTypeCategory.Race,
   Frog: CardTypeCategory.Race,
   Bear: CardTypeCategory.Race,
 
-  //Classes
+  /**
+   * Classes
+   */
   Soldier: CardTypeCategory.Class,
   Mage: CardTypeCategory.Class,
   Warrior: CardTypeCategory.Class,
   Noble: CardTypeCategory.Class,
+
   //Special types
   Tactic: CardTypeCategory.Class,
+
   //Resource types
-  Location: CardTypeCategory.Class
+  Location: CardTypeCategory.Class,
+
+  /**
+   * Factions
+   */
+  Jedi: CardTypeCategory.Faction,
+  Sith: CardTypeCategory.Faction
 };
 
 export function getCardTypes(card: CardInstance, category?: CardTypeCategory): string[] {

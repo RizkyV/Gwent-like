@@ -18,6 +18,9 @@ export function isFriendly(source: CardInstance, target: CardInstance): boolean 
 export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean {
   return getCardController(source) === player;
 }
+export function isEnemyRow(source: CardInstance, player: PlayerRole): boolean {
+  return getCardController(source) !== player;
+}
 
 
 export const isFriendlyUnit = (source: CardInstance, target: CardInstance): boolean => {
@@ -68,9 +71,9 @@ export function triggersHarmony(card: CardInstance): boolean {
   for (let type of types) {
     let typeIsUnique = true;
     for (let card of friendlyCards) {
-      if(cardIsType(card, type)) typeIsUnique = false;
+      if (cardIsType(card, type)) typeIsUnique = false;
     }
-    if(typeIsUnique) return true;
+    if (typeIsUnique) return true;
   }
   return false;
 }
@@ -524,6 +527,31 @@ export const cardDefinitions: CardDefinition[] = [
     isValidRow: isFriendlyRow,
     effects: [
       harmony2
+    ]
+  },
+  {
+    id: 'unit_cantarella',
+    name: 'Cantarella',
+    category: CardCategory.Unit,
+    provisionCost: 7,
+    basePower: 1,
+    baseArmor: 0,
+    types: ['Human', 'Agent'],
+    rarity: CardRarity.Gold,
+    colors: [CardColor.Blue, CardColor.Blue],
+    description: 'Disloyal. Play: Play the top card of your opponent\'s deck.',
+    tags: ['Mill', 'Spying'],
+    sets: ['Witcher'],
+    isValidRow: isEnemyRow,
+    effects: [
+      {
+        hook: HookType.OnPlay,
+        effect: (context: EffectContext) => {
+          if (sourceIsSelf(context)) {
+            //TODO: find top card - play it
+          }
+        }
+      }
     ]
   }
 ];

@@ -2,6 +2,7 @@ import React from "react";
 import { CardInstance, GameState, PlayerRole, RowType } from "../core/types";
 import Hand from "./hand";
 import Row from "./row";
+import { ZonePreview } from "./zone-preview";
 
 export type BoardProps = {
     gameState: GameState;
@@ -25,6 +26,19 @@ export const GameInfo: React.FC<BoardProps> = ({
 
     return (
         <>
+            {/* Enemy zones */}
+            <ZonePreview
+                title="Enemy Deck"
+                cards={gameState.players.enemy.deck}
+                position={{ top: 16, right: 16 }}
+            />
+            <ZonePreview
+                title="Enemy Graveyard"
+                cards={gameState.players.enemy.graveyard}
+                position={{ top: 16, left: 16 }}
+            />
+
+            {/* Enemy hand and rows */}
             <Hand
                 cards={gameState.players.enemy.hand}
                 selectedCard={selectedHandCard}
@@ -48,6 +62,8 @@ export const GameInfo: React.FC<BoardProps> = ({
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
             />
+
+            {/* Friendly rows and hand */}
             <Row
                 row={gameState.players.friendly.rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
@@ -71,6 +87,18 @@ export const GameInfo: React.FC<BoardProps> = ({
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
                 title="Friendly Hand" />
+
+            {/* Friendly zones */}
+            <ZonePreview
+                title="Friendly Deck"
+                cards={gameState.players.friendly.deck}
+                position={{ bottom: 16, right: 16 }}
+            />
+            <ZonePreview
+                title="Friendly Graveyard"
+                cards={gameState.players.friendly.graveyard}
+                position={{ bottom: 16, left: 16 }}
+            />
         </>
     );
 };

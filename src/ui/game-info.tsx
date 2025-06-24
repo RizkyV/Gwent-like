@@ -10,9 +10,11 @@ export const GameInfo: React.FC<InfoProps> = ({ gameState }) => {
     return (
         <div className="game-info">
             <div>Current Round: <strong>{gameState.currentRound}</strong></div>
+            <div>Active Player: {gameState.currentPlayer === "friendly" ? "Friendly" : "Enemy"}</div>
             <div>
                 <span>Friendly Wins: <strong>{gameState.players.friendly.roundWins}</strong></span>
-                {" | "}
+            </div>
+            <div>
                 <span>Enemy Wins: <strong>{gameState.players.enemy.roundWins}</strong></span>
             </div>
             <div className="player-points">
