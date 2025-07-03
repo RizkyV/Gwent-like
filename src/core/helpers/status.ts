@@ -1,3 +1,4 @@
+import { getEffectSourceCard } from "../cards";
 import { boostCard, dealDamage } from "../state";
 import { CardInstance, HookType, StatusEffect, StatusType } from "../types";
 import { getCardController } from "./board";
@@ -10,11 +11,13 @@ export const statusEffects: Record<StatusType, StatusEffect> = {
       {
         hook: HookType.OnTurnEnd,
         effect: (context) => {
-          if (hasStatus(context.self, StatusType.Decay) && getCardController(context.self) === context.player) {
+          const self = getEffectSourceCard(context.self);
+          if (!self) return;
+          if (hasStatus(self, StatusType.Decay) && getCardController(self) === context.player) {
             // Deal 1 damage
-            dealDamage(context.self, 1, context.self);
+            dealDamage(self, 1, context.self);
             // Tick duration
-            tickStatusDurations(context.self);
+            tickStatusDurations(self);
           }
         }
       }
@@ -27,11 +30,13 @@ export const statusEffects: Record<StatusType, StatusEffect> = {
       {
         hook: HookType.OnTurnEnd,
         effect: (context) => {
-          if (hasStatus(context.self, StatusType.Decay) && getCardController(context.self) === context.player) {
+          const self = getEffectSourceCard(context.self);
+          if (!self) return;
+          if (hasStatus(self, StatusType.Decay) && getCardController(self) === context.player) {
             // Deal 1 damage
-            boostCard(context.self, 1, context.self);
+            boostCard(self, 1, context.self);
             // Tick duration
-            tickStatusDurations(context.self);
+            tickStatusDurations(self);
           }
         }
       }
@@ -61,7 +66,8 @@ export const statusEffects: Record<StatusType, StatusEffect> = {
       {
         hook: HookType.OnDeath,
         effect: (context) => {
-          const { self } = context;
+          const self = getEffectSourceCard(context.self);
+          if (!self) return;
           if (self) {
             // Logic to remove the card from the game
             console.log(`Card ${self.baseCard.name} is doomed and removed from the game.`);

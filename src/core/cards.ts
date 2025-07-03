@@ -1,15 +1,21 @@
-import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, CardTypeCategory, EffectContext, HookType, PlayerRole, PredicateType, StatusType, Zone } from '../core/types.js';
+import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, CardTypeCategory, EffectContext, EffectSource, HookType, PlayerRole, PredicateType, Row, RowEffectType, StatusType, Zone } from '../core/types.js';
 import { getCardController, getCardRow, getCardRowIndex } from './helpers/board.js';
 import { cardIsType, getCardBasePower, getCardTypes, isBonded } from './helpers/card.js';
-import { activatedAbility, addStatus, boostCard, dealDamage, decrementCooldown, getCardPosition, getPlayerCards, removeStatus, spawnCard, triggerHook } from './state.js';
+import { hasRowEffect } from './helpers/row.js';
+import { activatedAbility, addRowEffect, addStatus, boostCard, dealDamage, decrementCooldown, getCardPosition, getPlayerCards, getRow, removeStatus, spawnCard, triggerHook } from './state.js';
 /**
  * Helpers
  */
 export function sourceIsSelf(context: EffectContext): boolean {
-  return context.self.instanceId === context.source.instanceId;
+  const self = getEffectSourceCard(context.self);
+  const source = getEffectSourceCard(context.source);
+  if (!self || !source) return null;
+  return self.instanceId === source.instanceId;
 }
 export function isFriendlyTurn(context: EffectContext): boolean {
-  const cardController = getCardController(context.self);
+  const self = getEffectSourceCard(context.self);
+  if (!self) return null;
+  const cardController = getCardController(self);
   return context.player === cardController;
 }
 export function isFriendly(source: CardInstance, target: CardInstance): boolean {
@@ -23,33 +29,57 @@ export function isEnemyRow(source: CardInstance, player: PlayerRole): boolean {
 }
 
 
-export const isFriendlyUnit = (source: CardInstance, target: CardInstance): boolean => {
-  if (target.baseCard.category !== CardCategory.Unit) return false;
-  const position = getCardPosition(target);
+export const targetIsFriendlyUnit = (source: CardInstance, target: EffectSource): boolean => {
+  if (target.kind !== 'card') return false;
+  if (target.card.baseCard.category !== CardCategory.Unit) return false;
+  const position = getCardPosition(target.card);
   if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
-  return isFriendly(source, target);
+  return isFriendly(source, target.card);
 }
-export const isEnemyUnit = (source: CardInstance, target: CardInstance): boolean => {
-  if (target.baseCard.category !== CardCategory.Unit) return false;
-  const position = getCardPosition(target);
+export const targetIsEnemyUnit = (source: CardInstance, target: EffectSource): boolean => {
+  if (target.kind !== 'card') return false;
+  if (target.card.baseCard.category !== CardCategory.Unit) return false;
+  const position = getCardPosition(target.card);
   if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
-  return !isFriendly(source, target);
+  return !isFriendly(source, target.card);
+}
+export function targetIsFriendlyRow(source: CardInstance, target: EffectSource): boolean {
+  if (target.kind !== 'row') return false;
+  return getCardController(source) === target.row.player;
+}
+export function targetIsEnemyRow(source: CardInstance, target: EffectSource): boolean {
+  if (target.kind !== 'row') return false;
+  return getCardController(source) !== target.row.player;
+}
+
+export function getEffectSourceCard(effectSource: EffectSource): CardInstance | null {
+  if (effectSource.kind !== "card") return null;
+  return effectSource.card;
+}
+export function getEffectSourceRow(effectSource: EffectSource): Row | null {
+  if (effectSource.kind !== "row") return null;
+  return effectSource.row;
 }
 
 /**
 * Effects
 */
 export function canThrive(context: EffectContext): boolean {
+  const self = getEffectSourceCard(context.self);
+  const source = getEffectSourceCard(context.self);
+  if (!self || !source) return false;
   if (sourceIsSelf(context)) return false;
-  if (!isFriendlyRow(context.source, getCardController(context.self))) return false;
-  if (context.source.currentPower < context.self.currentPower) return false;
+  if (!isFriendlyRow(source, getCardController(self))) return false;
+  if (source.currentPower < self.currentPower) return false;
   return true;
 }
 const thrive1 = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
+    const self = getEffectSourceCard(context.self);
+    if (!self) return;
     if (canThrive(context)) {
-      boostCard(context.self, 1, context.self);
+      boostCard(self, 1, { kind: 'card', card: self });
       triggerHook(HookType.OnThriveTrigger, { source: context.self, trigger: context.source });
     }
   }
@@ -57,15 +87,17 @@ const thrive1 = {
 const thrive2 = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
+    const self = getEffectSourceCard(context.self);
+    if (!self) return;
     if (canThrive(context)) {
-      boostCard(context.self, 2, context.self);
+      boostCard(self, 2, { kind: 'card', card: self });
       triggerHook(HookType.OnThriveTrigger, { source: context.self, trigger: context.source });
     }
   }
 }
 export function triggersHarmony(card: CardInstance): boolean {
   const player = getCardController(card);
-  const types = getCardTypes(card, CardTypeCategory.Race); //TODO: only look at race types
+  const types = getCardTypes(card, CardTypeCategory.Race);
   //get all cards minus the card itself
   const friendlyCards = getPlayerCards(player).filter((_card) => _card.instanceId !== card.instanceId);
   for (let type of types) {
@@ -80,9 +112,12 @@ export function triggersHarmony(card: CardInstance): boolean {
 const harmony1 = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
-    if (!sourceIsSelf(context) && isFriendly(context.source, context.self)) {
-      if (triggersHarmony(context.source)) {
-        boostCard(context.self, 1, context.self);
+    const self = getEffectSourceCard(context.self);
+    const source = getEffectSourceCard(context.source);
+    if (!self || !source) return;
+    if (!sourceIsSelf(context) && isFriendly(source, self)) {
+      if (triggersHarmony(source)) {
+        boostCard(self, 1, { kind: 'card', card: self });
         triggerHook(HookType.OnHarmonyTrigger, { source: context.self, trigger: context.source });
       }
     }
@@ -91,9 +126,12 @@ const harmony1 = {
 const harmony2 = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
-    if (!sourceIsSelf(context) && isFriendly(context.source, context.self)) {
-      if (triggersHarmony(context.source)) {
-        boostCard(context.self, 2, context.self);
+    const self = getEffectSourceCard(context.self);
+    const source = getEffectSourceCard(context.source);
+    if (!self || !source) return;
+    if (!sourceIsSelf(context) && isFriendly(source, self)) {
+      if (triggersHarmony(source)) {
+        boostCard(self, 2, { kind: 'card', card: self });
         triggerHook(HookType.OnHarmonyTrigger, { source: context.self, trigger: context.source });
       }
     }
@@ -103,8 +141,10 @@ const harmony2 = {
 const handleCooldown = {
   hook: HookType.OnTurnEnd,
   effect: (context: EffectContext) => {
+    const self = getEffectSourceCard(context.self);
+    if (!self) return;
     if (isFriendlyTurn(context)) {
-      decrementCooldown(context.self);
+      decrementCooldown(self);
     }
   }
 }
@@ -250,11 +290,14 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const target = getEffectSourceCard(context.self);
+          if (!self || !target) return;
           if (sourceIsSelf(context)) {
-            dealDamage(context.target, 2, context.self);
+            dealDamage(target, 2, { kind: 'card', card: self });
           }
         },
-        validTargets: isEnemyUnit
+        validTargets: targetIsEnemyUnit
       }
     ],
     isValidRow: isFriendlyRow
@@ -273,8 +316,10 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnTurnEnd,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          if (!self) return;
           if (isFriendlyTurn(context)) {
-            boostCard(context.self, 1, context.self);
+            boostCard(self, 1, { kind: 'card', card: self });
           }
         }
       }
@@ -301,9 +346,11 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          if (!self) return;
           // Spawn a base copy of self on this row
           if (sourceIsSelf(context)) {
-            spawnCard(context.self.baseCard, getCardRow(context.self), getCardRowIndex(context.self) + 1, context.self);
+            spawnCard(self.baseCard, getCardRow(self), getCardRowIndex(self) + 1, context.self);
           }
         }
       }
@@ -327,15 +374,18 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const target = getEffectSourceCard(context.target);
+          if (!self || !target) return;
           if (sourceIsSelf(context)) {
-            if (context.target.currentArmor > 0) {
-              boostCard(context.target, 4, context.self);
+            if (target.currentArmor > 0) {
+              boostCard(target, 4, context.self);
             } else {
-              boostCard(context.target, 2, context.self);
+              boostCard(target, 2, context.self);
             }
           }
         },
-        validTargets: isFriendlyUnit
+        validTargets: targetIsFriendlyUnit
       }
     ]
   },
@@ -357,9 +407,12 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const source = getEffectSourceCard(context.source);
+          if (!self || !source) return;
           if (!sourceIsSelf(context)) {
-            if (cardIsType(context.source, 'Soldier')) {
-              boostCard(context.source, 1, context.self);
+            if (cardIsType(source, 'Soldier')) {
+              boostCard(source, 1, context.self);
             }
           }
         }
@@ -384,12 +437,15 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const target = getEffectSourceCard(context.target);
+          if (!self || !target) return;
           if (sourceIsSelf(context)) {
-            removeStatus(context.target, StatusType.Locked);
-            boostCard(context.target, 5, context.self);
+            removeStatus(target, StatusType.Locked);
+            boostCard(target, 5, context.self);
           }
         },
-        validTargets: isFriendlyUnit,
+        validTargets: targetIsFriendlyUnit,
         zone: Zone.Graveyard
       }
     ]
@@ -412,15 +468,18 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const target = getEffectSourceCard(context.target);
+          if (!self || !target) return;
           if (sourceIsSelf(context)) {
-            if (isBonded(context.self)) {
-              addStatus(context.target, StatusType.Decay, getCardBasePower(context.target));
+            if (isBonded(self)) {
+              addStatus(target, StatusType.Decay, getCardBasePower(target));
             } else {
-              addStatus(context.target, StatusType.Decay, 2);
+              addStatus(target, StatusType.Decay, 2);
             }
           }
         },
-        validTargets: isEnemyUnit
+        validTargets: targetIsEnemyUnit
       }
     ]
   },
@@ -442,12 +501,15 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnAbilityActivated,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const target = getEffectSourceCard(context.target);
+          if (!self || !target) return;
           if (sourceIsSelf(context)) {
-            dealDamage(context.target, 2, context.self);
-            activatedAbility(context.self, 2);
+            dealDamage(target, 2, context.self);
+            activatedAbility(self, 2);
           }
         },
-        validTargets: isEnemyUnit
+        validTargets: targetIsEnemyUnit
       },
       handleCooldown
     ]
@@ -470,12 +532,15 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnAbilityActivated,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const target = getEffectSourceCard(context.target);
+          if (!self || !target) return;
           if (sourceIsSelf(context)) {
-            dealDamage(context.target, 2, context.self);
-            activatedAbility(context.self);
+            dealDamage(target, 2, context.self);
+            activatedAbility(self);
           }
         },
-        validTargets: isEnemyUnit
+        validTargets: targetIsEnemyUnit
       }
     ],
     abilityOneTimeUse: true
@@ -498,12 +563,15 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnAbilityActivated,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const target = getEffectSourceCard(context.target);
+          if (!self || !target) return;
           if (sourceIsSelf(context)) {
-            dealDamage(context.target, 2, context.self);
-            activatedAbility(context.self);
+            dealDamage(target, 2, context.self);
+            activatedAbility(self);
           }
         },
-        validTargets: isEnemyUnit
+        validTargets: targetIsEnemyUnit
       }
     ],
     abilityInitialCharges: 3,
@@ -547,10 +615,104 @@ export const cardDefinitions: CardDefinition[] = [
       {
         hook: HookType.OnPlay,
         effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          if (!self) return;
           if (sourceIsSelf(context)) {
             //TODO: find top card - play it
           }
         }
+      }
+    ]
+  },
+  {
+    id: 'unit_foglet',
+    name: 'Foglet',
+    category: CardCategory.Unit,
+    provisionCost: 4,
+    basePower: 4,
+    baseArmor: 0,
+    types: ['Monster'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.Green],
+    description: 'At the end of your turn, if there is Fog on the opposite row, boost self by 1.',
+    tags: ['Fog'],
+    sets: ['Witcher'],
+    isValidRow: isEnemyRow,
+    effects: [
+      {
+        hook: HookType.OnTurnEnd,
+        effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          if (!self) return;
+          if (isFriendlyTurn) {
+            const player = getCardController(self);
+            const row = getCardRow(self);
+            if (hasRowEffect(getRow(player, row.type), RowEffectType.Fog)) {
+              boostCard(self, 1, context.self);
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: 'unit_ancient_foglet',
+    name: 'Ancient Foglet',
+    category: CardCategory.Unit,
+    provisionCost: 4,
+    basePower: 4,
+    baseArmor: 0,
+    types: ['Monster'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.Green],
+    description: 'Whenever Fog deals damage to an enemy unit, boost self by the same amount.',
+    tags: ['Fog'],
+    sets: ['Witcher'],
+    isValidRow: isEnemyRow,
+    effects: [
+      {
+        hook: HookType.OnDamaged,
+        effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          if (!self) return;
+          if (isFriendlyTurn) {
+            const player = getCardController(self);
+            const row = getCardRow(self);
+            if (hasRowEffect(getRow(player, row.type), RowEffectType.Fog)) {
+              boostCard(self, 1, context.self);
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: 'special_impenetrable_fog',
+    name: 'Impenetrable Fog',
+    category: CardCategory.Special,
+    provisionCost: 4,
+    basePower: 0,
+    baseArmor: 0,
+    types: ['Monster'],
+    rarity: CardRarity.Bronze,
+    colors: [CardColor.Green],
+    description: 'Spawn Fog (3) on an enemy row.',
+    tags: ['Fog'],
+    sets: ['Witcher'],
+    isValidRow: isEnemyRow,
+    effects: [
+      {
+        hook: HookType.OnPlay,
+        effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const target = getEffectSourceRow(context.target);
+          if (!self || !target) return;
+          if (sourceIsSelf(context)) {
+            addRowEffect(target.player, target.type, RowEffectType.Fog, 3);
+          }
+        },
+        validTargets: targetIsEnemyRow,
+        zone: Zone.Graveyard
       }
     ]
   }

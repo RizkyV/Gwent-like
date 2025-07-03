@@ -11,6 +11,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 
 /**
  * TODO:
+ * UI Targeting rows
  * UI needs to expose functions to the state - allowing the state to tell the UI that a player is now playing a card (eg. Cantarella)
  * Therefore the dragging will need to also be click - then click again on drop zone. If the player stops dragging - it needs to stay in that state and wait for cancel or click on drop zone.
  * Determine whether players are controllable by the UI - Only allow the active player to do things.

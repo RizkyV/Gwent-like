@@ -25,7 +25,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
         if (gameState.turn.hasPlayedCard) {
             console.warn('A card has already been played this turn');
             return;
-        } 
+        }
         const onPlayEffect = card.baseCard.effects?.find(e => e.hook === HookType.OnPlay);
         if (onPlayEffect && onPlayEffect.validTargets) {
             setSelectedHandCard(card);
@@ -85,12 +85,12 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
             const onPlayEffect = pendingAction.card.baseCard.effects?.find(
                 e => e.hook === HookType.OnPlay && typeof e.validTargets === "function"
             );
-            return !!onPlayEffect?.validTargets?.(pendingAction.card, card);
+            return !!onPlayEffect?.validTargets?.(pendingAction.card, { kind: "card", card });
         } else if (pendingAction.type === "ability") {
             const onAbilityEffect = pendingAction.card.baseCard.effects?.find(
                 e => e.hook === HookType.OnAbilityActivated && typeof e.validTargets === "function"
             );
-            return !!onAbilityEffect?.validTargets?.(pendingAction.card, card);
+            return !!onAbilityEffect?.validTargets?.(pendingAction.card, { kind: "card", card });
         }
         return false;
     };

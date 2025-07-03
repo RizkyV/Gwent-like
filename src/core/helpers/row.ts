@@ -1,48 +1,63 @@
 import { dealDamage, getLowestCard } from "../state";
-import { CardInstance, HookType, Row, RowEffect, StatusType, WeatherType } from "../types";
+import { CardInstance, HookType, Row, RowEffect, RowEffectType} from "../types";
 
-export const weatherEffects: Record<WeatherType, RowEffect> = {
+export const rowEffects: Record<RowEffectType, RowEffect> = {
   frost: {
-    type: WeatherType.Frost,
+    type: RowEffectType.Frost,
     description: 'Deal 2 damage to the lowest power card.',
     effects: [
       {
         hook: HookType.OnTurnEnd,
         effect: (context) => {
+          const row = context.self.kind === 'row' ? context.self.row : null;
+          if (!row) return;
           const lowestPowerCard = getLowestCard();
           if (lowestPowerCard) {
-            //TODO: REWORK SOURCE 
-            dealDamage(lowestPowerCard, 2, null);
+            dealDamage(lowestPowerCard, 2, { kind: 'rowEffect', type: RowEffectType.Frost, row: row });
           }
         }
       }
     ]
   },
   fog: {
-    type: WeatherType.Fog,
+    type: RowEffectType.Fog,
     description: 'Fog',
+    effects: [
+      {
+        hook: HookType.OnTurnEnd,
+        effect: (context) => {
+          //TODO: change to highest power instead
+          const row = context.self.kind === 'row' ? context.self.row : null;
+          if (!row) return;
+          const lowestPowerCard = getLowestCard();
+          if (lowestPowerCard) {
+            dealDamage(lowestPowerCard, 2, { kind: 'rowEffect', type: RowEffectType.Fog, row: row });
+          }
+        }
+      }
+    ]
   },
   rain: {
-    type: WeatherType.Rain,
+    type: RowEffectType.Rain,
     description: 'Rain',
   },
   storm: {
-    type: WeatherType.Storm,
+    type: RowEffectType.Storm,
     description: 'Storm',
   },
   clearSkies: {
-    type: WeatherType.ClearSkies,
+    type: RowEffectType.ClearSkies,
     description: 'Clear Skies',
   }
 };
 
-export function getWeatherEffect(weather: WeatherType): RowEffect {
-  return weatherEffects[weather];
+export function getRowEffect(rowEffect: RowEffectType): RowEffect {
+  return rowEffects[rowEffect];
 }
 
-export function hasWeatherEffect(row: Row, weather: WeatherType): boolean {
+export function hasRowEffect(row: Row, rowEffect: RowEffectType): boolean {
   //First in list is the active weather effect
-  return row.effects[0]?.type === weather;
+  return row.effects[0]?.type === rowEffect;
 }
 
 export function tickStatusDurations(card: CardInstance): void {

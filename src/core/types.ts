@@ -16,7 +16,7 @@ export enum StatusType {
   Shield = 'shield',
   Doomed = 'doomed',
 }
-export enum WeatherType {
+export enum RowEffectType {
   Rain = 'rain',
   Storm = 'storm',
   Frost = 'frost',
@@ -90,10 +90,11 @@ export type GameState = {
 
 // === ROWS ===
 export type RowEffect = {
-  type: WeatherType;
+  type: RowEffectType;
   description?: string;
   effects?: HookedEffect[];
   predicates?: Predicate[];
+  duration?: number;
 };
 export type Row = {
   cards: CardInstance[];
@@ -151,7 +152,7 @@ export type GameEffect = (context: EffectContext) => void;
 export type HookedEffect = {
   hook: HookType;
   effect: GameEffect;
-  validTargets?: (source: CardInstance, target: CardInstance) => boolean;
+  validTargets?: (source: CardInstance, target: EffectSource) => boolean;
   zone?: Zone | ((context: EffectContext) => boolean);
 };
 export type Predicate = {
@@ -170,16 +171,33 @@ export type Enchantment = {
 };
 
 // === EFFECT CONTEXT & METADATA ===
+export type EffectSource =
+  | { kind: "card"; card: CardInstance }
+  | { kind: "status"; status: StatusType; card: CardInstance }
+  | { kind: "row"; row: Row }
+  | { kind: "rowEffect"; type: RowEffectType; row: Row }
+  // Add more as needed
+  ;
 export interface EffectContext {
-  self?: CardInstance;
-  source?: CardInstance;
-  target?: CardInstance;
-  trigger?: CardInstance; //the card that triggered the effect on the source card (ie. an Elf triggering a Dwarf with Harmony - Elf would be trigger - Dwarf would be source)
+  self?: EffectSource;
+  source?: EffectSource;
+  target?: EffectSource;
+  trigger?: EffectSource; //the card that triggered the effect on the source card (ie. an Elf triggering a Dwarf with Harmony - Elf would be trigger - Dwarf would be source)
   player?: PlayerRole;
   amount?: number; //The relevant amount (ie. damage amount, boost amount etc.)
   metadata?: EffectMetadata;
 }
+
 type EffectMetadata =
   | { movedFrom: Zone; movedTo: Zone }
   | { abilityId: string }
   | Record<string, any>; // fallback
+
+// === STATE ===
+export type CardPosition = {
+  card: CardInstance;
+  player: PlayerRole;
+  zone: Zone;
+  rowType?: RowType;
+  index?: number;
+}
