@@ -15,7 +15,13 @@ export enum StatusType {
   Veil = 'veil',
   Shield = 'shield',
   Doomed = 'doomed',
-  //add more as needed
+}
+export enum WeatherType {
+  Rain = 'rain',
+  Storm = 'storm',
+  Frost = 'frost',
+  Fog = 'fog',
+  ClearSkies = 'clearSkies',
 }
 export enum HookType {
   OnPlay = 'onPlay',
@@ -84,17 +90,16 @@ export type GameState = {
 
 // === ROWS ===
 export type RowEffect = {
-  id: string;
+  type: WeatherType;
   description?: string;
-  duration?: number;
-  apply: (state: GameState, row: Row) => Row;
-  trigger: 'endOfTurn' | 'startOfTurn';
+  effects?: HookedEffect[];
+  predicates?: Predicate[];
 };
 export type Row = {
   cards: CardInstance[];
   type: RowType;
   player: PlayerRole;
-  effect?: RowEffect;
+  effects?: RowEffect[];
 };
 
 // === CARD & STATUS ===
@@ -102,7 +107,7 @@ export interface CardInstance {
   instanceId: string; //Unique ID per game instance
   baseCard: CardDefinition; //Reference to static card definition
   owner: PlayerRole;
-  currentPower: number; //Modifiable in-game value
+  currentPower: number;
   currentArmor?: number;
   currentBasePower?: number; //Base power can change due to effects
   statuses: Map<StatusType, CardStatus>;

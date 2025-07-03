@@ -42,7 +42,7 @@ export const ZonePreview: React.FC<ZonePreviewProps> = ({ title, cards, position
                     <strong>{title} ({cards.length})</strong>
                     <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
                         {cards.map(card => (
-                            <li key={card.instanceId}>{card.baseCard.name}</li>
+                            <li key={card.instanceId}>{card.baseCard.provisionCost} {card.baseCard.name} {card.currentPower ?? card.currentPower}</li>
                         ))}
                     </ul>
                 </div>

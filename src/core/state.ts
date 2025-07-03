@@ -377,6 +377,7 @@ export function canActivateAbility(card: CardInstance): boolean {
 //returns true if default behavior (predicate doesnt change anything)
 export function checkPredicate(card: CardInstance, predicateType: PredicateType, context?: EffectContext): boolean {
   //TODO: also check statuses like hook trigger
+  //TOOD: always return true if the card is locked.
   const predicate = card.baseCard?.predicates?.find(predicate => predicate.type === predicateType);
   if (predicate) {
     return predicate.check(context);
@@ -394,7 +395,11 @@ export function decrementCooldown(card: CardInstance): void {
 }
 
 
-
+/**
+ * Gets the cards on board for a player
+ * @param player - the player to get cards for
+ * @returns 
+ */
 export function getPlayerCards(player: PlayerRole): CardInstance[] {
   return gameState.players[player].rows.flatMap(row => row.cards);
 }
@@ -535,6 +540,7 @@ export function triggerHook(
   hook: HookType,
   context: EffectContext,
 ): void {
+  //TODO: dont trigger hooks for locked units
   console.info(`Triggering hook: ${hook}`, context);
   const allCards = [
     ...gameState.players.friendly.rows.flatMap(row => row.cards),
@@ -571,7 +577,7 @@ export function triggerHook(
 }
 
 export function addStatus(card: CardInstance, status: StatusType, duration?: number): void {
-  const newState = { ...getGameState() }
+  const newState = { ...gameState }
   const targetCard = findCardOnBoardInState(newState, card.instanceId);
   const newStatuses = new Map(targetCard.statuses);
 
@@ -612,12 +618,38 @@ export function addStatus(card: CardInstance, status: StatusType, duration?: num
 }
 
 export function removeStatus(card: CardInstance, status: StatusType): void {
-  const newState = { ...getGameState() }
+  const newState = { ...gameState }
   const targetCard = findCardOnBoardInState(newState, card.instanceId);
   const newStatuses = new Map(targetCard.statuses);
   newStatuses.delete(status);
   targetCard.statuses = newStatuses;
   setGameState(newState);
+}
+
+export function getLowestCards(): CardInstance[] | null {
+  let lowestCards: CardInstance[] = [];
+  let lowestPower = Infinity;
+  const cards = [...getPlayerCards(PlayerRole.Friendly), ...getPlayerCards(PlayerRole.Enemy)];
+  //Determine the lowest power
+  for (const card of cards) {
+    if (card.currentPower <= lowestPower) {
+      lowestPower = card.currentPower;
+    }
+  }
+  //Get all valid cards
+  for (const card of cards) {
+    if (card.currentPower <= lowestPower) {
+      lowestCards.push(card);
+    }
+  }
+  if (lowestCards.length === 0) return null; // No valid cards found
+  return lowestCards;
+}
+export function getLowestCard(): CardInstance | null {
+  const lowestCards = getLowestCards();
+  if (lowestCards === null || lowestCards.length === 0) return null;
+  //Return a card randomly chosen from the lowest cards
+  return lowestCards[Math.floor(Math.random() * lowestCards.length)];
 }
 
 /**
@@ -631,16 +663,15 @@ export function dealDamage(target: CardInstance, amount: number, source: CardIns
   //Find the target card in the game state
   const targetCard = findCardOnBoardInState(newState, target.instanceId);
 
-  // Check for immunities, shields, etc. (expand as needed)
-  // Example: if (targetCard.statuses.has('immune')) return state;
-  // Check for armor
+  //1 - Check for innate card effects
+  //2 - Check for statuses
+  //3 - Check for armor
 
   // Apply damage
   const newPower = Math.max(0, targetCard.currentPower - amount);
   targetCard.currentPower = newPower;
   const damagedAmount = targetCard.currentPower - newPower;
   setGameState(newState);
-  //TODO: source: target - target: null - trigger: source
   triggerHook(HookType.OnDamaged, {
     source: target,
     trigger: source,
