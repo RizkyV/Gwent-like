@@ -5,6 +5,7 @@ let resolveMove: (() => void) = null;
 
 // Call this from your UI when the player completes their move (play card, target, or pass)
 export function playerMadeMove() {
+  console.log('Player made a move, resolving...');
   if (resolveMove) {
     resolveMove();
     resolveMove = null;

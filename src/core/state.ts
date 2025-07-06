@@ -1,5 +1,5 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
-import { ALWAYS_BLACK_START_PLAYER, ALWAYS_WHITE_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
+import { ALWAYS_IVORY_START_PLAYER, ALWAYS_OBSIDIAN_START_PLAYER,  CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
 import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
@@ -32,34 +32,34 @@ export function setGameState(newState: GameState) {
   listeners.forEach(listener => listener(gameState));
 }
 
-export function resetGameState(whiteDeck: CardDefinition[], blackDeck: CardDefinition[], config: GameConfig) {
+export function resetGameState(ivoryDeck: CardDefinition[], obsidianDeck: CardDefinition[], config: GameConfig) {
   setGameState({
     players: {
-      white: {
+      ivory: {
         hand: [],
-        deck: buildDeck(whiteDeck, PlayerRole.White),
+        deck: buildDeck(ivoryDeck, PlayerRole.Ivory),
         graveyard: [],
         rows: [
-          { type: RowType.Melee, cards: [], player: PlayerRole.White },
-          { type: RowType.Ranged, cards: [], player: PlayerRole.White }
+          { type: RowType.Melee, cards: [], player: PlayerRole.Ivory },
+          { type: RowType.Ranged, cards: [], player: PlayerRole.Ivory }
         ],
         passed: false,
         roundWins: 0
       },
-      black: {
+      obsidian: {
         hand: [],
-        deck: buildDeck(blackDeck, PlayerRole.Black),
+        deck: buildDeck(obsidianDeck, PlayerRole.Obsidian),
         graveyard: [],
         rows: [
-          { type: RowType.Melee, cards: [], player: PlayerRole.Black },
-          { type: RowType.Ranged, cards: [], player: PlayerRole.Black }
+          { type: RowType.Melee, cards: [], player: PlayerRole.Obsidian },
+          { type: RowType.Ranged, cards: [], player: PlayerRole.Obsidian }
         ],
         passed: false,
         roundWins: 0
       }
     },
-    //TODO: should default to white player
-    currentPlayer: ALWAYS_WHITE_START_PLAYER ? PlayerRole.White : ALWAYS_BLACK_START_PLAYER ? PlayerRole.Black : (flipCoin() ? PlayerRole.White : PlayerRole.Black),
+    //TODO: should default to ivory player
+    currentPlayer: ALWAYS_IVORY_START_PLAYER ? PlayerRole.Ivory : ALWAYS_OBSIDIAN_START_PLAYER ? PlayerRole.Obsidian : (flipCoin() ? PlayerRole.Ivory : PlayerRole.Obsidian),
     currentRound: 0,
     phase: GamePhase.Draw,
     turn: {
@@ -78,7 +78,7 @@ export function checkState(): void {
   //TODO: reset instance ability state - like cooldown, charges, ability used - BUT NOT COUNTER
   let newState = { ...gameState };
 
-  for (const role of ['white', 'black'] as PlayerRole[]) {
+  for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
     for (let rowIdx = 0; rowIdx < newState.players[role].rows.length; rowIdx++) {
       const row = newState.players[role].rows[rowIdx];
       // Find dead units (unit power <= 0)
@@ -118,8 +118,8 @@ export function checkState(): void {
 export function startRound() {
   const newState = { ...gameState };
   newState.currentRound += 1;
-  newState.players.white.passed = false;
-  newState.players.black.passed = false;
+  newState.players.ivory.passed = false;
+  newState.players.obsidian.passed = false;
   newState.turn = {
     hasActivatedAbility: false,
     hasPlayedCard: false
@@ -129,7 +129,7 @@ export function startRound() {
   console.log(`Starting round ${newState.currentRound}`);
 
   //Draw the appropriate number of cards for each player
-  (['white', 'black'] as PlayerRole[]).forEach(role => {
+  (['ivory', 'obsidian'] as PlayerRole[]).forEach(role => {
     const cardsToDraw =
       gameState.currentRound === 1
         ? CARDS_DRAWN_ROUND_1
@@ -197,8 +197,8 @@ export function endTurn() {
 }
 
 export function checkEndOfRound(): boolean {
-  const bothPassed = gameState.players.white.passed && gameState.players.black.passed;
-  const bothHandsEmpty = gameState.players.white.hand.length === 0 && gameState.players.black.hand.length === 0;
+  const bothPassed = gameState.players.ivory.passed && gameState.players.obsidian.passed;
+  const bothHandsEmpty = gameState.players.ivory.hand.length === 0 && gameState.players.obsidian.hand.length === 0;
   if (bothPassed || bothHandsEmpty) {
     return true;
   }
@@ -208,26 +208,26 @@ export function checkEndOfRound(): boolean {
 export function endRound() {
   const newState = { ...gameState };
   //TODO: Trigger onRoundEnd hooks for each player
-  const whitePoints = gameState.players.white.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
-  const blackPoints = gameState.players.black.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
+  const ivoryPoints = gameState.players.ivory.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
+  const obsidianPoints = gameState.players.obsidian.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
 
-  if (whitePoints > blackPoints) {
-    newState.players.white.roundWins += 1;
-    console.log(`Round ${gameState.currentRound} goes to White (${whitePoints} vs ${blackPoints})`);
-  } else if (blackPoints > whitePoints) {
-    newState.players.black.roundWins += 1;
-    console.log(`Round ${gameState.currentRound} goes to Black (${blackPoints} vs ${whitePoints})`);
+  if (ivoryPoints > obsidianPoints) {
+    newState.players.ivory.roundWins += 1;
+    console.log(`Round ${gameState.currentRound} goes to Ivory (${ivoryPoints} vs ${obsidianPoints})`);
+  } else if (obsidianPoints > ivoryPoints) {
+    newState.players.obsidian.roundWins += 1;
+    console.log(`Round ${gameState.currentRound} goes to Obsidian (${obsidianPoints} vs ${ivoryPoints})`);
   } else {
     //Both players get a point in case of a tie
-    newState.players.white.roundWins += 1;
-    newState.players.black.roundWins += 1;
-    console.log(`Round ${gameState.currentRound} is a tie! (${whitePoints} vs ${blackPoints})`);
+    newState.players.ivory.roundWins += 1;
+    newState.players.obsidian.roundWins += 1;
+    console.log(`Round ${gameState.currentRound} is a tie! (${ivoryPoints} vs ${obsidianPoints})`);
   }
   setGameState(newState);
 
   //Reset rows for the next round
   //TODO: Check resilience
-  (['white', 'black'] as PlayerRole[]).forEach(role => {
+  (['ivory', 'obsidian'] as PlayerRole[]).forEach(role => {
     newState.players[role].rows.forEach(row => {
       row.cards.forEach(card => {
         moveToZone(card, role, Zone.Graveyard);
@@ -246,7 +246,7 @@ export function moveToZone(card: CardInstance, player: PlayerRole, zone: Zone) {
   let cardIdx = -1;
 
   // Find the card in rows, hand, or deck
-  for (const role of ['white', 'black'] as PlayerRole[]) {
+  for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
     // Rows
     for (let r = 0; r < gameState.players[role].rows.length; r++) {
       const row = gameState.players[role].rows[r];
@@ -457,7 +457,7 @@ export function getCardPosition(card: CardInstance): CardPosition | null {
   let foundCardIndex = -1;
 
   // Find the card in rows, hand, or deck
-  for (const role of ['white', 'black'] as PlayerRole[]) {
+  for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
     //Row
     for (let r = 0; r < gameState.players[role].rows.length; r++) {
       const row = gameState.players[role].rows[r];
@@ -538,14 +538,14 @@ export function triggerHook(
   //TODO: dont trigger hooks for locked units
   console.info(`Triggering hook: ${hook}`, context);
   const allCards = [
-    ...gameState.players.white.rows.flatMap(row => row.cards),
-    ...gameState.players.black.rows.flatMap(row => row.cards),
-    ...gameState.players.white.hand,
-    ...gameState.players.black.hand,
-    ...gameState.players.white.deck,
-    ...gameState.players.black.deck,
-    ...gameState.players.white.graveyard,
-    ...gameState.players.black.graveyard,
+    ...gameState.players.ivory.rows.flatMap(row => row.cards),
+    ...gameState.players.obsidian.rows.flatMap(row => row.cards),
+    ...gameState.players.ivory.hand,
+    ...gameState.players.obsidian.hand,
+    ...gameState.players.ivory.deck,
+    ...gameState.players.obsidian.deck,
+    ...gameState.players.ivory.graveyard,
+    ...gameState.players.obsidian.graveyard,
   ];
   //TODO: ORDER ORDER ORDER
   //TODO: trigger row effects and statuses
@@ -633,7 +633,7 @@ export function addRowEffect(player: PlayerRole, rowType: RowType, rowEffect: Ro
 export function getLowestCards(): CardInstance[] | null {
   let lowestCards: CardInstance[] = [];
   let lowestPower = Infinity;
-  const cards = [...getPlayerCards(PlayerRole.White), ...getPlayerCards(PlayerRole.Black)];
+  const cards = [...getPlayerCards(PlayerRole.Ivory), ...getPlayerCards(PlayerRole.Obsidian)];
   //Determine the lowest power
   for (const card of cards) {
     if (card.currentPower <= lowestPower) {
@@ -744,7 +744,7 @@ export function drawCard(player: PlayerRole, source?: EffectSource) {
  * State builder helpers
  */
 export function findCardOnBoardInState(state: GameState, targetId: string): CardInstance | null {
-  for (const role of ['white', 'black'] as PlayerRole[]) {
+  for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
     for (let r = 0; r < state.players[role].rows.length; r++) {
       const row = state.players[role].rows[r];
       for (let c = 0; c < row.cards.length; c++) {
@@ -767,8 +767,8 @@ export function addCardToPlayerHand(cardId: string): CardInstance | null {
     return null;
   }
   const newState = { ...gameState };
-  const newCard = createCardInstance(cardDef, PlayerRole.White);
-  newState.players.white.hand = [...newState.players.white.hand, newCard];
+  const newCard = createCardInstance(cardDef, PlayerRole.Ivory);
+  newState.players.ivory.hand = [...newState.players.ivory.hand, newCard];
   setGameState(newState);
   return newCard;
 }

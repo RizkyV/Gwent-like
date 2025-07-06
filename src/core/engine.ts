@@ -22,6 +22,7 @@ export async function gameLoop(config: GameConfig) {
       console.log(`Player ${getGameState().currentPlayer}'s turn.`);
       const controller = config.controllers[getGameState().currentPlayer];
       await controller.makeMove(getGameState().currentPlayer);
+      console.log(`Player ${getGameState().currentPlayer} has made their move.`);
 
       const roundOver = checkEndOfRound();
       if (roundOver) {
@@ -32,19 +33,19 @@ export async function gameLoop(config: GameConfig) {
     }
     if (getGameState().phase === GamePhase.RoundEnd) {
       endRound();
-      const whiteWins = getGameState().players.white.roundWins;
-      const blackWins = getGameState().players.black.roundWins;
+      const ivoryWins = getGameState().players.ivory.roundWins;
+      const obsidianWins = getGameState().players.obsidian.roundWins;
 
       //Calculate the amount of round wins needed to win the game
       const roundsLeft = MAX_ROUNDS - getGameState().currentRound;
-      const whiteCanBeCaught = (whiteWins + roundsLeft) >= blackWins;
-      const blackCanBeCaught = (blackWins + roundsLeft) >= whiteWins;
-      const gameIsOver = !whiteCanBeCaught || !blackCanBeCaught || getGameState().currentRound >= MAX_ROUNDS || whiteWins + blackWins >= MAX_ROUNDS;
-      console.log(`Round ${getGameState().currentRound} ended. White Wins: ${whiteWins}, Black Wins: ${blackWins}`);
+      const ivoryCanBeCaught = (ivoryWins + roundsLeft) >= obsidianWins;
+      const obsidianCanBeCaught = (obsidianWins + roundsLeft) >= ivoryWins;
+      const gameIsOver = !ivoryCanBeCaught || !obsidianCanBeCaught || getGameState().currentRound >= MAX_ROUNDS || ivoryWins + obsidianWins >= MAX_ROUNDS;
+      console.log(`Round ${getGameState().currentRound} ended. Ivory Wins: ${ivoryWins}, Obsidian Wins: ${obsidianWins}`);
       console.log(`Rounds left: ${roundsLeft}. Game Over: ${gameIsOver}`);
       if (gameIsOver) {
         setToPhase(GamePhase.GameOver);
-        const winner = whiteWins > blackWins ? 'white' : (blackWins > whiteWins ? 'black' : 'Draw');
+        const winner = ivoryWins > obsidianWins ? 'ivory' : (obsidianWins > ivoryWins ? 'obsidian' : 'Draw');
         console.log(`Game Over! Winner: ${winner}`);
         break;
       } else {
