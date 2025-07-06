@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { subscribe } from "../core/state";
 import { runGame } from "../cli/main";
 
@@ -10,7 +10,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import { PlayerRole } from "../core/types";
+import { CardInstance, PlayerRole, RowType } from "../core/types";
 import { DEFAULT_ACTIVE_PLAYER } from "../core/constants";
 
 /**
@@ -27,15 +27,20 @@ import { DEFAULT_ACTIVE_PLAYER } from "../core/constants";
  * Potential hook queueing - potential timing issues
 */
 
+export type uiState = {
+  selectedHandCard: CardInstance | null; // Instance ID of the selected card
+  isTargeting: boolean; // Whether the UI is in a targeting state
+  pendingAction: PendingAction | null; // The action that is pending (play or ability)
+}
+export type PendingAction =
+    | { type: "play"; card: CardInstance; rowType: RowType; player: PlayerRole; index: number }
+    | { type: "ability"; card: CardInstance };
+
 const App = () => {
   const [gameState, setGameState] = useState(null);
-  const [role, setRole] = useState<PlayerRole | null>(null);
+  const [role, setRole] = useState<PlayerRole | null>(DEFAULT_ACTIVE_PLAYER as PlayerRole);
 
   useUrlLocale(); // Initialize locale from URL parameters
-  // Client-side (React)
-  React.useEffect(() => {
-    setRole(DEFAULT_ACTIVE_PLAYER as PlayerRole);
-  });
 
   const { t } = useTranslation();
 

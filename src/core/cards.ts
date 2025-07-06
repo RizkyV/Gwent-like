@@ -29,42 +29,42 @@ export function sourceIsSelf(context: EffectContext): boolean {
   if (!self || !source) return null;
   return self.instanceId === source.instanceId;
 }
-export function isWhiteTurn(context: EffectContext): boolean {
+export function isFriendlyTurn(context: EffectContext): boolean {
   const self = getEffectSourceCard(context.self);
   if (!self) return null;
   const cardController = getCardController(self);
   return context.player === cardController;
 }
-export function isWhite(source: CardInstance, target: CardInstance): boolean {
+export function isFriendly(source: CardInstance, target: CardInstance): boolean {
   return getCardController(source) === getCardController(target);
 }
-export function isWhiteRow(source: CardInstance, player: PlayerRole): boolean {
+export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean {
   return getCardController(source) === player;
 }
-export function isBlackRow(source: CardInstance, player: PlayerRole): boolean {
+export function isEnemyRow(source: CardInstance, player: PlayerRole): boolean {
   return getCardController(source) !== player;
 }
 
 
-export const targetIsWhiteUnit = (source: CardInstance, target: EffectSource): boolean => {
+export const targetIsFriendlyUnit = (source: CardInstance, target: EffectSource): boolean => {
   if (target.kind !== 'card') return false;
   if (target.card.baseCard.category !== CardCategory.Unit) return false;
   const position = getCardPosition(target.card);
   if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
-  return isWhite(source, target.card);
+  return isFriendly(source, target.card);
 }
-export const targetIsBlackUnit = (source: CardInstance, target: EffectSource): boolean => {
+export const targetIsEnemyUnit = (source: CardInstance, target: EffectSource): boolean => {
   if (target.kind !== 'card') return false;
   if (target.card.baseCard.category !== CardCategory.Unit) return false;
   const position = getCardPosition(target.card);
   if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
-  return !isWhite(source, target.card);
+  return !isFriendly(source, target.card);
 }
-export function targetIsWhiteRow(source: CardInstance, target: EffectSource): boolean {
+export function targetIsFriendlyRow(source: CardInstance, target: EffectSource): boolean {
   if (target.kind !== 'row') return false;
   return getCardController(source) === target.row.player;
 }
-export function targetIsBlackRow(source: CardInstance, target: EffectSource): boolean {
+export function targetIsEnemyRow(source: CardInstance, target: EffectSource): boolean {
   if (target.kind !== 'row') return false;
   return getCardController(source) !== target.row.player;
 }
@@ -86,7 +86,7 @@ export function canThrive(context: EffectContext): boolean {
   const source = getEffectSourceCard(context.source);
   if (!self || !source) return false;
   if (sourceIsSelf(context)) return false;
-  if (!isWhiteRow(source, getCardController(self))) return false;
+  if (!isFriendlyRow(source, getCardController(self))) return false;
   if (source.currentPower < self.currentPower) return false;
   return true;
 }
@@ -116,10 +116,10 @@ export function triggersHarmony(card: CardInstance): boolean {
   const player = getCardController(card);
   const types = getCardTypes(card, CardTypeCategory.Race);
   //get all cards minus the card itself
-  const whiteCards = getPlayerCards(player).filter((_card) => _card.instanceId !== card.instanceId);
+  const friendlyCards = getPlayerCards(player).filter((_card) => _card.instanceId !== card.instanceId);
   for (let type of types) {
     let typeIsUnique = true;
-    for (let card of whiteCards) {
+    for (let card of friendlyCards) {
       if (cardIsType(card, type)) typeIsUnique = false;
     }
     if (typeIsUnique) return true;
@@ -132,7 +132,7 @@ const harmony1 = {
     const self = getEffectSourceCard(context.self);
     const source = getEffectSourceCard(context.source);
     if (!self || !source) return;
-    if (!sourceIsSelf(context) && isWhite(source, self)) {
+    if (!sourceIsSelf(context) && isFriendly(source, self)) {
       if (triggersHarmony(source)) {
         boostCard(self, 1, { kind: 'card', card: self });
         triggerHook(HookType.OnHarmonyTrigger, { source: context.self, trigger: context.source });
@@ -146,7 +146,7 @@ const harmony2 = {
     const self = getEffectSourceCard(context.self);
     const source = getEffectSourceCard(context.source);
     if (!self || !source) return;
-    if (!sourceIsSelf(context) && isWhite(source, self)) {
+    if (!sourceIsSelf(context) && isFriendly(source, self)) {
       if (triggersHarmony(source)) {
         boostCard(self, 2, { kind: 'card', card: self });
         triggerHook(HookType.OnHarmonyTrigger, { source: context.self, trigger: context.source });
@@ -160,7 +160,7 @@ const handleCooldown = {
   effect: (context: EffectContext) => {
     const self = getEffectSourceCard(context.self);
     if (!self) return;
-    if (isWhiteTurn(context)) {
+    if (isFriendlyTurn(context)) {
       decrementCooldown(self);
     }
   }
@@ -185,7 +185,7 @@ export const cardDefinitions: CardDefinition[] = [
     rarity: CardRarity.Bronze,
     description: 'cards.token_cow.desc',
     isToken: true,
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     innateStatuses: [StatusType.Doomed]
   },
   {
@@ -199,7 +199,7 @@ export const cardDefinitions: CardDefinition[] = [
     rarity: CardRarity.Bronze,
     description: 'Doomed.',
     isToken: true,
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     innateStatuses: [StatusType.Doomed]
   },
   {
@@ -213,7 +213,7 @@ export const cardDefinitions: CardDefinition[] = [
     rarity: CardRarity.Bronze,
     description: 'cards.token_cow.desc',
     isToken: true,
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     innateStatuses: [StatusType.Doomed]
   },
   {
@@ -224,7 +224,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Four',
-    isValidRow: isWhiteRow
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card5',
@@ -234,7 +234,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Five',
-    isValidRow: isWhiteRow
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card6',
@@ -244,7 +244,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Six',
-    isValidRow: isWhiteRow
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card7',
@@ -254,7 +254,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Seven',
-    isValidRow: isWhiteRow
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card8',
@@ -264,7 +264,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Eight',
-    isValidRow: isWhiteRow
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card9',
@@ -274,7 +274,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Nine',
-    isValidRow: isWhiteRow
+    isValidRow: isFriendlyRow
   },
   {
     id: 'unit_olaf_champion_of_skellige',
@@ -290,7 +290,7 @@ export const cardDefinitions: CardDefinition[] = [
     artworkUrl: import.meta.env.BASE_URL + 'assets/cards/unit_olaf_champion_of_skellige.png',
     tags: ['Tall', 'Dominance'],
     sets: ['Witcher'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
   },
   {
     id: 'card11',
@@ -301,7 +301,7 @@ export const cardDefinitions: CardDefinition[] = [
     baseArmor: 0,
     types: ['Warrior'],
     rarity: CardRarity.Bronze,
-    description: 'Play: Deal 2 damage to an black unit.',
+    description: 'Play: Deal 2 damage to an enemy unit.',
     //artworkUrl: '/assets/cards/card11.png',
     effects: [
       {
@@ -314,10 +314,10 @@ export const cardDefinitions: CardDefinition[] = [
             dealDamage(target, 2, { kind: 'card', card: self });
           }
         },
-        validTargets: targetIsBlackUnit
+        validTargets: targetIsEnemyUnit
       }
     ],
-    isValidRow: isWhiteRow
+    isValidRow: isFriendlyRow
   },
   {
     id: 'card12',
@@ -335,13 +335,13 @@ export const cardDefinitions: CardDefinition[] = [
         effect: (context: EffectContext) => {
           const self = getEffectSourceCard(context.self);
           if (!self) return;
-          if (isWhiteTurn(context)) {
+          if (isFriendlyTurn(context)) {
             boostCard(self, 1, { kind: 'card', card: self });
           }
         }
       }
     ],
-    isValidRow: isWhiteRow
+    isValidRow: isFriendlyRow
   },
   {
     id: 'unit_nekker',
@@ -356,7 +356,7 @@ export const cardDefinitions: CardDefinition[] = [
     description: 'Thrive. Play: Spawn a base copy of self on this row',
     tags: ['Thrive'],
     sets: ['Witcher'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     innateStatuses: [StatusType.Locked],
     effects: [
       thrive1,
@@ -383,10 +383,10 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Human', 'Soldier'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.White],
-    description: 'Play: Boost a white unit by 2. If it has armor, boost it by 4 instead',
+    description: 'Play: Boost a friendly unit by 2. If it has armor, boost it by 4 instead',
     tags: ['Armor'],
     sets: ['Base'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     effects: [
       {
         hook: HookType.OnPlay,
@@ -402,7 +402,7 @@ export const cardDefinitions: CardDefinition[] = [
             }
           }
         },
-        validTargets: targetIsWhiteUnit
+        validTargets: targetIsFriendlyUnit
       }
     ]
   },
@@ -419,7 +419,7 @@ export const cardDefinitions: CardDefinition[] = [
     description: 'Whenever you play a Soldier, boost it by 1.',
     tags: ['Soldier', 'Location', 'Inspired'],
     sets: ['Base'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     effects: [
       {
         hook: HookType.OnPlay,
@@ -449,7 +449,7 @@ export const cardDefinitions: CardDefinition[] = [
     description: 'Remove a unit\'s lock and boost it by 5',
     tags: ['Lock', 'Noble'],
     sets: ['Base'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     effects: [
       {
         hook: HookType.OnPlay,
@@ -462,7 +462,7 @@ export const cardDefinitions: CardDefinition[] = [
             boostCard(target, 5, context.self);
           }
         },
-        validTargets: targetIsWhiteUnit,
+        validTargets: targetIsFriendlyUnit,
         zone: Zone.Graveyard
       }
     ]
@@ -477,10 +477,10 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Vampire'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
-    description: 'Play: Give an black unit Decay (2). Bonded: Give an black unit Decay (X), where X is it\'s base power instead',
+    description: 'Play: Give an enemy unit Decay (2). Bonded: Give an enemy unit Decay (X), where X is it\'s base power instead',
     tags: ['Decay', 'Bonded'],
     sets: ['Witcher'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     effects: [
       {
         hook: HookType.OnPlay,
@@ -496,7 +496,7 @@ export const cardDefinitions: CardDefinition[] = [
             }
           }
         },
-        validTargets: targetIsBlackUnit
+        validTargets: targetIsEnemyUnit
       }
     ]
   },
@@ -510,10 +510,10 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Vampire'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
-    description: 'Activate: Deal 2 damage to an black unit. Cooldown: 2.',
+    description: 'Activate: Deal 2 damage to an enemy unit. Cooldown: 2.',
     tags: ['Decay', 'Bonded'],
     sets: ['Witcher'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     effects: [
       {
         hook: HookType.OnAbilityActivated,
@@ -526,7 +526,7 @@ export const cardDefinitions: CardDefinition[] = [
             activatedAbility(self, 2);
           }
         },
-        validTargets: targetIsBlackUnit
+        validTargets: targetIsEnemyUnit
       },
       handleCooldown
     ]
@@ -541,10 +541,10 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Vampire'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
-    description: 'Activate: Deal 2 damage to an black unit',
+    description: 'Activate: Deal 2 damage to an enemy unit',
     tags: ['Decay', 'Bonded'],
     sets: ['Witcher'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     effects: [
       {
         hook: HookType.OnAbilityActivated,
@@ -557,7 +557,7 @@ export const cardDefinitions: CardDefinition[] = [
             activatedAbility(self);
           }
         },
-        validTargets: targetIsBlackUnit
+        validTargets: targetIsEnemyUnit
       }
     ],
     abilityOneTimeUse: true
@@ -572,10 +572,10 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Vampire'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
-    description: 'Zeal. Activate: Deal 2 damage to an black unit. Charges: 3.',
+    description: 'Zeal. Activate: Deal 2 damage to an enemy unit. Charges: 3.',
     tags: ['Decay', 'Bonded'],
     sets: ['Witcher'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     effects: [
       {
         hook: HookType.OnAbilityActivated,
@@ -588,7 +588,7 @@ export const cardDefinitions: CardDefinition[] = [
             activatedAbility(self);
           }
         },
-        validTargets: targetIsBlackUnit
+        validTargets: targetIsEnemyUnit
       }
     ],
     abilityInitialCharges: 3,
@@ -609,7 +609,7 @@ export const cardDefinitions: CardDefinition[] = [
     description: 'Harmony 2.',
     tags: ['Harmony'],
     sets: ['Dungeons & Dragons'],
-    isValidRow: isWhiteRow,
+    isValidRow: isFriendlyRow,
     effects: [
       harmony2
     ]
@@ -627,7 +627,7 @@ export const cardDefinitions: CardDefinition[] = [
     description: 'Disloyal. Play: Play the top card of your opponent\'s deck.',
     tags: ['Mill', 'Spying'],
     sets: ['Witcher'],
-    isValidRow: isBlackRow,
+    isValidRow: isEnemyRow,
     effects: [
       {
         hook: HookType.OnPlay,
@@ -654,14 +654,14 @@ export const cardDefinitions: CardDefinition[] = [
     description: 'At the end of your turn, if there is Fog on the opposite row, boost self by 1.',
     tags: ['Fog'],
     sets: ['Witcher'],
-    isValidRow: isBlackRow,
+    isValidRow: isEnemyRow,
     effects: [
       {
         hook: HookType.OnTurnEnd,
         effect: (context: EffectContext) => {
           const self = getEffectSourceCard(context.self);
           if (!self) return;
-          if (isWhiteTurn) {
+          if (isFriendlyTurn) {
             const player = getCardController(self);
             const row = getCardRow(self);
             if (hasRowEffect(getRow(player, row.type), RowEffectType.Fog)) {
@@ -682,17 +682,17 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Monster'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Green],
-    description: 'Whenever Fog deals damage to an black unit, boost self by the same amount.',
+    description: 'Whenever Fog deals damage to an enemy unit, boost self by the same amount.',
     tags: ['Fog'],
     sets: ['Witcher'],
-    isValidRow: isBlackRow,
+    isValidRow: isEnemyRow,
     effects: [
       {
         hook: HookType.OnDamaged,
         effect: (context: EffectContext) => {
           const self = getEffectSourceCard(context.self);
           if (!self) return;
-          if (isWhiteTurn) {
+          if (isFriendlyTurn) {
             const player = getCardController(self);
             const row = getCardRow(self);
             if (hasRowEffect(getRow(player, row.type), RowEffectType.Fog)) {
@@ -713,10 +713,10 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Monster'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Green],
-    description: 'Spawn Fog (3) on an black row.',
+    description: 'Spawn Fog (3) on an enemy row.',
     tags: ['Fog'],
     sets: ['Witcher'],
-    isValidRow: isBlackRow,
+    isValidRow: isEnemyRow,
     effects: [
       {
         hook: HookType.OnPlay,
@@ -728,7 +728,7 @@ export const cardDefinitions: CardDefinition[] = [
             addRowEffect(target.player, target.type, RowEffectType.Fog, 3);
           }
         },
-        validTargets: targetIsBlackRow,
+        validTargets: targetIsEnemyRow,
         zone: Zone.Graveyard
       }
     ]
