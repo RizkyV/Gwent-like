@@ -1,5 +1,5 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
-import { ALWAYS_ENEMY_START_PLAYER, ALWAYS_FRIENDLY_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
+import { ALWAYS_BLACK_START_PLAYER, ALWAYS_WHITE_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
 import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
@@ -58,7 +58,8 @@ export function resetGameState(whiteDeck: CardDefinition[], blackDeck: CardDefin
         roundWins: 0
       }
     },
-    currentPlayer: ALWAYS_FRIENDLY_START_PLAYER ? PlayerRole.White : ALWAYS_ENEMY_START_PLAYER ? PlayerRole.Black : (flipCoin() ? PlayerRole.White : PlayerRole.Black),
+    //TODO: should default to white player
+    currentPlayer: ALWAYS_WHITE_START_PLAYER ? PlayerRole.White : ALWAYS_BLACK_START_PLAYER ? PlayerRole.Black : (flipCoin() ? PlayerRole.White : PlayerRole.Black),
     currentRound: 0,
     phase: GamePhase.Draw,
     turn: {

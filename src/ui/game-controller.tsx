@@ -6,13 +6,14 @@ import { playerMadeMove } from "../controllers/uiPlayer";
 
 type GameControllerProps = {
     gameState: GameState;
+    role: PlayerRole | null;
 };
 
 type PendingAction =
     | { type: "play"; card: CardInstance; rowType: RowType; player: PlayerRole; index: number }
     | { type: "ability"; card: CardInstance };
 
-const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
+const GameController: React.FC<GameControllerProps> = ({ gameState, role }) => {
     const [selectedHandCard, setSelectedHandCard] = useState<CardInstance | null>(null);
     const [targeting, setTargeting] = useState(false);
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
@@ -113,6 +114,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState }) => {
         <div>
             <GameBoard
                 gameState={gameState}
+                role={role}
                 onCardDrop={handleCardDrop}
                 onBoardCardClick={handleBoardCardClick}
                 onAbilityActivate={handleAbilityActivate}

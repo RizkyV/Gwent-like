@@ -89,9 +89,6 @@ export const HandCard: React.FC<CardProps> = ({
               {card.baseCard.category && (
                 <div className="card__category">Category: {card.baseCard.category}</div>
               )}
-              {card.baseCard.provisionCost !== undefined && (
-                <div className="card__provision">Provision: {card.baseCard.provisionCost}</div>
-              )}
               {card.baseCard.description && (
                 <div className="card__description">{t(card.baseCard.description)}</div>
               )}
@@ -131,9 +128,6 @@ export const HandCard: React.FC<CardProps> = ({
           )}
           {card.baseCard.category && (
             <div className="card__category">Category: {card.baseCard.category}</div>
-          )}
-          {card.baseCard.provisionCost !== undefined && (
-            <div className="card__provision">Provision: {card.baseCard.provisionCost}</div>
           )}
           {hovered && card.baseCard.description && (
             <div className="card__description-tooltip" style={{ zIndex: 10 }}>

@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { subscribe } from "../core/state";
 import { runGame } from "../cli/main";
 
@@ -10,6 +10,8 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
+import { PlayerRole } from "../core/types";
+import { DEFAULT_ACTIVE_PLAYER } from "../core/constants";
 
 /**
  * TODO:
@@ -27,8 +29,13 @@ import i18n from '../i18n';
 
 const App = () => {
   const [gameState, setGameState] = useState(null);
+  const [role, setRole] = useState<PlayerRole | null>(null);
 
   useUrlLocale(); // Initialize locale from URL parameters
+  // Client-side (React)
+  React.useEffect(() => {
+    setRole(DEFAULT_ACTIVE_PLAYER as PlayerRole);
+  });
 
   const { t } = useTranslation();
 
@@ -47,8 +54,8 @@ const App = () => {
     <div className="app">
       {false && <h1 className="app__title">GWENT-LIKE</h1>}
 
-      <GameInfo gameState={gameState} />
-      <GameController gameState={gameState} />
+      <GameInfo gameState={gameState} role={role} />
+      <GameController gameState={gameState} role={role} />
     </div>
   );
 };

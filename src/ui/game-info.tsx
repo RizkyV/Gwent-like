@@ -1,10 +1,11 @@
 import React from "react";
-import { GameState } from "../core/types";
+import { GameState, PlayerRole } from "../core/types";
 import { getPlayerPoints } from "../core/state";
 import { useTranslation } from "react-i18next";
 
 export type InfoProps = {
     gameState: GameState;
+    role: PlayerRole | null;
 };
 
 export const GameInfo: React.FC<InfoProps> = ({ gameState }) => {

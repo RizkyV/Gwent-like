@@ -13,7 +13,10 @@
     "round": "Runde",
     "cooldown": "Nedkøling",
     "charges": "Ladninger",
-    "counter": "Tæller"
+    "counter": "Tæller",
+    "power": "Styrke",
+    "status": "Status",
+    "armor": "Armor"
   },
   "actions": {
     "play": "Spil",

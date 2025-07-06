@@ -3,9 +3,11 @@ import { CardInstance, GameState, PlayerRole, RowType } from "../core/types";
 import Hand from "./hand";
 import Row from "./row";
 import { ZonePreview } from "./zone-preview";
+import { getOtherPlayer } from "../core/helpers/player";
 
 export type BoardProps = {
     gameState: GameState;
+    role: PlayerRole | null;
     onCardDrop: (card: CardInstance, rowType: RowType, player: PlayerRole, index: number) => void;
     onBoardCardClick: (card: CardInstance) => void;
     onAbilityActivate: (card: CardInstance) => void;
@@ -16,6 +18,7 @@ export type BoardProps = {
 
 export const GameInfo: React.FC<BoardProps> = ({
     gameState,
+    role,
     onCardDrop,
     onBoardCardClick,
     onAbilityActivate,
@@ -26,28 +29,28 @@ export const GameInfo: React.FC<BoardProps> = ({
 
     return (
         <>
-            {/* Black zones */}
+            {/* non-Active zones */}
             <ZonePreview
-                title="Black Deck"
-                cards={gameState.players.black.deck}
+                title={`${getOtherPlayer(role)} Deck`}
+                cards={gameState.players[getOtherPlayer(role)].deck}
                 position={{ top: 16, right: 16 }}
             />
             <ZonePreview
-                title="Black Graveyard"
-                cards={gameState.players.black.graveyard}
+                title={`${getOtherPlayer(role)} Graveyard`}
+                cards={gameState.players[getOtherPlayer(role)].graveyard}
                 position={{ top: 16, left: 16 }}
             />
 
-            {/* Black hand and rows */}
+            {/* non-Active hand and rows */}
             <Hand
-                cards={gameState.players.black.hand}
+                cards={gameState.players[getOtherPlayer(role)].hand}
                 selectedCard={selectedHandCard}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
-                title="Black Hand" />
+                title={`${getOtherPlayer(role)} Hand`} />
 
             <Row
-                row={gameState.players.black.rows.find(r => r.type === RowType.Ranged)}
+                row={gameState.players[getOtherPlayer(role)].rows.find(r => r.type === RowType.Ranged)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 onAbilityActivate={onAbilityActivate}
@@ -55,7 +58,7 @@ export const GameInfo: React.FC<BoardProps> = ({
                 isValidTarget={isValidTarget}
             />
             <Row
-                row={gameState.players.black.rows.find(r => r.type === RowType.Melee)}
+                row={gameState.players[getOtherPlayer(role)].rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 onAbilityActivate={onAbilityActivate}
@@ -63,9 +66,9 @@ export const GameInfo: React.FC<BoardProps> = ({
                 isValidTarget={isValidTarget}
             />
 
-            {/* White rows and hand */}
+            {/* Active rows and hand */}
             <Row
-                row={gameState.players.white.rows.find(r => r.type === RowType.Melee)}
+                row={gameState.players[role].rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 onAbilityActivate={onAbilityActivate}
@@ -73,7 +76,7 @@ export const GameInfo: React.FC<BoardProps> = ({
                 isValidTarget={isValidTarget}
             />
             <Row
-                row={gameState.players.white.rows.find(r => r.type === RowType.Ranged)}
+                row={gameState.players[role].rows.find(r => r.type === RowType.Ranged)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 onAbilityActivate={onAbilityActivate}
@@ -82,21 +85,21 @@ export const GameInfo: React.FC<BoardProps> = ({
             />
 
             <Hand
-                cards={gameState.players.white.hand}
+                cards={gameState.players[role].hand}
                 selectedCard={selectedHandCard}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
-                title="White Hand" />
+                title={`${role} Hand`} />
 
-            {/* White zones */}
+            {/* Active zones */}
             <ZonePreview
-                title="White Deck"
-                cards={gameState.players.white.deck}
+                title={`${role} Deck`}
+                cards={gameState.players[role].deck}
                 position={{ bottom: 16, right: 16 }}
             />
             <ZonePreview
-                title="White Graveyard"
-                cards={gameState.players.white.graveyard}
+                title={`${role} Graveyard`}
+                cards={gameState.players[role].graveyard}
                 position={{ bottom: 16, left: 16 }}
             />
         </>

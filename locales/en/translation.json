@@ -13,7 +13,10 @@
     "round": "Round",
     "cooldown": "Cooldown",
     "charges": "Charges",
-    "counter": "Counter"
+    "counter": "Counter",
+    "power": "Power",
+    "status": "Status",
+    "armor": "Armor"
   },
   "actions": {
     "play": "Play",
