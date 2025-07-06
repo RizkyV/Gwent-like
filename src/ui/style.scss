@@ -1,11 +1,55 @@
 @use "sass:color";
 
+// === VARIABLES ===
 $app-bg: #181818;
 $card-bg: #223;
 $card-border: #333;
 $card-highlight: gold;
 $text-color: #fff;
 
+// The total height of a card, including the row header
+$card-total-height: 130px; // <--- Set your desired total card+row height here
+$row-header-height: 12px;  // <--- Height of the row header
+$row-body-height: $card-total-height - $row-header-height; // Height for the card area under the header
+
+$card-width: 90px;
+$row-radius: 12px;
+$row-shadow: 0 2px 8px 2px rgba(0, 0, 0, 0.10);
+$row-border: 2px solid #444;
+$row-bg: linear-gradient(120deg, #2d2d2d 80%, #232323 100%);
+$row-bg-white: linear-gradient(120deg, #2d3d5a 80%, #1a2333 100%);
+$row-bg-black: linear-gradient(120deg, #5a2d2d 80%, #331a1a 100%);
+$row-border-white: #4a8cff;
+$row-border-black: #ff4a4a;
+$zone-preview-width: 60px;
+$zone-preview-height: 80px;
+$zone-preview-radius: 8px;
+$zone-preview-border: 2px solid #888;
+$zone-preview-bg: #333;
+$zone-preview-font-size: 12px;
+$zone-tooltip-bg: #222;
+$zone-tooltip-border: 1px solid #555;
+$zone-tooltip-radius: 6px;
+$zone-tooltip-padding: 8px;
+$zone-tooltip-min-width: 120px;
+$zone-tooltip-max-height: 200px;
+$zone-tooltip-z: 100;
+$game-info-bg: rgba(34, 34, 51, 0.97);
+$game-info-radius: 10px;
+$game-info-padding: 8px 10px;
+$game-info-width: 180px;
+$game-info-border: 2px solid $card-highlight;
+$game-info-shadow: 0 2px 8px 2px rgba(255, 215, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.13);
+$game-info-font-size: 0.97em;
+$game-info-gap: 4px;
+$game-info-over-banner-bg: rgba(40, 40, 20, 0.95);
+$game-info-over-banner-radius: 8px;
+$game-info-over-banner-border: 2px solid $card-highlight;
+$game-info-over-banner-shadow: 0 2px 8px 2px rgba(255, 215, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.13);
+$end-turn-btn-radius: 8px;
+$end-turn-btn-padding: 10px 24px;
+
+// === GLOBAL ===
 html,
 body {
   margin: 0;
@@ -46,6 +90,7 @@ body {
   position: relative;
 }
 
+// === HAND ===
 .hand {
   width: 100vw;
   margin: 0;
@@ -68,42 +113,52 @@ body {
     align-items: flex-end;
     gap: 0.4em;
     width: 100vw;
-    min-height: 100px;
+    min-height: $card-total-height;
     margin: 0 auto;
     padding: 0;
   }
 }
 
+// === ROW ===
 .row {
+  position: relative;
   margin: 8px 0 8px 220px;
   width: calc(100vw - 220px - 220px);
-  min-height: 90px;
-  max-height: 120px;
+  height: $card-total-height;
+  min-height: $card-total-height;
+  max-height: $card-total-height;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 8px 18px 8px 0;
-  background: linear-gradient(120deg, #2d2d2d 80%, #232323 100%);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px 2px rgba(0, 0, 0, 0.10);
-  border: 2px solid #444;
+  padding: 0;
+  background: $row-bg;
+  border-radius: $row-radius;
+  box-shadow: $row-shadow;
+  border: $row-border;
+  box-sizing: border-box;
+  overflow: visible;
 
   &--white {
-    border-color: #4a8cff;
-    background: linear-gradient(120deg, #2d3d5a 80%, #1a2333 100%);
+    border-color: $row-border-white;
+    background: $row-bg-white;
   }
 
   &--black {
-    border-color: #ff4a4a;
-    background: linear-gradient(120deg, #5a2d2d 80%, #331a1a 100%);
+    border-color: $row-border-black;
+    background: $row-bg-black;
   }
 
   &__header {
+    height: $row-header-height;
+    z-index: 2;
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
+    margin-bottom: 0;
     padding: 0 6px;
+    background: transparent;
+    pointer-events: none;
   }
 
   &__title {
@@ -116,26 +171,30 @@ body {
 
   &__points {
     font-size: 0.95em;
-    color: #ffd700;
+    color: $card-highlight;
     font-weight: bold;
     letter-spacing: 1px;
   }
 
   &__cards {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    width: 100%;
+    height: $row-body-height + $row-header-height;
     display: flex;
     flex-direction: row;
-    align-items: flex-end;
-    min-height: 60px;
-    padding: 2px 0;
-    gap: 0.3em;
-    position: relative;
+    align-items: stretch;
     justify-content: center;
-    width: 100%;
+    gap: 0.3em;
+    z-index: 1;
+    padding: 0;
+    box-sizing: border-box;
   }
 
   &__drop-zone {
     width: 22px;
-    height: 60px;
+    height: $row-body-height;
     margin: 0 1px;
     border-radius: 6px;
     background: transparent;
@@ -146,39 +205,41 @@ body {
     justify-content: center;
 
     &--can-drop {
-      border-color: #4a8cff;
+      border-color: $row-border-white;
       background: rgba(74, 140, 255, 0.08);
     }
 
     &--active {
-      border-color: #ffd700;
+      border-color: $card-highlight;
       background: rgba(255, 215, 0, 0.18);
     }
   }
 }
 
+// === CARD ===
 .card {
+  width: $card-width;
+  min-width: $card-width;
+  max-width: $card-width;
+  height: $row-body-height;
+  min-height: $row-body-height;
+  max-height: $row-body-height;
+  margin: 0;
+  padding: 0;
   border: 1px solid $card-border;
   border-radius: 6px;
-  padding: 6px;
   background: $card-bg;
   color: $text-color;
-  width: 100px;
-  min-width: 100px;
-  max-width: 100px;
-  height: 130px;
-  min-height: 130px;
-  max-height: 130px;
-  margin: 4px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.13);
   cursor: pointer;
   user-select: none;
   transition: box-shadow 0.18s, border-color 0.18s;
-  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  align-items: stretch;
+  justify-content: stretch;
+  box-sizing: border-box;
+  overflow: hidden;
 
   &--highlight {
     border: 2px solid $card-highlight;
@@ -186,16 +247,16 @@ body {
   }
 
   &__art {
-    width: 100%;
-    height: 100%;
     object-fit: cover;
     border-radius: 6px;
     margin: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative;
     z-index: 1;
     pointer-events: none;
+    flex-shrink: 0;
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
   }
 
   &__name {
@@ -221,26 +282,23 @@ body {
     margin-top: 1px;
   }
 
-  // Make sure content overlays (like tooltip) are above the image
   &__description-tooltip {
     position: absolute;
     left: 0;
     z-index: 10;
-    background: #222;
+    background: $zone-tooltip-bg;
     color: #fff;
-    border: 1px solid #555;
-    border-radius: 6px;
+    border: $zone-tooltip-border;
+    border-radius: $zone-tooltip-radius;
     padding: 6px;
-    min-width: 120px;
+    min-width: $zone-tooltip-min-width;
     max-width: 220px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     font-size: 0.85em;
     pointer-events: none;
-    // Default: open downward
     top: 100%;
     margin-top: 2px;
 
-    // Open upward if .card--tooltip-upwards is present
     .card--tooltip-upwards & {
       top: auto;
       bottom: 100%;
@@ -272,18 +330,19 @@ body {
   }
 }
 
+// === ZONE PREVIEW ===
 .zone-preview {
   position: absolute;
-  width: 60px;
-  height: 80px;
-  background: #333;
-  border-radius: 8px;
-  border: 2px solid #888;
+  width: $zone-preview-width;
+  height: $zone-preview-height;
+  background: $zone-preview-bg;
+  border-radius: $zone-preview-radius;
+  border: $zone-preview-border;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 12px;
+  font-size: $zone-preview-font-size;
   cursor: pointer;
   z-index: 20;
   transition: box-shadow 0.18s, border-color 0.18s;
@@ -291,16 +350,16 @@ body {
 
 .zone-preview__tooltip {
   position: absolute;
-  background: #222;
+  background: $zone-tooltip-bg;
   color: #fff;
-  border: 1px solid #555;
-  border-radius: 6px;
-  padding: 8px;
-  min-width: 120px;
-  max-height: 200px;
+  border: $zone-tooltip-border;
+  border-radius: $zone-tooltip-radius;
+  padding: $zone-tooltip-padding;
+  min-width: $zone-tooltip-min-width;
+  max-height: $zone-tooltip-max-height;
   overflow-y: auto;
   white-space: pre-line;
-  z-index: 100;
+  z-index: $zone-tooltip-z;
   left: 0;
   top: 100%;
   margin-top: 2px;
@@ -318,32 +377,33 @@ body {
   right: 0;
 }
 
+// === GAME INFO ===
 .game-info {
   position: absolute;
   top: calc(50% - 65px);
   left: 10px;
   transform: translateY(-50%);
   color: $text-color;
-  background: rgba(34, 34, 51, 0.97);
-  border: 2px solid $card-highlight;
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 0.97em;
+  background: $game-info-bg;
+  border: $game-info-border;
+  border-radius: $game-info-radius;
+  padding: $game-info-padding;
+  font-size: $game-info-font-size;
   font-weight: bold;
-  box-shadow: 0 2px 8px 2px rgba(255, 215, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.13);
+  box-shadow: $game-info-shadow;
   min-width: 140px;
   max-width: 200px;
-  width: 180px;
+  width: $game-info-width;
   text-align: left;
   z-index: 200;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $game-info-gap;
 
   div {
     margin: 0;
     line-height: 1.25;
-    font-size: 0.97em;
+    font-size: $game-info-font-size;
     text-align: left;
   }
 
@@ -353,7 +413,7 @@ body {
 
   .player-points {
     margin: 4px 0 0 0;
-    font-size: 0.97em;
+    font-size: $game-info-font-size;
     font-weight: bold;
     color: $card-highlight;
     text-shadow: 0 2px 6px rgba(255, 215, 0, 0.10);
@@ -378,15 +438,16 @@ body {
     font-size: 1em;
     font-weight: bold;
     color: $card-highlight;
-    background: rgba(40, 40, 20, 0.95);
-    border: 2px solid $card-highlight;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px 2px rgba(255, 215, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.13);
+    background: $game-info-over-banner-bg;
+    border: $game-info-over-banner-border;
+    border-radius: $game-info-over-banner-radius;
+    box-shadow: $game-info-over-banner-shadow;
     letter-spacing: 1px;
     text-align: center;
   }
 }
 
+// === END TURN BUTTON ===
 .end-turn-btn {
   position: fixed;
   top: 50%;
@@ -395,8 +456,8 @@ body {
   background: $card-highlight;
   color: #222;
   border: none;
-  border-radius: 8px;
-  padding: 10px 24px;
+  border-radius: $end-turn-btn-radius;
+  padding: $end-turn-btn-padding;
   font-size: 1em;
   font-weight: bold;
   cursor: pointer;

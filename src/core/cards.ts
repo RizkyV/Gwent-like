@@ -15,6 +15,11 @@ declare global {
   }
 }
 
+
+export function getCardDefinition(id: string): CardDefinition | null {
+  if (!cardDefinitions) return null;
+  return cardDefinitions.find(card => card.id === id) || null;
+}
 /**
  * Helpers
  */

@@ -1,4 +1,4 @@
-import { cardDefinitions } from '../core/cards.js';
+import { cardDefinitions, getCardDefinition } from '../core/cards.js';
 import { CardDefinition, GameConfig } from '../core/types.js';
 import { gameLoop } from '../core/engine.js';
 import { resetGameState } from '../core/state.js';
@@ -12,10 +12,10 @@ export const runGame = async () => {
     const typesMissingCat = types.filter(t => !TypeCategoryMap[t]);
     typesMissingCat ?? console.warn('Types still missing a category!', typesMissingCat);
 
-    const activeCardPool = [cardDefinitions[9], cardDefinitions[16], cardDefinitions[19], cardDefinitions[20]];
+    const activeCardPool = [getCardDefinition('unit_olaf_champion_of_skellige'), getCardDefinition('unit_nekker'), getCardDefinition('unit_plumard'), getCardDefinition('unit_catapult')];
     const passiveCardPool = cardDefinitions.slice(0, 10);
 
-    const testActiveDeck: CardDefinition[] = Array.from({ length: 10/* DEFAULT_DECK_SIZE */ }, (_, i) => activeCardPool[i % activeCardPool.length]);
+    const testActiveDeck: CardDefinition[] = Array.from({ length: DEFAULT_DECK_SIZE }, (_, i) => activeCardPool[i % activeCardPool.length]);
     const testPassiveDeck: CardDefinition[] = Array.from({ length: DEFAULT_DECK_SIZE }, (_, i) => passiveCardPool[i % passiveCardPool.length]);
 
     const config: GameConfig = {
