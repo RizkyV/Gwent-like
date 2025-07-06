@@ -7,4 +7,5 @@ export default defineConfig({
   server: {
     port: 3000, // or whatever you prefer
   },
+  base: '/Gwent-like/',
 });

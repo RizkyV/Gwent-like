@@ -1,0 +1,34 @@
+{
+  "game": {
+    "currentRound": "Nuværende Runde",
+    "activePlayer": "Aktive Spiller",
+    "friendly": "Ven",
+    "enemy": "Fjende",
+    "friendlyWins": "Ven Sejre",
+    "enemyWins": "Fjende Sejre",
+    "loading": "Indlæser...",
+    "turn": "Tur",
+    "round": "Runde",
+    "cooldown": "Nedkøling",
+    "charges": "Ladninger",
+    "counter": "Tæller"
+  },
+  "actions": {
+    "play": "Spil",
+    "cancel": "Afbryd"
+  },
+  "cards": {
+    "token_cow": {
+      "name": "Ko",
+      "desc": "Fordømt."
+    },
+    "token_frog": {
+      "name": "Frø",
+      "desc": "Fordømt."
+    },
+    "unit_olaf_champion_of_skellige": {
+      "name": "Olaf, Skellige's Mester",
+      "desc": ""
+    }
+  }
+}

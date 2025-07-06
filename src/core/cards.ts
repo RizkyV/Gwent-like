@@ -3,6 +3,18 @@ import { getCardController, getCardRow, getCardRowIndex } from './helpers/board.
 import { cardIsType, getCardBasePower, getCardTypes, isBonded } from './helpers/card.js';
 import { hasRowEffect } from './helpers/row.js';
 import { activatedAbility, addRowEffect, addStatus, boostCard, dealDamage, decrementCooldown, getCardPosition, getPlayerCards, getRow, removeStatus, spawnCard, triggerHook } from './state.js';
+
+// Add this declaration to fix ImportMeta typing for Vite or similar environments
+declare global {
+  interface ImportMetaEnv {
+    readonly BASE_URL: string;
+    // add other env variables here if needed
+  }
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+}
+
 /**
  * Helpers
  */
@@ -66,7 +78,7 @@ export function getEffectSourceRow(effectSource: EffectSource): Row | null {
 */
 export function canThrive(context: EffectContext): boolean {
   const self = getEffectSourceCard(context.self);
-  const source = getEffectSourceCard(context.self);
+  const source = getEffectSourceCard(context.source);
   if (!self || !source) return false;
   if (sourceIsSelf(context)) return false;
   if (!isFriendlyRow(source, getCardController(self))) return false;
@@ -159,14 +171,14 @@ const zeal = {
 export const cardDefinitions: CardDefinition[] = [
   {
     id: 'token_cow',
-    name: 'Cow',
+    name: 'cards.token_cow.name',
     category: CardCategory.Unit,
     provisionCost: 0,
     basePower: 1,
     baseArmor: 0,
     types: ['Cow'],
     rarity: CardRarity.Bronze,
-    description: 'Doomed.',
+    description: 'cards.token_cow.desc',
     isToken: true,
     isValidRow: isFriendlyRow,
     innateStatuses: [StatusType.Doomed]
@@ -187,14 +199,14 @@ export const cardDefinitions: CardDefinition[] = [
   },
   {
     id: 'token_frog',
-    name: 'Frog',
+    name: 'cards.token_frog.name',
     category: CardCategory.Unit,
     provisionCost: 0,
     basePower: 1,
     baseArmor: 0,
     types: ['Frog'],
     rarity: CardRarity.Bronze,
-    description: 'Doomed.',
+    description: 'cards.token_cow.desc',
     isToken: true,
     isValidRow: isFriendlyRow,
     innateStatuses: [StatusType.Doomed]
@@ -261,7 +273,7 @@ export const cardDefinitions: CardDefinition[] = [
   },
   {
     id: 'unit_olaf_champion_of_skellige',
-    name: 'Olaf, Champion of Skellige',
+    name: 'cards.unit_olaf_champion_of_skellige.name',
     category: CardCategory.Unit,
     provisionCost: 11,
     basePower: 15,
@@ -269,8 +281,8 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Bear'],
     rarity: CardRarity.Gold,
     colors: [CardColor.Green, CardColor.Green, CardColor.Green],
-    description: '',
-    artworkUrl: '/assets/cards/unit_olaf_champion_of_skellige.png',
+    description: 'cards.unit_olaf_champion_of_skellige.desc',
+    artworkUrl: import.meta.env.BASE_URL + 'assets/cards/unit_olaf_champion_of_skellige.png',
     tags: ['Tall', 'Dominance'],
     sets: ['Witcher'],
     isValidRow: isFriendlyRow,

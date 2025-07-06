@@ -1,0 +1,34 @@
+{
+  "game": {
+    "currentRound": "Current Round",
+    "activePlayer": "Active Player",
+    "friendly": "Friendly",
+    "enemy": "Enemy",
+    "friendlyWins": "Friendly Wins",
+    "enemyWins": "Enemy Wins",
+    "loading": "Loading...",
+    "turn": "Turn",
+    "round": "Round",
+    "cooldown": "Cooldown",
+    "charges": "Charges",
+    "counter": "Counter"
+  },
+  "actions": {
+    "play": "Play",
+    "cancel": "Cancel"
+  },
+  "cards": {
+    "token_cow": {
+      "name": "Cow",
+      "desc": "Doomed."
+    },
+    "token_frog": {
+      "name": "Frog",
+      "desc": "Doomed."
+    },
+    "unit_olaf_champion_of_skellige": {
+      "name": "Olaf, Champion of Skellige",
+      "desc": ""
+    }
+  }
+}

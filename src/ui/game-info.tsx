@@ -1,21 +1,23 @@
 import React from "react";
 import { GameState } from "../core/types";
 import { getPlayerPoints } from "../core/state";
+import { useTranslation } from "react-i18next";
 
 export type InfoProps = {
     gameState: GameState;
 };
 
 export const GameInfo: React.FC<InfoProps> = ({ gameState }) => {
+    const { t } = useTranslation();
     return (
         <div className="game-info">
-            <div>Current Round: <strong>{gameState.currentRound}</strong></div>
-            <div>Active Player: {gameState.currentPlayer === "friendly" ? "Friendly" : "Enemy"}</div>
+            <div>{t('game.currentRound')}: <strong>{gameState.currentRound}</strong></div>
+            <div>{t('game.activePlayer')}: {gameState.currentPlayer === "friendly" ? t('game.friendly') : t('game.enemy')}</div>
             <div>
-                <span>Friendly Wins: <strong>{gameState.players.friendly.roundWins}</strong></span>
+                <span>{t('game.friendlyWins')}: <strong>{gameState.players.friendly.roundWins}</strong></span>
             </div>
             <div>
-                <span>Enemy Wins: <strong>{gameState.players.enemy.roundWins}</strong></span>
+                <span>{t('game.enemyWins')}: <strong>{gameState.players.enemy.roundWins}</strong></span>
             </div>
             <div className="player-points">
                 <div className="player-points__enemy">

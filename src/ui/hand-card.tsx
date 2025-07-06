@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { CardInstance } from "../core/types";
 import { useDrag } from "react-dnd";
+import { useTranslation } from "react-i18next";
 
 export type CardProps = {
   card: CardInstance;
@@ -20,7 +21,7 @@ export const HandCard: React.FC<CardProps> = ({
   const [hovered, setHovered] = useState(false);
   const [shouldOpenUpwards, setShouldOpenUpwards] = useState(false);
   const cardRef = React.useRef<HTMLDivElement>(null);
-
+  const { t } = useTranslation();
   React.useEffect(() => {
     if (hovered && cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();
@@ -62,7 +63,7 @@ export const HandCard: React.FC<CardProps> = ({
           <img className="card__art" src={card.baseCard.artworkUrl!} alt={card.baseCard.name} />
           {hovered && (
             <div className="card__description-tooltip" style={{ zIndex: 10 }}>
-              <div className="card__name">{card.baseCard.name}</div>
+              <div className="card__name">{t(card.baseCard.name)}</div>
               <div className="card__power">
                 Power: <span>{card.currentPower}</span>
               </div>
@@ -92,7 +93,7 @@ export const HandCard: React.FC<CardProps> = ({
                 <div className="card__provision">Provision: {card.baseCard.provisionCost}</div>
               )}
               {card.baseCard.description && (
-                <div className="card__description">{card.baseCard.description}</div>
+                <div className="card__description">{t(card.baseCard.description)}</div>
               )}
               {showPlayButton && (
                 <button className="card__action-btn">Play</button>
@@ -105,7 +106,7 @@ export const HandCard: React.FC<CardProps> = ({
         </>
       ) : (
         <>
-          <div className="card__name">{card.baseCard.name}</div>
+          <div className="card__name">{t(card.baseCard.name)}</div>
           <div className="card__power">
             Power: <span>{card.currentPower}</span>
           </div>
@@ -118,15 +119,15 @@ export const HandCard: React.FC<CardProps> = ({
             <div className="card__type">Type: {card.baseCard.types.join(", ")}</div>
           )}
           {card.statuses && card.statuses.size > 0 && (
-                <div className="card__statuses">
-                  Statuses: {[...card.statuses.values()]
-                    .map(statusObj =>
-                      statusObj.duration !== undefined
-                        ? `${statusObj.type} (${statusObj.duration})`
-                        : statusObj.type
-                    )
-                    .join(", ")}
-                </div>
+            <div className="card__statuses">
+              Statuses: {[...card.statuses.values()]
+                .map(statusObj =>
+                  statusObj.duration !== undefined
+                    ? `${statusObj.type} (${statusObj.duration})`
+                    : statusObj.type
+                )
+                .join(", ")}
+            </div>
           )}
           {card.baseCard.category && (
             <div className="card__category">Category: {card.baseCard.category}</div>
@@ -136,7 +137,7 @@ export const HandCard: React.FC<CardProps> = ({
           )}
           {hovered && card.baseCard.description && (
             <div className="card__description-tooltip" style={{ zIndex: 10 }}>
-              <div className="card__description">{card.baseCard.description}</div>
+              <div className="card__description">{t(card.baseCard.description)}</div>
             </div>
           )}
           {showPlayButton && (

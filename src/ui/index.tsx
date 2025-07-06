@@ -8,6 +8,8 @@ import GameInfo from "./game-info";
 import GameController from "./game-controller";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 /**
  * TODO:
@@ -17,6 +19,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
  * If no legal targets - just play without triggering the effect
  * If the player regrets - a right click should reset the whole playing state
+ * Change friendly/enemy to playerWhite/playerBlack
  * UI Multi targeting
  * Mulligan
  * Potential hook queueing - potential timing issues
@@ -24,6 +27,10 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 
 const App = () => {
   const [gameState, setGameState] = useState(null);
+
+  useUrlLocale(); // Initialize locale from URL parameters
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Subscribe to state changes
@@ -34,7 +41,7 @@ const App = () => {
     return unsubscribe;
   }, []);
 
-  if (!gameState) return <div>Loading...</div>;
+  if (!gameState) return <div>{t('game.loading')}</div>;
 
   return (
     <div className="app">
@@ -45,6 +52,14 @@ const App = () => {
     </div>
   );
 };
+
+export function useUrlLocale() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const lng = params.get("lng");
+    if (lng) i18n.changeLanguage(lng);
+  }, [window.location.search]);
+}
 
 const root = createRoot(document.getElementById('root')!);
 root.render(
