@@ -32,33 +32,33 @@ export function setGameState(newState: GameState) {
   listeners.forEach(listener => listener(gameState));
 }
 
-export function resetGameState(friendlyDeck: CardDefinition[], enemyDeck: CardDefinition[], config: GameConfig) {
+export function resetGameState(whiteDeck: CardDefinition[], blackDeck: CardDefinition[], config: GameConfig) {
   setGameState({
     players: {
-      friendly: {
+      white: {
         hand: [],
-        deck: buildDeck(friendlyDeck, PlayerRole.Friendly),
+        deck: buildDeck(whiteDeck, PlayerRole.White),
         graveyard: [],
         rows: [
-          { type: RowType.Melee, cards: [], player: PlayerRole.Friendly },
-          { type: RowType.Ranged, cards: [], player: PlayerRole.Friendly }
+          { type: RowType.Melee, cards: [], player: PlayerRole.White },
+          { type: RowType.Ranged, cards: [], player: PlayerRole.White }
         ],
         passed: false,
         roundWins: 0
       },
-      enemy: {
+      black: {
         hand: [],
-        deck: buildDeck(enemyDeck, PlayerRole.Enemy),
+        deck: buildDeck(blackDeck, PlayerRole.Black),
         graveyard: [],
         rows: [
-          { type: RowType.Melee, cards: [], player: PlayerRole.Enemy },
-          { type: RowType.Ranged, cards: [], player: PlayerRole.Enemy }
+          { type: RowType.Melee, cards: [], player: PlayerRole.Black },
+          { type: RowType.Ranged, cards: [], player: PlayerRole.Black }
         ],
         passed: false,
         roundWins: 0
       }
     },
-    currentPlayer: ALWAYS_FRIENDLY_START_PLAYER ? PlayerRole.Friendly : ALWAYS_ENEMY_START_PLAYER ? PlayerRole.Enemy : (flipCoin() ? PlayerRole.Friendly : PlayerRole.Enemy),
+    currentPlayer: ALWAYS_FRIENDLY_START_PLAYER ? PlayerRole.White : ALWAYS_ENEMY_START_PLAYER ? PlayerRole.Black : (flipCoin() ? PlayerRole.White : PlayerRole.Black),
     currentRound: 0,
     phase: GamePhase.Draw,
     turn: {
@@ -77,7 +77,7 @@ export function checkState(): void {
   //TODO: reset instance ability state - like cooldown, charges, ability used - BUT NOT COUNTER
   let newState = { ...gameState };
 
-  for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
+  for (const role of ['white', 'black'] as PlayerRole[]) {
     for (let rowIdx = 0; rowIdx < newState.players[role].rows.length; rowIdx++) {
       const row = newState.players[role].rows[rowIdx];
       // Find dead units (unit power <= 0)
@@ -117,8 +117,8 @@ export function checkState(): void {
 export function startRound() {
   const newState = { ...gameState };
   newState.currentRound += 1;
-  newState.players.friendly.passed = false;
-  newState.players.enemy.passed = false;
+  newState.players.white.passed = false;
+  newState.players.black.passed = false;
   newState.turn = {
     hasActivatedAbility: false,
     hasPlayedCard: false
@@ -128,7 +128,7 @@ export function startRound() {
   console.log(`Starting round ${newState.currentRound}`);
 
   //Draw the appropriate number of cards for each player
-  (['friendly', 'enemy'] as PlayerRole[]).forEach(role => {
+  (['white', 'black'] as PlayerRole[]).forEach(role => {
     const cardsToDraw =
       gameState.currentRound === 1
         ? CARDS_DRAWN_ROUND_1
@@ -196,8 +196,8 @@ export function endTurn() {
 }
 
 export function checkEndOfRound(): boolean {
-  const bothPassed = gameState.players.friendly.passed && gameState.players.enemy.passed;
-  const bothHandsEmpty = gameState.players.friendly.hand.length === 0 && gameState.players.enemy.hand.length === 0;
+  const bothPassed = gameState.players.white.passed && gameState.players.black.passed;
+  const bothHandsEmpty = gameState.players.white.hand.length === 0 && gameState.players.black.hand.length === 0;
   if (bothPassed || bothHandsEmpty) {
     return true;
   }
@@ -207,26 +207,26 @@ export function checkEndOfRound(): boolean {
 export function endRound() {
   const newState = { ...gameState };
   //TODO: Trigger onRoundEnd hooks for each player
-  const friendlyPoints = gameState.players.friendly.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
-  const enemyPoints = gameState.players.enemy.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
+  const whitePoints = gameState.players.white.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
+  const blackPoints = gameState.players.black.rows.flatMap(r => r.cards).reduce((sum, c) => sum + c.currentPower, 0);
 
-  if (friendlyPoints > enemyPoints) {
-    newState.players.friendly.roundWins += 1;
-    console.log(`Round ${gameState.currentRound} goes to Friendly (${friendlyPoints} vs ${enemyPoints})`);
-  } else if (enemyPoints > friendlyPoints) {
-    newState.players.enemy.roundWins += 1;
-    console.log(`Round ${gameState.currentRound} goes to Enemy (${enemyPoints} vs ${friendlyPoints})`);
+  if (whitePoints > blackPoints) {
+    newState.players.white.roundWins += 1;
+    console.log(`Round ${gameState.currentRound} goes to White (${whitePoints} vs ${blackPoints})`);
+  } else if (blackPoints > whitePoints) {
+    newState.players.black.roundWins += 1;
+    console.log(`Round ${gameState.currentRound} goes to Black (${blackPoints} vs ${whitePoints})`);
   } else {
     //Both players get a point in case of a tie
-    newState.players.friendly.roundWins += 1;
-    newState.players.enemy.roundWins += 1;
-    console.log(`Round ${gameState.currentRound} is a tie! (${friendlyPoints} vs ${enemyPoints})`);
+    newState.players.white.roundWins += 1;
+    newState.players.black.roundWins += 1;
+    console.log(`Round ${gameState.currentRound} is a tie! (${whitePoints} vs ${blackPoints})`);
   }
   setGameState(newState);
 
   //Reset rows for the next round
   //TODO: Check resilience
-  (['friendly', 'enemy'] as PlayerRole[]).forEach(role => {
+  (['white', 'black'] as PlayerRole[]).forEach(role => {
     newState.players[role].rows.forEach(row => {
       row.cards.forEach(card => {
         moveToZone(card, role, Zone.Graveyard);
@@ -245,7 +245,7 @@ export function moveToZone(card: CardInstance, player: PlayerRole, zone: Zone) {
   let cardIdx = -1;
 
   // Find the card in rows, hand, or deck
-  for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
+  for (const role of ['white', 'black'] as PlayerRole[]) {
     // Rows
     for (let r = 0; r < gameState.players[role].rows.length; r++) {
       const row = gameState.players[role].rows[r];
@@ -456,7 +456,7 @@ export function getCardPosition(card: CardInstance): CardPosition | null {
   let foundCardIndex = -1;
 
   // Find the card in rows, hand, or deck
-  for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
+  for (const role of ['white', 'black'] as PlayerRole[]) {
     //Row
     for (let r = 0; r < gameState.players[role].rows.length; r++) {
       const row = gameState.players[role].rows[r];
@@ -537,14 +537,14 @@ export function triggerHook(
   //TODO: dont trigger hooks for locked units
   console.info(`Triggering hook: ${hook}`, context);
   const allCards = [
-    ...gameState.players.friendly.rows.flatMap(row => row.cards),
-    ...gameState.players.enemy.rows.flatMap(row => row.cards),
-    ...gameState.players.friendly.hand,
-    ...gameState.players.enemy.hand,
-    ...gameState.players.friendly.deck,
-    ...gameState.players.enemy.deck,
-    ...gameState.players.friendly.graveyard,
-    ...gameState.players.enemy.graveyard,
+    ...gameState.players.white.rows.flatMap(row => row.cards),
+    ...gameState.players.black.rows.flatMap(row => row.cards),
+    ...gameState.players.white.hand,
+    ...gameState.players.black.hand,
+    ...gameState.players.white.deck,
+    ...gameState.players.black.deck,
+    ...gameState.players.white.graveyard,
+    ...gameState.players.black.graveyard,
   ];
   //TODO: ORDER ORDER ORDER
   //TODO: trigger row effects and statuses
@@ -632,7 +632,7 @@ export function addRowEffect(player: PlayerRole, rowType: RowType, rowEffect: Ro
 export function getLowestCards(): CardInstance[] | null {
   let lowestCards: CardInstance[] = [];
   let lowestPower = Infinity;
-  const cards = [...getPlayerCards(PlayerRole.Friendly), ...getPlayerCards(PlayerRole.Enemy)];
+  const cards = [...getPlayerCards(PlayerRole.White), ...getPlayerCards(PlayerRole.Black)];
   //Determine the lowest power
   for (const card of cards) {
     if (card.currentPower <= lowestPower) {
@@ -743,7 +743,7 @@ export function drawCard(player: PlayerRole, source?: EffectSource) {
  * State builder helpers
  */
 export function findCardOnBoardInState(state: GameState, targetId: string): CardInstance | null {
-  for (const role of ['friendly', 'enemy'] as PlayerRole[]) {
+  for (const role of ['white', 'black'] as PlayerRole[]) {
     for (let r = 0; r < state.players[role].rows.length; r++) {
       const row = state.players[role].rows[r];
       for (let c = 0; c < row.cards.length; c++) {
@@ -766,8 +766,8 @@ export function addCardToPlayerHand(cardId: string): CardInstance | null {
     return null;
   }
   const newState = { ...gameState };
-  const newCard = createCardInstance(cardDef, PlayerRole.Friendly);
-  newState.players.friendly.hand = [...newState.players.friendly.hand, newCard];
+  const newCard = createCardInstance(cardDef, PlayerRole.White);
+  newState.players.white.hand = [...newState.players.white.hand, newCard];
   setGameState(newState);
   return newCard;
 }

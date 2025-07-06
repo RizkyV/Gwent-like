@@ -12,28 +12,28 @@ export const GameInfo: React.FC<InfoProps> = ({ gameState }) => {
     return (
         <div className="game-info">
             <div>{t('game.currentRound')}: <strong>{gameState.currentRound}</strong></div>
-            <div>{t('game.activePlayer')}: {gameState.currentPlayer === "friendly" ? t('game.friendly') : t('game.enemy')}</div>
+            <div>{t('game.activePlayer')}: {gameState.currentPlayer === "white" ? t('game.white') : t('game.black')}</div>
             <div>
-                <span>{t('game.friendlyWins')}: <strong>{gameState.players.friendly.roundWins}</strong></span>
+                <span>{t('game.whiteWins')}: <strong>{gameState.players.white.roundWins}</strong></span>
             </div>
             <div>
-                <span>{t('game.enemyWins')}: <strong>{gameState.players.enemy.roundWins}</strong></span>
+                <span>{t('game.blackWins')}: <strong>{gameState.players.black.roundWins}</strong></span>
             </div>
             <div className="player-points">
-                <div className="player-points__enemy">
-                    Enemy Total Points: <strong>{getPlayerPoints(gameState.players.enemy)}</strong>
+                <div className="player-points__black">
+                    Black Total Points: <strong>{getPlayerPoints(gameState.players.black)}</strong>
                 </div>
-                <div className="player-points__friendly">
-                    Friendly Total Points: <strong>{getPlayerPoints(gameState.players.friendly)}</strong>
+                <div className="player-points__white">
+                    White Total Points: <strong>{getPlayerPoints(gameState.players.white)}</strong>
                 </div>
             </div>
             {gameState.phase === "gameOver" && (
                 <div className="game-over-banner">
                     Game Over!{" "}
-                    {gameState.players.friendly.roundWins > gameState.players.enemy.roundWins
-                        ? "Friendly Wins!"
-                        : gameState.players.enemy.roundWins > gameState.players.friendly.roundWins
-                            ? "Enemy Wins!"
+                    {gameState.players.white.roundWins > gameState.players.black.roundWins
+                        ? "White Wins!"
+                        : gameState.players.black.roundWins > gameState.players.white.roundWins
+                            ? "Black Wins!"
                             : "It's a Draw!"}
                 </div>
             )}

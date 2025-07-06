@@ -1,19 +1,18 @@
 import { CardInstance, PlayerRole, Row, GameState } from "../types";
 import { getGameState } from "../state";
-import { getStatusEffect } from "./status";
 
 export function flipCoin(): boolean {
   return Math.random() < 0.5;
 }
 export function getRows(state: GameState, player: PlayerRole): Row[] {
-  return player === 'friendly' ? state.players.friendly.rows : state.players.enemy.rows;
+  return player === 'white' ? state.players.white.rows : state.players.black.rows;
 }
 export function setRows(state: GameState, player: PlayerRole, rows: Row[]): GameState {
   return {
     ...state,
-    ...(player === 'friendly'
-      ? { friendlyRows: rows }
-      : { enemyRows: rows })
+    ...(player === 'white'
+      ? { whiteRows: rows }
+      : { blackRows: rows })
   };
 }
 

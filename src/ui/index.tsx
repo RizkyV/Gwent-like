@@ -19,7 +19,7 @@ import i18n from '../i18n';
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
  * If no legal targets - just play without triggering the effect
  * If the player regrets - a right click should reset the whole playing state
- * Change friendly/enemy to playerWhite/playerBlack
+ * Change white/black to playerWhite/playerBlack
  * UI Multi targeting
  * Mulligan
  * Potential hook queueing - potential timing issues

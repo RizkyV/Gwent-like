@@ -20,8 +20,8 @@ export const runGame = async () => {
 
     const config: GameConfig = {
         controllers: {
-            friendly: uiPlayer,
-            enemy: dummyPlayer2
+            white: uiPlayer,
+            black: dummyPlayer2
         }
     }
     resetGameState(testActiveDeck, testPassiveDeck, config);

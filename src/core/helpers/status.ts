@@ -48,7 +48,7 @@ export const statusEffects: Record<StatusType, StatusEffect> = {
   },
   veil: {
     type: StatusType.Veil,
-    description: 'Card cannot be targeted by enemy effects',
+    description: 'Card cannot be targeted by black effects',
   },
   poisoned: {
     type: StatusType.Poisoned,

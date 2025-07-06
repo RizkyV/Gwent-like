@@ -32,19 +32,19 @@ export async function gameLoop(config: GameConfig) {
     }
     if (getGameState().phase === GamePhase.RoundEnd) {
       endRound();
-      const friendlyWins = getGameState().players.friendly.roundWins;
-      const enemyWins = getGameState().players.enemy.roundWins;
+      const whiteWins = getGameState().players.white.roundWins;
+      const blackWins = getGameState().players.black.roundWins;
 
       //Calculate the amount of round wins needed to win the game
       const roundsLeft = MAX_ROUNDS - getGameState().currentRound;
-      const friendlyCanBeCaught = (friendlyWins + roundsLeft) >= enemyWins;
-      const enemyCanBeCaught = (enemyWins + roundsLeft) >= friendlyWins;
-      const gameIsOver = !friendlyCanBeCaught || !enemyCanBeCaught || getGameState().currentRound >= MAX_ROUNDS || friendlyWins + enemyWins >= MAX_ROUNDS;
-      console.log(`Round ${getGameState().currentRound} ended. Friendly Wins: ${friendlyWins}, Enemy Wins: ${enemyWins}`);
+      const whiteCanBeCaught = (whiteWins + roundsLeft) >= blackWins;
+      const blackCanBeCaught = (blackWins + roundsLeft) >= whiteWins;
+      const gameIsOver = !whiteCanBeCaught || !blackCanBeCaught || getGameState().currentRound >= MAX_ROUNDS || whiteWins + blackWins >= MAX_ROUNDS;
+      console.log(`Round ${getGameState().currentRound} ended. White Wins: ${whiteWins}, Black Wins: ${blackWins}`);
       console.log(`Rounds left: ${roundsLeft}. Game Over: ${gameIsOver}`);
       if (gameIsOver) {
         setToPhase(GamePhase.GameOver);
-        const winner = friendlyWins > enemyWins ? 'Friendly' : (enemyWins > friendlyWins ? 'Enemy' : 'Draw');
+        const winner = whiteWins > blackWins ? 'white' : (blackWins > whiteWins ? 'black' : 'Draw');
         console.log(`Game Over! Winner: ${winner}`);
         break;
       } else {

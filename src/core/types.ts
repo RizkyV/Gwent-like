@@ -1,5 +1,5 @@
 // === ENUMS & BASIC TYPES ===
-export enum PlayerRole { Friendly = 'friendly', Enemy = 'enemy' }
+export enum PlayerRole { White = 'white', Black = 'black' }
 export enum GamePhase { Draw = 'draw', Mulligan = 'mulligan', Play = 'play', RoundEnd = 'roundEnd', GameOver = 'gameOver' }
 export enum Zone { Deck = 'deck', Hand = 'hand', Graveyard = 'graveyard', RowMelee = 'melee', RowRanged = 'ranged', Exile = 'exile' }
 export enum RowType { Melee = 'melee', Ranged = 'ranged' }
@@ -59,8 +59,8 @@ export type PlayerController = {
 };
 export type GameConfig = {
   controllers: {
-    friendly: PlayerController;
-    enemy: PlayerController;
+    white: PlayerController;
+    black: PlayerController;
   };
 };
 export type TurnState = {
@@ -77,8 +77,8 @@ export type PlayerState = {
 };
 export type GameState = {
   players: {
-    friendly: PlayerState;
-    enemy: PlayerState;
+    white: PlayerState;
+    black: PlayerState;
   };
   currentPlayer: PlayerRole;
   currentRound: number;

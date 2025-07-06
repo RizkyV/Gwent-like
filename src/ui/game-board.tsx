@@ -26,28 +26,28 @@ export const GameInfo: React.FC<BoardProps> = ({
 
     return (
         <>
-            {/* Enemy zones */}
+            {/* Black zones */}
             <ZonePreview
-                title="Enemy Deck"
-                cards={gameState.players.enemy.deck}
+                title="Black Deck"
+                cards={gameState.players.black.deck}
                 position={{ top: 16, right: 16 }}
             />
             <ZonePreview
-                title="Enemy Graveyard"
-                cards={gameState.players.enemy.graveyard}
+                title="Black Graveyard"
+                cards={gameState.players.black.graveyard}
                 position={{ top: 16, left: 16 }}
             />
 
-            {/* Enemy hand and rows */}
+            {/* Black hand and rows */}
             <Hand
-                cards={gameState.players.enemy.hand}
+                cards={gameState.players.black.hand}
                 selectedCard={selectedHandCard}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
-                title="Enemy Hand" />
+                title="Black Hand" />
 
             <Row
-                row={gameState.players.enemy.rows.find(r => r.type === RowType.Ranged)}
+                row={gameState.players.black.rows.find(r => r.type === RowType.Ranged)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 onAbilityActivate={onAbilityActivate}
@@ -55,7 +55,7 @@ export const GameInfo: React.FC<BoardProps> = ({
                 isValidTarget={isValidTarget}
             />
             <Row
-                row={gameState.players.enemy.rows.find(r => r.type === RowType.Melee)}
+                row={gameState.players.black.rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 onAbilityActivate={onAbilityActivate}
@@ -63,9 +63,9 @@ export const GameInfo: React.FC<BoardProps> = ({
                 isValidTarget={isValidTarget}
             />
 
-            {/* Friendly rows and hand */}
+            {/* White rows and hand */}
             <Row
-                row={gameState.players.friendly.rows.find(r => r.type === RowType.Melee)}
+                row={gameState.players.white.rows.find(r => r.type === RowType.Melee)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 onAbilityActivate={onAbilityActivate}
@@ -73,7 +73,7 @@ export const GameInfo: React.FC<BoardProps> = ({
                 isValidTarget={isValidTarget}
             />
             <Row
-                row={gameState.players.friendly.rows.find(r => r.type === RowType.Ranged)}
+                row={gameState.players.white.rows.find(r => r.type === RowType.Ranged)}
                 onCardDrop={onCardDrop}
                 onCardClick={onBoardCardClick}
                 onAbilityActivate={onAbilityActivate}
@@ -82,21 +82,21 @@ export const GameInfo: React.FC<BoardProps> = ({
             />
 
             <Hand
-                cards={gameState.players.friendly.hand}
+                cards={gameState.players.white.hand}
                 selectedCard={selectedHandCard}
                 isTargeting={isTargeting}
                 isValidTarget={isValidTarget}
-                title="Friendly Hand" />
+                title="White Hand" />
 
-            {/* Friendly zones */}
+            {/* White zones */}
             <ZonePreview
-                title="Friendly Deck"
-                cards={gameState.players.friendly.deck}
+                title="White Deck"
+                cards={gameState.players.white.deck}
                 position={{ bottom: 16, right: 16 }}
             />
             <ZonePreview
-                title="Friendly Graveyard"
-                cards={gameState.players.friendly.graveyard}
+                title="White Graveyard"
+                cards={gameState.players.white.graveyard}
                 position={{ bottom: 16, left: 16 }}
             />
         </>
