@@ -1,5 +1,5 @@
 import React from "react";
-import { CardInstance, GameState, PlayerRole, RowType } from "../core/types";
+import { CardInstance, GameState, PlayerRole, RowType, Zone } from "../core/types";
 import Hand from "./hand";
 import Row from "./row";
 import { ZonePreview } from "./zone-preview";
@@ -32,11 +32,13 @@ export const GameInfo: React.FC<BoardProps> = ({
             {/* opponent zones */}
             <ZonePreview
                 title={`${getOtherPlayer(localPlayer)} Deck`}
+                zone={Zone.Deck}
                 cards={gameState.players[getOtherPlayer(localPlayer)].deck}
                 position={{ top: 16, right: 16 }}
             />
             <ZonePreview
                 title={`${getOtherPlayer(localPlayer)} Graveyard`}
+                zone={Zone.Graveyard}
                 cards={gameState.players[getOtherPlayer(localPlayer)].graveyard}
                 position={{ top: 16, left: 16 }}
             />
@@ -94,11 +96,13 @@ export const GameInfo: React.FC<BoardProps> = ({
             {/* local zones */}
             <ZonePreview
                 title={`${localPlayer} Deck`}
+                zone={Zone.Deck}
                 cards={gameState.players[localPlayer].deck}
                 position={{ bottom: 16, right: 16 }}
             />
             <ZonePreview
                 title={`${localPlayer} Graveyard`}
+                zone={Zone.Graveyard}
                 cards={gameState.players[localPlayer].graveyard}
                 position={{ bottom: 16, left: 16 }}
             />

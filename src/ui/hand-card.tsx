@@ -65,11 +65,11 @@ export const HandCard: React.FC<CardProps> = ({
             <div className="card__description-tooltip" style={{ zIndex: 10 }}>
               <div className="card__name">{t(card.baseCard.name)}</div>
               <div className="card__power">
-                Power: <span>{card.currentPower}</span>
+                {t('game.power')}: <span>{card.currentPower}</span>
               </div>
               {card.currentArmor > 0 && (
                 <div className="card__armor">
-                  Armor: <span>{card.currentArmor}</span>
+                  {t('game.armor')}: <span>{card.currentArmor}</span>
                 </div>
               )}
               {card.baseCard.types && (
@@ -87,7 +87,7 @@ export const HandCard: React.FC<CardProps> = ({
                 </div>
               )}
               {card.baseCard.category && (
-                <div className="card__category">Category: {card.baseCard.category}</div>
+                <div className="card__category">{t('game.category')}: {card.baseCard.category}</div>
               )}
               {card.baseCard.description && (
                 <div className="card__description">{t(card.baseCard.description)}</div>
@@ -105,11 +105,11 @@ export const HandCard: React.FC<CardProps> = ({
         <>
           <div className="card__name">{t(card.baseCard.name)}</div>
           <div className="card__power">
-            Power: <span>{card.currentPower}</span>
+            {t('game.power')}: <span>{card.currentPower}</span>
           </div>
           {card.currentArmor > 0 && (
             <div className="card__armor">
-              Armor: <span>{card.currentArmor}</span>
+              {t('game.armor')}: <span>{card.currentArmor}</span>
             </div>
           )}
           {card.baseCard.types && (
@@ -127,7 +127,7 @@ export const HandCard: React.FC<CardProps> = ({
             </div>
           )}
           {card.baseCard.category && (
-            <div className="card__category">Category: {card.baseCard.category}</div>
+            <div className="card__category">{t('game.category')}: {card.baseCard.category}</div>
           )}
           {hovered && card.baseCard.description && (
             <div className="card__description-tooltip" style={{ zIndex: 10 }}>

@@ -16,7 +16,8 @@
     "counter": "Counter",
     "power": "Power",
     "status": "Status",
-    "armor": "Armor"
+    "armor": "Armor",
+    "category": "Category"
   },
   "actions": {
     "play": "Play",

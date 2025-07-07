@@ -16,7 +16,8 @@
     "counter": "Tæller",
     "power": "Styrke",
     "status": "Status",
-    "armor": "Armor"
+    "armor": "Armor",
+    "category": "Kategori"
   },
   "actions": {
     "play": "Spil",
