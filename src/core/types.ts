@@ -135,7 +135,7 @@ export interface CardDefinition {
   tags?: string[];
   sets?: string[];
   isToken?: boolean;
-  isValidRow: (source: CardInstance, player: PlayerRole, rowId: RowType) => boolean;
+  isValidRow: (self: CardInstance, player: PlayerRole, rowType: RowType) => boolean;
   innateStatuses?: StatusType[];
   effects?: HookedEffect[];
   abilityOneTimeUse?: boolean;

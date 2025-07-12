@@ -36,11 +36,11 @@ export function isFriendlyTurn(context: EffectContext): boolean {
 export function isFriendly(source: CardInstance, target: CardInstance): boolean {
   return getCardController(source) === getCardController(target);
 }
-export function isFriendlyRow(source: CardInstance, player: PlayerRole): boolean {
-  return getCardController(source) === player;
+export function isFriendlyRow(self: CardInstance, player: PlayerRole): boolean {
+  return getCardController(self) === player;
 }
-export function isEnemyRow(source: CardInstance, player: PlayerRole): boolean {
-  return getCardController(source) !== player;
+export function isEnemyRow(self: CardInstance, player: PlayerRole): boolean {
+  return getCardController(self) !== player;
 }
 
 
@@ -68,11 +68,11 @@ export function targetIsEnemyRow(source: CardInstance, target: EffectSource): bo
 }
 
 export function getEffectSourceCard(effectSource: EffectSource): CardInstance | null {
-  if (effectSource.kind !== "card") return null;
+  if (!effectSource || effectSource.kind !== "card") return null;
   return effectSource.card;
 }
 export function getEffectSourceRow(effectSource: EffectSource): Row | null {
-  if (effectSource.kind !== "row") return null;
+  if (!effectSource || effectSource.kind !== "row") return null;
   return effectSource.row;
 }
 

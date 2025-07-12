@@ -20,7 +20,7 @@ export const Hand: React.FC<HandProps> = ({ cards, title }) => {
             key={card.instanceId}
             card={card}
             highlight={selectedHandCard?.instanceId === card.instanceId}
-            showTargetButton={isTargeting && isValidTarget(card)}
+            showTargetButton={isTargeting && isValidTarget({kind: "card", card})}
           />
         ))}
       </div>

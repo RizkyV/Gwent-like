@@ -10,7 +10,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import { CardInstance, PlayerRole, RowType } from "../core/types";
+import { CardInstance, EffectSource, PlayerRole, Row, RowType } from "../core/types";
 import { DEFAULT_LOCAL_PLAYER } from "../core/constants";
 import { create } from "zustand";
 import { flipCoin } from "../core/helpers/utils";
@@ -30,29 +30,40 @@ import { flipCoin } from "../core/helpers/utils";
 */
 
 export type uiState = {
-  selectedHandCard: CardInstance | null; // Instance ID of the selected card
-  isTargeting: boolean; // Whether the UI is in a targeting state
-  pendingAction: PendingAction | null; // The action that is pending (play or ability)
+  selectedHandCard: CardInstance | null;
+  isTargeting: boolean;
+  pendingAction: PendingAction | null;
+  uiPhase: UIPhase;
+  playInitiator: PlayInitiator | null;
   setSelectedHandCard: (card: CardInstance | null) => void;
   setIsTargeting: (isTargeting: boolean) => void;
-  flipTargeting: () => void; // Toggle the targeting state
+  flipTargeting: () => void;
   setPendingAction: (action: PendingAction | null) => void;
+  setUIPhase: (phase: UIPhase) => void;
+  setPlayInitiator: (initiator: PlayInitiator | null) => void;
   setState: (state: Partial<uiState>) => void;
-}
+};
+export type UIPhase = "waiting" | "playing" | "targeting";
+export type PlayInitiator = "user" | "engine";
 export type PendingAction =
   | { type: "play"; card: CardInstance; rowType: RowType; player: PlayerRole; index: number }
-  | { type: "ability"; card: CardInstance };
+  | { type: "ability"; card: CardInstance }
+  | { type: "target"; effectSource: EffectSource};
 
 export const uiStateStore = create<uiState>((set) => ({
   selectedHandCard: null,
   isTargeting: false,
   pendingAction: null,
-  setSelectedHandCard: (card: CardInstance | null) => set({ selectedHandCard: card }),
-  setIsTargeting: (isTargeting: boolean) => set({ isTargeting }),
+  uiPhase: "waiting",
+  playInitiator: null,
+  setSelectedHandCard: (card) => set({ selectedHandCard: card }),
+  setIsTargeting: (isTargeting) => set({ isTargeting }),
   flipTargeting: () => set((state) => ({ isTargeting: !state.isTargeting })),
-  setPendingAction: (action: PendingAction | null) => set({ pendingAction: action }),
-  setState: (state: Partial<uiState>) => set({ ...state }),
-}))
+  setPendingAction: (action) => set({ pendingAction: action }),
+  setUIPhase: (phase) => set({ uiPhase: phase }),
+  setPlayInitiator: (initiator) => set({ playInitiator: initiator }),
+  setState: (state) => set({ ...state }),
+}));
 const App = () => {
   const [gameState, setGameState] = useState(null);
   const [localPlayer, setLocalPlayer] = useState<PlayerRole | null>(null);

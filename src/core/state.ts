@@ -1,5 +1,5 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
-import { ALWAYS_IVORY_START_PLAYER, ALWAYS_OBSIDIAN_START_PLAYER,  CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
+import { ALWAYS_IVORY_START_PLAYER, ALWAYS_OBSIDIAN_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
 import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
@@ -152,6 +152,7 @@ export function mulliganCards() {
 }
 
 export function startTurn() {
+  console.log(`Starting turn ${gameState.currentTurn} for player ${gameState.currentPlayer}`);
   triggerHook(HookType.OnTurnStart, { player: gameState.currentPlayer });
 }
 export function passTurn(player: PlayerRole) {
@@ -165,6 +166,7 @@ export function passTurn(player: PlayerRole) {
   checkState();
 }
 export function endTurn() {
+  console.log(`Ending turn for player ${gameState.currentPlayer} - turn number is ${gameState.currentTurn}`);
   const newState = { ...gameState };
   const oldPlayer = newState.currentPlayer;
   const newPlayer = getOtherPlayer(newState.currentPlayer);
@@ -329,7 +331,7 @@ export function setToPhase(phase: GamePhase) {
   setGameState(newState);
 }
 
-export function playCard(card: CardInstance, player: PlayerRole, rowType: RowType, index: number, target?: CardInstance): void {
+export function playCard(card: CardInstance, player: PlayerRole, rowType: RowType, index: number, target?: EffectSource): void {
   if (card.baseCard.category !== CardCategory.Special) {
     moveCardToBoard(card, player, rowType, index)
   } else {
@@ -338,16 +340,16 @@ export function playCard(card: CardInstance, player: PlayerRole, rowType: RowTyp
   const newState = { ...gameState };
   newState.turn.hasPlayedCard = true;
   setGameState(newState);
-  triggerHook(HookType.OnPlay, { source: { kind: 'card', card }, target: { kind: 'card', card: target } });
+  triggerHook(HookType.OnPlay, { source: { kind: 'card', card }, target });
   triggerHook(HookType.OnSummoned, { source: { kind: 'card', card }, player: player });
   checkState();
 }
 
-export function activateAbility(card: CardInstance, target?: CardInstance): void {
+export function activateAbility(card: CardInstance, target?: EffectSource): void {
   const newState = { ...gameState };
   newState.turn.hasActivatedAbility = true;
   setGameState(newState);
-  triggerHook(HookType.OnAbilityActivated, { source: { kind: 'card', card }, target: { kind: 'card', card: target } });
+  triggerHook(HookType.OnAbilityActivated, { source: { kind: 'card', card }, target });
   checkState();
 }
 

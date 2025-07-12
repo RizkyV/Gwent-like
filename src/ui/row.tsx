@@ -1,25 +1,31 @@
 import React from "react";
 import HandCard from "./hand-card";
 import { getRowPoints } from "../core/state";
-import { CardInstance, RowType } from "../core/types";
-import type { Row as RowData, GameState } from "../core/types";
+import { CardInstance } from "../core/types";
+import type { Row as RowData } from "../core/types";
 import { useDrop } from "react-dnd";
 import { uiStateStore } from "./index";
-import { handleCardDrop, handleAbilityActivate, handleBoardCardClick, isValidTarget } from "./ui-helpers";
+import { handleCardDrop, handleAbilityActivate, handleTargetClick, isValidTarget, handleRowDropConfirm } from "./ui-helpers";
 
 export type RowProps = {
   row: RowData;
 };
 
 export const Row: React.FC<RowProps> = ({ row }) => {
-  const { isTargeting } = uiStateStore();
+  const { selectedHandCard, isTargeting, setPendingAction } = uiStateStore();
 
   // Helper for drop zones
   const DropZone = ({ index }) => {
+    const { uiPhase } = uiStateStore();
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
       accept: 'CARD',
       drop: (item: CardInstance) => handleCardDrop(item, row.type, row.player, index),
       canDrop: (item) => {
+        if(!item) {
+          console.warn("Invalid item dropped on row", { item });
+          return false;
+        }
+        //console.log("canDrop", { item, thing: item.baseCard.isValidRow(item, row.player, row.type) });
         return item.baseCard.isValidRow(item, row.player, row.type);
       },
       collect: (monitor) => ({
@@ -29,10 +35,21 @@ export const Row: React.FC<RowProps> = ({ row }) => {
     }));
     const divRef = React.useRef<HTMLDivElement>(null);
     drop(divRef);
+
+    // In playing phase, allow clicking the drop zone to confirm placement
+    const handleClick = () => {
+      if (uiPhase === "playing") {
+        setPendingAction({ type: "play", card: selectedHandCard, rowType: row.type, player: row.player, index });
+        handleRowDropConfirm();
+      }
+    };
+    const showDropZone = canDrop || (uiPhase === "playing" && selectedHandCard.baseCard.isValidRow(selectedHandCard, row.player, row.type));
     return (
       <div
         ref={divRef}
-        className={`row__drop-zone${isOver && canDrop ? " row__drop-zone--active" : ""}${canDrop ? " row__drop-zone--can-drop" : ""}`}
+        className={`row__drop-zone${isOver && showDropZone ? " row__drop-zone--active" : ""}${showDropZone ? " row__drop-zone--can-drop" : ""}`}
+        onClick={handleClick}
+        style={{ cursor: uiPhase === "playing" ? "pointer" : undefined }}
       />
     );
   };
@@ -51,15 +68,15 @@ export const Row: React.FC<RowProps> = ({ row }) => {
             <HandCard
               key={card.instanceId}
               card={card}
-              highlight={isTargeting && isValidTarget(card)}
+              highlight={isTargeting && isValidTarget({ kind: "card", card })}
               onClick={() => {
-                if (isTargeting && isValidTarget(card)) {
-                  handleBoardCardClick(card);
+                if (isTargeting && isValidTarget({ kind: "card", card })) {
+                  handleTargetClick({ kind: "card", card });
                 } else {
                   handleAbilityActivate(card);
                 }
               }}
-              showTargetButton={isTargeting && isValidTarget(card)}
+              showTargetButton={isTargeting && isValidTarget({ kind: "card", card })}
             />
           </React.Fragment>
         ))}
