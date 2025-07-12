@@ -1,27 +1,53 @@
 {
+  "ui": {
+    "loading": "Indlæser...",
+    "cancel": "Afbryd"
+  },
   "game": {
+    "round": "Runde",
     "currentRound": "Nuværende Runde",
-    "activePlayer": "Aktive Spiller",
-    "friendly": "Ven",
-    "enemy": "Fjende",
+    "turn": "Tur",
+    "activePlayer": "Aktive spiller",
     "ivory": "Elfenben",
     "obsidian": "Obsidian",
-    "ivoryWins": "Elfenben Sejre",
-    "obsidianWins": "Obsidian Sejre",
-    "loading": "Indlæser...",
-    "turn": "Tur",
-    "round": "Runde",
-    "cooldown": "Nedkøling",
-    "charges": "Ladninger",
-    "counter": "Tæller",
-    "power": "Styrke",
-    "status": "Status",
-    "armor": "Armor",
-    "category": "Kategori"
+    "ivoryWins": "Elfenben sejre",
+    "obsidianWins": "Obsidian sejre",
+    "ivoryPoints": "Elfenben point",
+    "obsidianPoints": "Obsidian point",
+    "gameOver": "Spillet er slut",
+    "ivoryVictory": "Elfenben vandt",
+    "obsidianVictory": "Obsidian vandt",
+    "tie": "Spillet endte uafgjort"
+  },
+  "player": {
+    "friendly": "Ven",
+    "enemy": "Fjende"
+  },
+  "zones": {
+    "hand": "Hånd",
+    "deck": "Dæk",
+    "graveyard": "Kirkegård",
+    "row": "Række",
+    "melee": "Frontlinje",
+    "ranged": "Baglinje"
   },
   "actions": {
     "play": "Spil",
-    "cancel": "Afbryd"
+    "cancel": "Afbryd",
+    "target": "Sigt",
+    "endTurn": "Afslut tur",
+    "passTurn": "Meld pas"
+  },
+  "card": {
+    "power": "Styrke",
+    "armor": "Armor",
+    "category": "Kategori",
+    "type": "Type",
+    "status": "Status",
+    "statuses": "Statuser",
+    "cooldown": "Nedkøling",
+    "charges": "Ladninger",
+    "counter": "Tæller"
   },
   "cards": {
     "token_cow": {

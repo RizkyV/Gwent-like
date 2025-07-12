@@ -1,6 +1,6 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
 import { ALWAYS_IVORY_START_PLAYER, ALWAYS_OBSIDIAN_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
-import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType } from './types.js';
+import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType, RowEffect } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
 import { getStatusEffect } from './helpers/status.js';
@@ -550,12 +550,10 @@ export function triggerHook(
     ...gameState.players.obsidian.graveyard,
   ];
   //TODO: ORDER ORDER ORDER
-  //TODO: trigger row effects and statuses
+  //Trigger hooks of cards
   for (const card of allCards) {
-    const hookedEffects = card.baseCard.effects?.filter(e => e.hook === hook) || [];
-    const statuses = card.statuses ? Array.from(card.statuses).flatMap(status => getStatusEffect(status[0]).effects?.filter(e => e.hook === hook) || []) : [];
-    hookedEffects.push(...statuses)
-    for (const effect of hookedEffects) {
+    const cardEffects = card.baseCard.effects?.filter(e => e.hook === hook) || [];
+    for (const effect of cardEffects) {
       // Default: only trigger if card is on board, unless effect.zone says otherwise
       const zoneCheck =
         typeof effect.zone === 'function'
@@ -569,6 +567,41 @@ export function triggerHook(
         self: { kind: 'card', card },
       };
       effect.effect(scopedContext);
+    }
+    //Trigger hooks of statuses
+    const statusEffects = card.statuses ? Array.from(card.statuses).flatMap(status => getStatusEffect(status[0]).effects?.filter(e => e.hook === hook) || []) : [];
+    for (const effect of statusEffects) {
+      const zoneCheck =
+        typeof effect.zone === 'function'
+          ? effect.zone(context)
+          : effect.zone
+            ? isCardInZone(card, effect.zone)
+            : isCardInZone(card, Zone.RowMelee) || isCardInZone(card, Zone.RowRanged);
+      if (!zoneCheck) continue;
+
+      const scopedContext: EffectContext = {
+        ...context,
+        self: { kind: 'card', card },
+      };
+      effect.effect(scopedContext);
+    }
+  }
+  //Trigger hooks of row effects
+  for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
+    const rows = gameState.players[role].rows;
+    for (const row of rows) {
+      if (row && row.effects) {
+        for (const rowEffect of row.effects) {
+          for (const rowEffectsEffect of rowEffect.effects) {
+            if( rowEffectsEffect.hook !== hook) continue;
+            const scopedContext: EffectContext = {
+              ...context,
+              self: { kind: 'rowEffect', type: rowEffect.type, row },
+            };
+            rowEffectsEffect.effect(scopedContext);
+          }
+        }
+      }
     }
   }
 }
@@ -627,11 +660,42 @@ export function addRowEffect(player: PlayerRole, rowType: RowType, rowEffect: Ro
   const newState = { ...gameState }
   const weatherEffect = getRowEffect(rowEffect);
   if (!weatherEffect) return;
+  //TODO: increase duration if already exists
   weatherEffect.duration = duration;
-  newState.players[player].rows.find(row => row.type === rowType).effects.push(weatherEffect);
+  const row = newState.players[player].rows.find(row => row.type === rowType);
+  if (!row.effects) {
+    row.effects = [weatherEffect];
+  } else {
+    row.effects.push(weatherEffect);
+  }
   setGameState(newState);
 }
 
+export function getHighestCards(): CardInstance[] | null {
+  let highestCards: CardInstance[] = [];
+  let highestPower = Infinity;
+  const cards = [...getPlayerCards(PlayerRole.Ivory), ...getPlayerCards(PlayerRole.Obsidian)];
+  //Determine the highest power
+  for (const card of cards) {
+    if (card.currentPower >= highestPower) {
+      highestPower = card.currentPower;
+    }
+  }
+  //Get all valid cards
+  for (const card of cards) {
+    if (card.currentPower >= highestPower) {
+      highestCards.push(card);
+    }
+  }
+  if (highestCards.length === 0) return null; // No valid cards found
+  return highestCards;
+}
+export function getHighestCard(): CardInstance | null {
+  const highestCards = getHighestCards();
+  if (highestCards === null || highestCards.length === 0) return null;
+  //Return a card randomly chosen from the highest cards
+  return highestCards[Math.floor(Math.random() * highestCards.length)];
+}
 export function getLowestCards(): CardInstance[] | null {
   let lowestCards: CardInstance[] = [];
   let lowestPower = Infinity;
@@ -661,6 +725,44 @@ export function getLowestCard(): CardInstance | null {
 export function getRow(player: PlayerRole, type: RowType): Row | null {
   const row = gameState.players[player].rows.find(r => r.type === type);
   return row || null;
+}
+
+export function tickStatusDurations(card: CardInstance): void {
+  const newState = { ...gameState };
+  card = findCardOnBoardInState(newState, card.instanceId);
+  if (!card) {
+    console.warn(`Card with instanceId ${card.instanceId} not found in game state.`);
+    return;
+  }
+  let changed = false;
+  const newStatuses = new Map(card.statuses);
+  for (const [status, statusObj] of card.statuses.entries()) {
+    if (statusObj.duration !== undefined) {
+      if (statusObj.duration <= 1) {
+        newStatuses.delete(status);
+        changed = true;
+      } else {
+        newStatuses.set(status, { ...statusObj, duration: statusObj.duration - 1 });
+        changed = true;
+      }
+    }
+  }
+  if (changed) {
+    card.statuses = newStatuses;
+  }
+  setGameState(newState);
+}
+
+export function tickRowEffectDuration(row: Row): void {
+  const newState = { ...gameState };
+  row = newState.players[row.player].rows.find(r => r.type === row.type);
+  if (!row) return;
+  row.effects[0].duration -= 1; //Tick down the active effect
+  if (row.effects[0].duration <= 0) {
+    //Remove the effect if duration is over
+    row.effects.shift();
+  }
+  setGameState(newState);
 }
 
 /**

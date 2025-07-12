@@ -7,10 +7,7 @@ export const dummyPlayer2: PlayerController = {
   makeMove: async (role) => {
     console.log(`It's DUMMY ${role}'s turn.`);
     // Wait for X seconds before making a move
-    await new Promise(resolve => {
-      console.log(`DUMMY ${role} is thinking...`);
-      setTimeout(resolve, DUMMY_DELAY);
-    });
+    await new Promise(resolve => setTimeout(resolve, DUMMY_DELAY));
     if (getGameState().players[role].hand.length > 0) {
       console.log(`Playing card: ${getGameState().players[role].hand[0].baseCard.name}`);
       if (getGameState().players[role].rows.find((row) => row.type === RowType.Melee).cards.length >= MAX_ROW_SIZE) {

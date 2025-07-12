@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { CardInstance } from "../core/types";
-import { DragPreviewImage, useDrag } from "react-dnd";
+import { useDrag } from "react-dnd";
 import { useTranslation } from "react-i18next";
-import { cancelPlayIfAllowed } from "./ui-helpers";
 import { uiStateStore } from "./index";
 
 export type CardProps = {
@@ -24,7 +23,7 @@ export const HandCard: React.FC<CardProps> = ({
   const [shouldOpenUpwards, setShouldOpenUpwards] = useState(false);
   const cardRef = React.useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
-  const { setSelectedHandCard, setUIPhase, setPlayInitiator, setPendingAction } = uiStateStore();
+  const { setSelectedHandCard, setUIPhase, setPlayInitiator } = uiStateStore();
 
   React.useEffect(() => {
     if (hovered && cardRef.current) {
@@ -78,10 +77,6 @@ export const HandCard: React.FC<CardProps> = ({
         ref={combinedRef}
         className={`card${highlight ? " card--highlight" : ""}${shouldOpenUpwards ? " card--tooltip-upwards" : ""}`}
         onClick={onClick}
-        onContextMenu={e => {
-          e.preventDefault();
-          cancelPlayIfAllowed();
-        }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
@@ -95,14 +90,14 @@ export const HandCard: React.FC<CardProps> = ({
           <>
             <img className="card__art" src={card.baseCard.artworkUrl!} alt={card.baseCard.name} />
             {hovered && (
-              <div className="card__description-tooltip" style={{ zIndex: 10 }}>
+              <div className="card__description-tooltip">
                 <div className="card__name">{t(card.baseCard.name)}</div>
                 <div className="card__power">
-                  {t('game.power')}: <span>{card.currentPower}</span>
+                  {t('card.power')}: <span>{card.currentPower}</span>
                 </div>
                 {card.currentArmor > 0 && (
                   <div className="card__armor">
-                    {t('game.armor')}: <span>{card.currentArmor}</span>
+                    {t('card.armor')}: <span>{card.currentArmor}</span>
                   </div>
                 )}
                 {card.baseCard.types && (
@@ -120,16 +115,16 @@ export const HandCard: React.FC<CardProps> = ({
                   </div>
                 )}
                 {card.baseCard.category && (
-                  <div className="card__category">{t('game.category')}: {card.baseCard.category}</div>
+                  <div className="card__category">{t('card.category')}: {card.baseCard.category}</div>
                 )}
                 {card.baseCard.description && (
                   <div className="card__description">{t(card.baseCard.description)}</div>
                 )}
                 {showPlayButton && (
-                  <button className="card__action-btn">Play</button>
+                  <button className="card__action-btn">{t('actions.play')}</button>
                 )}
                 {showTargetButton && (
-                  <button className="card__action-btn">Target</button>
+                  <button className="card__action-btn">{t('actions.target')}</button>
                 )}
               </div>
             )}
@@ -138,11 +133,11 @@ export const HandCard: React.FC<CardProps> = ({
           <>
             <div className="card__name">{t(card.baseCard.name)}</div>
             <div className="card__power">
-              {t('game.power')}: <span>{card.currentPower}</span>
+              {t('card.power')}: <span>{card.currentPower}</span>
             </div>
             {card.currentArmor > 0 && (
               <div className="card__armor">
-                {t('game.armor')}: <span>{card.currentArmor}</span>
+                {t('card.armor')}: <span>{card.currentArmor}</span>
               </div>
             )}
             {card.baseCard.types && (
@@ -160,23 +155,23 @@ export const HandCard: React.FC<CardProps> = ({
               </div>
             )}
             {card.baseCard.category && (
-              <div className="card__category">{t('game.category')}: {card.baseCard.category}</div>
+              <div className="card__category">{t('card.category')}: {card.baseCard.category}</div>
             )}
             {hovered && card.baseCard.description && (
-              <div className="card__description-tooltip" style={{ zIndex: 10 }}>
+              <div className="card__description-tooltip">
                 <div className="card__description">{t(card.baseCard.description)}</div>
               </div>
             )}
             {showPlayButton && (
-              <button className="card__action-btn">Play</button>
+              <button className="card__action-btn">{t('actions.play')}</button>
             )}
             {showTargetButton && (
-              <button className="card__action-btn">Target</button>
+              <button className="card__action-btn">{t('actions.target')}</button>
             )}
           </>
         )}
       </div>
-      {isSticky  && !isDragging && <StickyCardPreview card={card} />}
+      {isSticky && !isDragging && <StickyCardPreview card={card} />}
     </>
   );
 };

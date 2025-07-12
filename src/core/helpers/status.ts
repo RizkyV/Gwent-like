@@ -1,5 +1,5 @@
 import { getEffectSourceCard } from "../cards";
-import { boostCard, dealDamage } from "../state";
+import { boostCard, dealDamage, tickStatusDurations } from "../state";
 import { CardInstance, HookType, StatusEffect, StatusType } from "../types";
 import { getCardController } from "./board";
 
@@ -88,24 +88,4 @@ export function hasStatus(card: CardInstance, status: StatusType): boolean {
 
 export function getStatusDuration(card: CardInstance, status: StatusType): number | undefined {
   return card.statuses.get(status)?.duration;
-}
-
-export function tickStatusDurations(card: CardInstance): void {
-  //TODO: Needs to go through setGameState
-  let changed = false;
-  const newStatuses = new Map(card.statuses);
-  for (const [status, statusObj] of card.statuses.entries()) {
-    if (statusObj.duration !== undefined) {
-      if (statusObj.duration <= 1) {
-        newStatuses.delete(status);
-        changed = true;
-      } else {
-        newStatuses.set(status, { ...statusObj, duration: statusObj.duration - 1 });
-        changed = true;
-      }
-    }
-  }
-  if (changed) {
-    card.statuses = newStatuses;
-  }
 }

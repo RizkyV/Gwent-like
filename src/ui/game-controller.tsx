@@ -35,7 +35,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState, localPlayer 
         <div>
             <GameBoard gameState={gameState} localPlayer={localPlayer} />
             <button className="end-turn-btn" onClick={handleEndOrPassTurn}>
-                {hasTakenAction ? "End Turn" : "Pass Turn"}
+                {hasTakenAction ? t('actions.endTurn') : t('actions.passTurn')}
             </button>
             {uiPhase === "playing" && playInitiator === "user" && (
                 <button
@@ -52,7 +52,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState, localPlayer 
                     }}
                     onClick={cancelPlayIfAllowed}
                 >
-                    {t('game.cancel')}
+                    {t('actions.cancel')}
                 </button>
             )}
         </div>

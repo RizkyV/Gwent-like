@@ -5,7 +5,9 @@ import { CardInstance } from "../core/types";
 import type { Row as RowData } from "../core/types";
 import { useDrop } from "react-dnd";
 import { uiStateStore } from "./index";
-import { handleCardDrop, handleAbilityActivate, handleTargetClick, isValidTarget, handleRowDropConfirm } from "./ui-helpers";
+import { handleCardDrop, handleAbilityActivate, handleTargetClick, isValidTarget, handleRowDropConfirm, getLocalizedPlayer, getLocalizedRowType } from "./ui-helpers";
+import { useTranslation } from "react-i18next";
+import { getRowEffect } from "../core/helpers/row";
 
 export type RowProps = {
   row: RowData;
@@ -13,6 +15,9 @@ export type RowProps = {
 
 export const Row: React.FC<RowProps> = ({ row }) => {
   const { selectedHandCard, isTargeting, setPendingAction } = uiStateStore();
+  const showTargetButton = isTargeting && isValidTarget({ kind: "row", row });
+  const { t } = useTranslation();
+
 
   // Helper for drop zones
   const DropZone = ({ index }) => {
@@ -21,7 +26,7 @@ export const Row: React.FC<RowProps> = ({ row }) => {
       accept: 'CARD',
       drop: (item: CardInstance) => handleCardDrop(item, row.type, row.player, index),
       canDrop: (item) => {
-        if(!item) {
+        if (!item) {
           console.warn("Invalid item dropped on row", { item });
           return false;
         }
@@ -55,12 +60,22 @@ export const Row: React.FC<RowProps> = ({ row }) => {
   };
 
   return (
-    <div className="row">
+    <div className="row" onClick={() => handleTargetClick({ kind: "row", row })}>
       <div className="row__header">
         <span className="row__title">
-          {row.player} {row.type} Row <span className="row__points">({getRowPoints(row)})</span>
+          {getLocalizedPlayer(row.player)} {getLocalizedRowType(row.type)} <span className="row__points">({getRowPoints(row)})</span>
         </span>
+        {showTargetButton && (
+          <button className="card__action-btn" >{t('actions.target')}</button>
+        )}
       </div>
+      {row.effects && row.effects.length > 0 && (
+        <div className="row__effects">
+          {row.effects.map((effect, idx) => (
+            <span key={idx} className="row__effect">{getRowEffect(effect.type).name} - Duration: {effect.duration}</span>
+          ))}
+        </div>
+      )}
       <div className="row__cards">
         {row.cards.map((card, idx) => (
           <React.Fragment key={card.instanceId}>

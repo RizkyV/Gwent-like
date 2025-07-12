@@ -12,7 +12,7 @@ export const runGame = async () => {
     const typesMissingCat = types.filter(t => !TypeCategoryMap[t]);
     typesMissingCat ?? console.warn('Types still missing a category!', typesMissingCat);
 
-    const activeCardPool = [getCardDefinition('unit_olaf_champion_of_skellige'), getCardDefinition('unit_nekker'), getCardDefinition('unit_plumard'), getCardDefinition('unit_catapult')];
+    const activeCardPool = [getCardDefinition('unit_olaf_champion_of_skellige'), getCardDefinition('unit_nekker'), getCardDefinition('unit_catapult'), getCardDefinition('special_impenetrable_fog'), getCardDefinition('unit_foglet'), getCardDefinition('unit_ancient_foglet') ];
     const passiveCardPool = cardDefinitions.slice(0, 10);
 
     const testActiveDeck: CardDefinition[] = Array.from({ length: DEFAULT_DECK_SIZE }, (_, i) => activeCardPool[i % activeCardPool.length]);

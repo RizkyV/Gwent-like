@@ -1,6 +1,7 @@
 import { playCard, activateAbility, canActivateAbility, getGameState } from "../core/state";
 import { uiStateStore } from "./index";
 import { CardInstance, EffectSource, HookType, PlayerRole, RowType } from "../core/types";
+import { useTranslation } from "react-i18next";
 
 export function handleCardDrop(card: CardInstance, rowType: RowType, player: PlayerRole, index: number) {
     const {
@@ -157,4 +158,18 @@ export function initiateCardPlaying(card: CardInstance) {
     uiStateStore.getState().setSelectedHandCard(card);
     uiStateStore.getState().setUIPhase("playing");
     uiStateStore.getState().setPlayInitiator("engine");
+}
+
+/**
+ * Localisation helpers
+ */
+
+export function getLocalizedPlayer(player: PlayerRole) {
+  const { t } = useTranslation();
+  return player === PlayerRole.Ivory ? t("game.ivory") : t("game.obsidian");
+}
+
+export function getLocalizedRowType(rowType: RowType) {
+  const { t } = useTranslation();
+  return rowType === RowType.Melee ? t("zones.melee") : t("zones.ranged");
 }

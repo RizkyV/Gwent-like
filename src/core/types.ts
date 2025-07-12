@@ -92,6 +92,7 @@ export type GameState = {
 // === ROWS ===
 export type RowEffect = {
   type: RowEffectType;
+  name?: string;
   description?: string;
   effects?: HookedEffect[];
   predicates?: Predicate[];

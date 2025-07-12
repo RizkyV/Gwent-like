@@ -72,7 +72,8 @@ export function getEffectSourceCard(effectSource: EffectSource): CardInstance | 
   return effectSource.card;
 }
 export function getEffectSourceRow(effectSource: EffectSource): Row | null {
-  if (!effectSource || effectSource.kind !== "row") return null;
+  if (!effectSource) return null;
+  if (effectSource.kind !== "row" && effectSource.kind !== "rowEffect") return null;
   return effectSource.row;
 }
 
@@ -652,7 +653,7 @@ export const cardDefinitions: CardDefinition[] = [
     description: 'At the end of your turn, if there is Fog on the opposite row, boost self by 1.',
     tags: ['Fog'],
     sets: ['Witcher'],
-    isValidRow: isEnemyRow,
+    isValidRow: isFriendlyRow,
     effects: [
       {
         hook: HookType.OnTurnEnd,
@@ -683,7 +684,7 @@ export const cardDefinitions: CardDefinition[] = [
     description: 'Whenever Fog deals damage to an enemy unit, boost self by the same amount.',
     tags: ['Fog'],
     sets: ['Witcher'],
-    isValidRow: isEnemyRow,
+    isValidRow: isFriendlyRow,
     effects: [
       {
         hook: HookType.OnDamaged,

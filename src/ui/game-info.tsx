@@ -2,6 +2,7 @@ import React from "react";
 import { GameState, PlayerRole } from "../core/types";
 import { getPlayerPoints } from "../core/state";
 import { useTranslation } from "react-i18next";
+import { getLocalizedPlayer } from "./ui-helpers";
 
 export type InfoProps = {
     gameState: GameState;
@@ -13,7 +14,7 @@ export const GameInfo: React.FC<InfoProps> = ({ gameState, localPlayer }) => {
     return (
         <div className="game-info">
             <div>{t('game.currentRound')}: <strong>{gameState.currentRound}</strong></div>
-            <div>{t('game.activePlayer')}: {gameState.currentPlayer === "ivory" ? t('game.ivory') : t('game.obsidian')}</div>
+            <div>{t('game.activePlayer')}: {getLocalizedPlayer(gameState.currentPlayer)}</div>
             <div>
                 <span>{t('game.ivoryWins')}: <strong>{gameState.players.ivory.roundWins}</strong></span>
             </div>
@@ -22,20 +23,20 @@ export const GameInfo: React.FC<InfoProps> = ({ gameState, localPlayer }) => {
             </div>
             <div className="player-points">
                 <div className="player-points__obsidian">
-                    Obsidian Total Points: <strong>{getPlayerPoints(gameState.players.obsidian)}</strong>
+                    {t('game.obsidianPoints')}: <strong>{getPlayerPoints(gameState.players.obsidian)}</strong>
                 </div>
                 <div className="player-points__ivory">
-                    Ivory Total Points: <strong>{getPlayerPoints(gameState.players.ivory)}</strong>
+                    {t('game.ivoryPoints')}: <strong>{getPlayerPoints(gameState.players.ivory)}</strong>
                 </div>
             </div>
             {gameState.phase === "gameOver" && (
                 <div className="game-over-banner">
-                    Game Over!{" "}
+                    {t('game.gameOver')}!{" "}
                     {gameState.players.ivory.roundWins > gameState.players.obsidian.roundWins
-                        ? "Ivory Wins!"
+                        ? t('game.ivoryVictory')
                         : gameState.players.obsidian.roundWins > gameState.players.ivory.roundWins
-                            ? "Obsidian Wins!"
-                            : "It's a Draw!"}
+                            ? t('game.obsidianVictory')
+                            : t('game.tie')}
                 </div>
             )}
         </div>

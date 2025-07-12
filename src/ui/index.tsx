@@ -10,20 +10,18 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import { CardInstance, EffectSource, PlayerRole, Row, RowType } from "../core/types";
+import { CardInstance, EffectSource, PlayerRole, RowType } from "../core/types";
 import { DEFAULT_LOCAL_PLAYER } from "../core/constants";
 import { create } from "zustand";
 import { flipCoin } from "../core/helpers/utils";
 
 /**
  * TODO:
+ * UI visualize row effects
  * UI Targeting rows
  * UI needs to expose functions to the state - allowing the state to tell the UI that a player is now playing a card (eg. Cantarella)
- * Therefore the dragging will need to also be click - then click again on drop zone. If the player stops dragging - it needs to stay in that state and wait for cancel or click on drop zone.
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
  * If no legal targets - just play without triggering the effect
- * If the player regrets - a right click should reset the whole playing state
- * Change ivory/obsidian to ivory/obsidian (iv/ob)
  * UI Multi targeting
  * Mulligan
  * Potential hook queueing - potential timing issues
@@ -86,10 +84,11 @@ const App = () => {
     return unsubscribe;
   }, []);
 
-  if (!gameState) return <div>{t('game.loading')}</div>;
+  if (!gameState) return <div>{t('ui.loading')}</div>;
 
   return (
     <div className="app">
+{/*       <GlobalCancelOnContextMenu /> */}
       {false && <h1 className="app__title">GWENT-LIKE</h1>}
 
       <GameInfo gameState={gameState} localPlayer={localPlayer} />
@@ -105,7 +104,25 @@ export function useUrlLocale() {
     const lang = parts[2];
     if (lang) i18n.changeLanguage(lang);
   }, [window.location.search]);
-}
+};
+
+/* export const GlobalCancelOnContextMenu = () => {
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const { uiPhase } = uiStateStore.getState();
+      console.log("Global contextmenu event fired", { phase: uiPhase });
+      if (uiPhase === "playing") {
+        e.preventDefault();
+        cancelPlayIfAllowed();
+      }
+    };
+    document.addEventListener("contextmenu", handler);
+    return () => {
+      document.removeEventListener("contextmenu", handler);
+    };
+  }, []);
+  return null;
+}; */
 
 const rootElement = document.getElementById('root')!;
 

@@ -1,27 +1,53 @@
 {
+  "ui": {
+    "loading": "Loading...",
+    "cancel": "Cancel"
+  },
   "game": {
+    "round": "Round",
     "currentRound": "Current Round",
+    "turn": "Turn",
     "activePlayer": "Active Player",
-    "friendly": "Friendly",
-    "enemy": "Enemy",
     "ivory": "Ivory",
     "obsidian": "Obsidian",
     "ivoryWins": "Ivory Wins",
     "obsidianWins": "Obsidian Wins",
-    "loading": "Loading...",
-    "turn": "Turn",
-    "round": "Round",
-    "cooldown": "Cooldown",
-    "charges": "Charges",
-    "counter": "Counter",
-    "power": "Power",
-    "status": "Status",
-    "armor": "Armor",
-    "category": "Category"
+    "ivoryPoints": "Ivory points",
+    "obsidianPoints": "Obsidian points",
+    "gameOver": "The game is over",
+    "ivoryVictory": "Ivory won",
+    "obsidianVictory": "Obsidian won",
+    "tie": "It's a tie"
+  },
+  "player": {
+    "friendly": "Friendly",
+    "enemy": "Enemy"
+  },
+  "zones": {
+    "hand": "Hand",
+    "deck": "Deck",
+    "graveyard": "Graveyard",
+    "row": "Row",
+    "melee": "Melee",
+    "ranged": "Ranged"
   },
   "actions": {
     "play": "Play",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "target": "Target",
+    "endTurn": "End turn",
+    "passTurn": "Pass turn"
+  },
+  "card": {
+    "power": "Power",
+    "armor": "Armor",
+    "category": "Category",
+    "type": "Type",
+    "status": "Status",
+    "statuses": "Statuses",
+    "cooldown": "Cooldown",
+    "charges": "Charges",
+    "counter": "Counter"
   },
   "cards": {
     "token_cow": {
