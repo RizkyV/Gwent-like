@@ -6,18 +6,18 @@ import { uiStateStore } from "./index";
 
 export type CardProps = {
   card: CardInstance;
+  allowDragging?: boolean;
   highlight?: boolean;
   onClick?: () => void;
   showPlayButton?: boolean;
-  showTargetButton?: boolean;
 };
 
 export const HandCard: React.FC<CardProps> = ({
   card,
+  allowDragging = true,
   highlight = false,
   onClick,
   showPlayButton,
-  showTargetButton,
 }) => {
   const [hovered, setHovered] = useState(false);
   const [shouldOpenUpwards, setShouldOpenUpwards] = useState(false);
@@ -39,6 +39,7 @@ export const HandCard: React.FC<CardProps> = ({
 
   const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: 'CARD',
+    canDrag: allowDragging,
     item: () => {
       setSelectedHandCard(card);
       setUIPhase("playing");
@@ -49,15 +50,13 @@ export const HandCard: React.FC<CardProps> = ({
       isDragging: !!monitor.isDragging(),
     }),
     end: (item, monitor) => {
-      // If not dropped on a drop zone, stay in playing phase (sticky)
       if (!monitor.didDrop()) {
         setSelectedHandCard(card);
         setUIPhase("playing");
         setPlayInitiator("user");
       }
-      // If dropped on a drop zone, the drop zone handler will handle phase transition
     },
-  }));
+  }), [allowDragging, card, setSelectedHandCard, setUIPhase, setPlayInitiator]);
 
   // Add a "sticky" card preview if in playing phase and this is the selected card
   const { uiPhase, selectedHandCard } = uiStateStore();
@@ -123,9 +122,6 @@ export const HandCard: React.FC<CardProps> = ({
                 {showPlayButton && (
                   <button className="card__action-btn">{t('actions.play')}</button>
                 )}
-                {showTargetButton && (
-                  <button className="card__action-btn">{t('actions.target')}</button>
-                )}
               </div>
             )}
           </>
@@ -164,9 +160,6 @@ export const HandCard: React.FC<CardProps> = ({
             )}
             {showPlayButton && (
               <button className="card__action-btn">{t('actions.play')}</button>
-            )}
-            {showTargetButton && (
-              <button className="card__action-btn">{t('actions.target')}</button>
             )}
           </>
         )}

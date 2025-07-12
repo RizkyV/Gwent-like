@@ -126,7 +126,6 @@ export function handleTargetClick(target: EffectSource) {
     } else if (pendingAction.type === "ability") {
         activateAbility(pendingAction.card, target);
     }
-
     setSelectedHandCard(null);
     setIsTargeting(false);
     setPendingAction(null);
@@ -145,7 +144,7 @@ export function cancelPlayIfAllowed() {
         setPlayInitiator,
     } = uiStateStore.getState();
 
-    if (uiPhase === "playing" && playInitiator === "user") {
+    if ((uiPhase === "playing" || playInitiator === "user") || uiPhase === "targeting") {
         setSelectedHandCard(null);
         setIsTargeting(false);
         setPendingAction(null);

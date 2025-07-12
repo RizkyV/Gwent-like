@@ -1,6 +1,6 @@
 import React from "react";
 import HandCard from "./hand-card";
-import { getRowPoints } from "../core/state";
+import { canActivateAbility, getRowPoints } from "../core/state";
 import { CardInstance } from "../core/types";
 import type { Row as RowData } from "../core/types";
 import { useDrop } from "react-dnd";
@@ -58,9 +58,12 @@ export const Row: React.FC<RowProps> = ({ row }) => {
       />
     );
   };
-
   return (
-    <div className="row" onClick={() => handleTargetClick({ kind: "row", row })}>
+    <div className="row" onClick={() => {
+      if (isTargeting && isValidTarget({ kind: "row", row })) {
+        handleTargetClick({ kind: "row", row });
+      }
+    }}>
       <div className="row__header">
         <span className="row__title">
           {getLocalizedPlayer(row.player)} {getLocalizedRowType(row.type)} <span className="row__points">({getRowPoints(row)})</span>
@@ -83,6 +86,7 @@ export const Row: React.FC<RowProps> = ({ row }) => {
             <HandCard
               key={card.instanceId}
               card={card}
+              allowDragging={false}
               highlight={isTargeting && isValidTarget({ kind: "card", card })}
               onClick={() => {
                 if (isTargeting && isValidTarget({ kind: "card", card })) {
@@ -91,7 +95,6 @@ export const Row: React.FC<RowProps> = ({ row }) => {
                   handleAbilityActivate(card);
                 }
               }}
-              showTargetButton={isTargeting && isValidTarget({ kind: "card", card })}
             />
           </React.Fragment>
         ))}

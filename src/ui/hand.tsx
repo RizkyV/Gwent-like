@@ -2,7 +2,6 @@ import React from "react";
 import HandCard from "./hand-card";
 import { CardInstance } from "../core/types";
 import { uiStateStore } from "./index";
-import { isValidTarget } from "./ui-helpers";
 
 export type HandProps = {
   cards: CardInstance[];
@@ -20,7 +19,6 @@ export const Hand: React.FC<HandProps> = ({ cards, title }) => {
             key={card.instanceId}
             card={card}
             highlight={selectedHandCard?.instanceId === card.instanceId}
-            showTargetButton={isTargeting && isValidTarget({kind: "card", card})}
           />
         ))}
       </div>

@@ -37,7 +37,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState, localPlayer 
             <button className="end-turn-btn" onClick={handleEndOrPassTurn}>
                 {hasTakenAction ? t('actions.endTurn') : t('actions.passTurn')}
             </button>
-            {uiPhase === "playing" && playInitiator === "user" && (
+            {(uiPhase === "playing" || playInitiator === "user") || uiPhase === "targeting" &&  (
                 <button
                     style={{
                         position: "fixed",

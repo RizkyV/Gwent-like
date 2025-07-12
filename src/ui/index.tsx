@@ -17,8 +17,7 @@ import { flipCoin } from "../core/helpers/utils";
 
 /**
  * TODO:
- * UI visualize row effects
- * UI Targeting rows
+ * UI activating abilities no longer works
  * UI needs to expose functions to the state - allowing the state to tell the UI that a player is now playing a card (eg. Cantarella)
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
  * If no legal targets - just play without triggering the effect
@@ -46,7 +45,7 @@ export type PlayInitiator = "user" | "engine";
 export type PendingAction =
   | { type: "play"; card: CardInstance; rowType: RowType; player: PlayerRole; index: number }
   | { type: "ability"; card: CardInstance }
-  | { type: "target"; effectSource: EffectSource};
+  | { type: "target"; effectSource: EffectSource };
 
 export const uiStateStore = create<uiState>((set) => ({
   selectedHandCard: null,
@@ -88,7 +87,7 @@ const App = () => {
 
   return (
     <div className="app">
-{/*       <GlobalCancelOnContextMenu /> */}
+      {/*       <GlobalCancelOnContextMenu /> */}
       {false && <h1 className="app__title">GWENT-LIKE</h1>}
 
       <GameInfo gameState={gameState} localPlayer={localPlayer} />
