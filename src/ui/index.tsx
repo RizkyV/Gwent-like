@@ -1,4 +1,4 @@
-import { createRoot } from "react-dom/client";
+import { createRoot, Root } from "react-dom/client";
 import { useEffect, useState } from "react";
 import { subscribe } from "../core/state";
 import { runGame } from "../cli/main";
@@ -96,8 +96,18 @@ export function useUrlLocale() {
   }, [window.location.search]);
 }
 
-const root = createRoot(document.getElementById('root')!);
-root.render(
+const rootElement = document.getElementById('root')!;
+
+// Use a global variable to store the root instance
+declare global {
+  interface Window { __GWENT_ROOT__: Root | undefined }
+}
+
+if (!window.__GWENT_ROOT__) {
+  window.__GWENT_ROOT__ = createRoot(rootElement);
+}
+
+window.__GWENT_ROOT__.render(
   <DndProvider backend={HTML5Backend}>
     <App />
   </DndProvider>

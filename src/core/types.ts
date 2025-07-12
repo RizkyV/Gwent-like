@@ -62,6 +62,7 @@ export type GameConfig = {
     ivory: PlayerController;
     obsidian: PlayerController;
   };
+  id: string; // Unique game ID
 };
 export type TurnState = {
   hasPlayedCard: boolean;

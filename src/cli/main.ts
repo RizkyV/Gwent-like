@@ -22,7 +22,8 @@ export const runGame = async () => {
         controllers: {
             ivory: uiPlayer,
             obsidian: dummyPlayer2
-        }
+        },
+        id: crypto.randomUUID(),
     }
     resetGameState(testActiveDeck, testPassiveDeck, config);
     await gameLoop(config);
