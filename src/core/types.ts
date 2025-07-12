@@ -158,6 +158,7 @@ export type HookedEffect = {
 export type Predicate = {
   type: PredicateType;
   check: (context: EffectContext) => boolean;
+  layer?: string; //5 layers of predicates. 1 - Card, 2 - Adjacency, 3 - Row (self exclusive), 4 - Player, 5 - Global  (if its self + adjacent, then make to predicates - one with 1 and one with 2)
 };
 export type StatusEffect = {
   type: StatusType;
@@ -177,7 +178,7 @@ export type EffectSource =
   | { kind: "row"; row: Row }
   | { kind: "rowEffect"; type: RowEffectType; row: Row }
   // Add more as needed
-  ;
+
 export interface EffectContext {
   self?: EffectSource;
   source?: EffectSource;
@@ -190,7 +191,6 @@ export interface EffectContext {
 
 type EffectMetadata =
   | { movedFrom: Zone; movedTo: Zone }
-  | { abilityId: string }
   | Record<string, any>; // fallback
 
 // === STATE ===

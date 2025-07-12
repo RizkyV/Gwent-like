@@ -1,5 +1,5 @@
 import React from "react";
-import { CardInstance, GameState, PlayerRole, RowType, Zone } from "../core/types";
+import { GameState, PlayerRole, RowType, Zone } from "../core/types";
 import Hand from "./hand";
 import Row from "./row";
 import { ZonePreview } from "./zone-preview";
@@ -8,25 +8,9 @@ import { getOtherPlayer } from "../core/helpers/player";
 export type BoardProps = {
     gameState: GameState;
     localPlayer: PlayerRole | null;
-    onCardDrop: (card: CardInstance, rowType: RowType, player: PlayerRole, index: number) => void;
-    onBoardCardClick: (card: CardInstance) => void;
-    onAbilityActivate: (card: CardInstance) => void;
-    selectedHandCard: CardInstance | null;
-    isTargeting: boolean;
-    isValidTarget: (card: CardInstance) => boolean;
 };
 
-export const GameInfo: React.FC<BoardProps> = ({
-    gameState,
-    localPlayer,
-    onCardDrop,
-    onBoardCardClick,
-    onAbilityActivate,
-    selectedHandCard,
-    isTargeting,
-    isValidTarget
-}) => {
-
+const GameBoard: React.FC<BoardProps> = ({ gameState, localPlayer }) => {
     return (
         <>
             {/* opponent zones */}
@@ -46,52 +30,18 @@ export const GameInfo: React.FC<BoardProps> = ({
             {/* opponent hand and rows */}
             <Hand
                 cards={gameState.players[getOtherPlayer(localPlayer)].hand}
-                selectedCard={selectedHandCard}
-                isTargeting={isTargeting}
-                isValidTarget={isValidTarget}
-                title={`${getOtherPlayer(localPlayer)} Hand`} />
-
-            <Row
-                row={gameState.players[getOtherPlayer(localPlayer)].rows.find(r => r.type === RowType.Ranged)}
-                onCardDrop={onCardDrop}
-                onCardClick={onBoardCardClick}
-                onAbilityActivate={onAbilityActivate}
-                isTargeting={isTargeting}
-                isValidTarget={isValidTarget}
+                title={`${getOtherPlayer(localPlayer)} Hand`}
             />
-            <Row
-                row={gameState.players[getOtherPlayer(localPlayer)].rows.find(r => r.type === RowType.Melee)}
-                onCardDrop={onCardDrop}
-                onCardClick={onBoardCardClick}
-                onAbilityActivate={onAbilityActivate}
-                isTargeting={isTargeting}
-                isValidTarget={isValidTarget}
-            />
+            <Row row={gameState.players[getOtherPlayer(localPlayer)].rows.find(r => r.type === RowType.Ranged)} />
+            <Row row={gameState.players[getOtherPlayer(localPlayer)].rows.find(r => r.type === RowType.Melee)} />
 
             {/* local rows and hand */}
-            <Row
-                row={gameState.players[localPlayer].rows.find(r => r.type === RowType.Melee)}
-                onCardDrop={onCardDrop}
-                onCardClick={onBoardCardClick}
-                onAbilityActivate={onAbilityActivate}
-                isTargeting={isTargeting}
-                isValidTarget={isValidTarget}
-            />
-            <Row
-                row={gameState.players[localPlayer].rows.find(r => r.type === RowType.Ranged)}
-                onCardDrop={onCardDrop}
-                onCardClick={onBoardCardClick}
-                onAbilityActivate={onAbilityActivate}
-                isTargeting={isTargeting}
-                isValidTarget={isValidTarget}
-            />
-
+            <Row row={gameState.players[localPlayer].rows.find(r => r.type === RowType.Melee)} />
+            <Row row={gameState.players[localPlayer].rows.find(r => r.type === RowType.Ranged)} />
             <Hand
                 cards={gameState.players[localPlayer].hand}
-                selectedCard={selectedHandCard}
-                isTargeting={isTargeting}
-                isValidTarget={isValidTarget}
-                title={`${localPlayer} Hand`} />
+                title={`${localPlayer} Hand`}
+            />
 
             {/* local zones */}
             <ZonePreview
@@ -110,4 +60,4 @@ export const GameInfo: React.FC<BoardProps> = ({
     );
 };
 
-export default GameInfo;
+export default GameBoard;
