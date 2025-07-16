@@ -3,6 +3,7 @@ import { CardInstance } from "../core/types";
 import { useDrag } from "react-dnd";
 import { useTranslation } from "react-i18next";
 import { uiStateStore } from "./index";
+import { canPlayCard } from "./ui-helpers";
 
 export type CardProps = {
   card: CardInstance;
@@ -39,7 +40,9 @@ export const HandCard: React.FC<CardProps> = ({
 
   const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: 'CARD',
-    canDrag: allowDragging,
+    canDrag: () => {
+      return allowDragging && canPlayCard();
+    },
     item: () => {
       setSelectedHandCard(card);
       setUIPhase("playing");

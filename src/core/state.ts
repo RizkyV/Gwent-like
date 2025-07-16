@@ -7,6 +7,7 @@ import { getStatusEffect } from './helpers/status.js';
 import { getCardController, isCardInZone } from './helpers/board.js';
 import { cardDefinitions, getEffectSourceCard } from './cards.js';
 import { getRowEffect } from './helpers/row.js';
+import { setCardPlayingState } from '../ui/ui-helpers.js';
 
 let gameState: GameState | null = null;
 const listeners: Array<(state: GameState | null) => void> = [];
@@ -395,6 +396,16 @@ export function decrementCooldown(card: CardInstance): void {
     _card.abilityCooldown -= 1;
     setGameState(newState);
   }
+}
+
+export function initiateCardPlaying(card: CardInstance): void {
+  //TODO: flip isValidRow
+  //card.baseCard.isValidRow =
+  setCardPlayingState(card);
+}
+
+export function getPlayerDeck(player: PlayerRole): CardInstance[] {
+  return gameState.players[player].deck;
 }
 
 

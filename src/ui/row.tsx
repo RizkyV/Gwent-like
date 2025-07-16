@@ -30,7 +30,6 @@ export const Row: React.FC<RowProps> = ({ row }) => {
           console.warn("Invalid item dropped on row", { item });
           return false;
         }
-        //console.log("canDrop", { item, thing: item.baseCard.isValidRow(item, row.player, row.type) });
         return item.baseCard.isValidRow(item, row.player, row.type);
       },
       collect: (monitor) => ({

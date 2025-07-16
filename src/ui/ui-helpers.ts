@@ -6,18 +6,12 @@ import { useTranslation } from "react-i18next";
 export function handleCardDrop(card: CardInstance, rowType: RowType, player: PlayerRole, index: number) {
     const {
         setSelectedHandCard,
-        setIsTargeting,
         setPendingAction,
         setUIPhase,
         setPlayInitiator,
     } = uiStateStore.getState();
-
+    console.info(`handleCardDrop called with card=${card.baseCard.name}, rowType=${rowType}, player=${player}, index=${index}`);
     if (!card) return;
-    //TODO: getCurrentPlayer state helper
-    if (getGameState().turn.hasPlayedCard) {
-        console.warn('A card has already been played this turn');
-        return;
-    }
     setSelectedHandCard(card);
     setPendingAction({ type: "play", card, rowType, player, index });
     setUIPhase("playing");
@@ -35,12 +29,7 @@ export function handleRowDropConfirm() {
         setUIPhase,
         setPlayInitiator,
     } = uiStateStore.getState();
-
-    //TODO: getCurrentPlayer state helper
-    if (getGameState().turn.hasPlayedCard) {
-        console.warn('A card has already been played this turn');
-        return;
-    }
+    console.info(`handleRowDropConfirm called with pendingAction=${JSON.stringify(pendingAction)}`);
     if (!pendingAction || pendingAction.type !== "play") return;
 
     const card = pendingAction.card;
@@ -50,18 +39,18 @@ export function handleRowDropConfirm() {
         setIsTargeting(true);
         setUIPhase("targeting");
     } else {
-        playCard(card, pendingAction.player, pendingAction.rowType, pendingAction.index);
         setSelectedHandCard(null);
         setIsTargeting(false);
         setPendingAction(null);
         setUIPhase("waiting");
         setPlayInitiator(null);
-
+        playCard(card, pendingAction.player, pendingAction.rowType, pendingAction.index);
     }
 }
 
 export function handleAbilityActivate(card: CardInstance) {
     const { setIsTargeting, setPendingAction, setUIPhase } = uiStateStore.getState();
+    console.info(`handleAbilityActivate called for card=${card.baseCard.name}`);
     if (!canActivateAbility(card)) {
         console.warn('Cards ability was not ready to be activated')
         return;
@@ -101,6 +90,11 @@ export function isValidTarget(target: EffectSource): boolean {
         return false;
     }
 }
+
+
+export function canPlayCard(): boolean {
+    return getGameState().turn.hasPlayedCard !== true;
+};
 
 // Accept both card and row as target
 export function handleTargetClick(target: EffectSource) {
@@ -153,10 +147,16 @@ export function cancelPlayIfAllowed() {
     }
 }
 
-export function initiateCardPlaying(card: CardInstance) {
-    uiStateStore.getState().setSelectedHandCard(card);
-    uiStateStore.getState().setUIPhase("playing");
-    uiStateStore.getState().setPlayInitiator("engine");
+export function setCardPlayingState(card: CardInstance) {
+    const {
+        setSelectedHandCard,
+        setUIPhase,
+        setPlayInitiator,
+    } = uiStateStore.getState();
+    console.log(`Setting card playing state for ${card.baseCard.name}`);
+    setSelectedHandCard(card);
+    setUIPhase("playing");
+    setPlayInitiator("engine");
 }
 
 /**

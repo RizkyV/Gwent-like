@@ -161,6 +161,8 @@ export type Predicate = {
   type: PredicateType;
   check: (context: EffectContext) => boolean;
   layer?: string; //5 layers of predicates. 1 - Card, 2 - Adjacency, 3 - Row (self exclusive), 4 - Player, 5 - Global  (if its self + adjacent, then make to predicates - one with 1 and one with 2)
+  // instead of layers just write a function that determines whether the target/source is affected by the predicate
+  // a predicate that just effects itself should check sourceIsSelf()
 };
 export type StatusEffect = {
   type: StatusType;

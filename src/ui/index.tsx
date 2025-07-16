@@ -14,10 +14,14 @@ import { CardInstance, EffectSource, PlayerRole, RowType } from "../core/types";
 import { DEFAULT_LOCAL_PLAYER } from "../core/constants";
 import { create } from "zustand";
 import { flipCoin } from "../core/helpers/utils";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Types from "./types";
 
 /**
  * TODO:
- * UI activating abilities no longer works
+ * get card controller should return the player that is currently playing the card - if applicable
+ * If action is engine initiated - do not block 
+ * move stickyimagepreview from card to game controller
  * UI needs to expose functions to the state - allowing the state to tell the UI that a player is now playing a card (eg. Cantarella)
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
  * If no legal targets - just play without triggering the effect
@@ -86,13 +90,20 @@ const App = () => {
   if (!gameState) return <div>{t('ui.loading')}</div>;
 
   return (
-    <div className="app">
-      {/*       <GlobalCancelOnContextMenu /> */}
-      {false && <h1 className="app__title">GWENT-LIKE</h1>}
+    <BrowserRouter>
+      <div className="app">
+        <Routes>
+          <Route path="/Gwent-like" element={<>
+            {/*       <GlobalCancelOnContextMenu /> */}
+            {false && <h1 className="app__title">GWENT-LIKE</h1>}
 
-      <GameInfo gameState={gameState} localPlayer={localPlayer} />
-      <GameController gameState={gameState} localPlayer={localPlayer} />
-    </div>
+            <GameInfo gameState={gameState} localPlayer={localPlayer} />
+            <GameController gameState={gameState} localPlayer={localPlayer} />
+          </>
+          } />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 };
 

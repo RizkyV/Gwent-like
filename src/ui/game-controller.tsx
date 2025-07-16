@@ -17,6 +17,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState, localPlayer 
     const { t } = useTranslation();
 
     const hasTakenAction = gameState.turn.hasPlayedCard || gameState.turn.hasActivatedAbility;
+    const canCancel = (uiPhase === "playing" || playInitiator === "user") || uiPhase === "targeting";
 
     const handleEndOrPassTurn = () => {
         if (hasTakenAction) {
@@ -37,7 +38,7 @@ const GameController: React.FC<GameControllerProps> = ({ gameState, localPlayer 
             <button className="end-turn-btn" onClick={handleEndOrPassTurn}>
                 {hasTakenAction ? t('actions.endTurn') : t('actions.passTurn')}
             </button>
-            {(uiPhase === "playing" || playInitiator === "user") || uiPhase === "targeting" &&  (
+            {canCancel &&  (
                 <button
                     style={{
                         position: "fixed",

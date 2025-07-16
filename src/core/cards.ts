@@ -1,8 +1,9 @@
 import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, CardTypeCategory, EffectContext, EffectSource, HookType, PlayerRole, PredicateType, Row, RowEffectType, StatusType, Zone } from '../core/types.js';
 import { getCardController, getCardRow, getCardRowIndex } from './helpers/board.js';
 import { cardIsType, getCardBasePower, getCardTypes, isBonded } from './helpers/card.js';
+import { getOtherPlayer } from './helpers/player.js';
 import { hasRowEffect } from './helpers/row.js';
-import { activatedAbility, addRowEffect, addStatus, boostCard, dealDamage, decrementCooldown, getCardPosition, getPlayerCards, getRow, removeStatus, spawnCard, triggerHook } from './state.js';
+import { activatedAbility, addRowEffect, addStatus, boostCard, dealDamage, decrementCooldown, getCardPosition, getPlayerCards, getPlayerDeck, getRow, initiateCardPlaying, removeStatus, spawnCard, triggerHook } from './state.js';
 
 // Add this declaration to fix ImportMeta typing for Vite or similar environments
 declare global {
@@ -506,7 +507,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 5,
     baseArmor: 0,
-    types: ['Vampire'],
+    types: ['Machine', 'Siege Engine'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
     description: 'Activate: Deal 2 damage to an enemy unit. Cooldown: 2.',
@@ -537,7 +538,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 5,
     baseArmor: 0,
-    types: ['Vampire'],
+    types: ['Machine', 'Siege Engine'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
     description: 'Activate: Deal 2 damage to an enemy unit',
@@ -568,7 +569,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 5,
     baseArmor: 0,
-    types: ['Vampire'],
+    types: ['Machine', 'Siege Engine'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
     description: 'Zeal. Activate: Deal 2 damage to an enemy unit. Charges: 3.',
@@ -620,7 +621,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 7,
     basePower: 1,
     baseArmor: 0,
-    types: ['Human', 'Agent'],
+    types: ['Human', 'Rogue'],
     rarity: CardRarity.Gold,
     colors: [CardColor.Blue, CardColor.Blue],
     description: 'Disloyal. Play: Play the top card of your opponent\'s deck.',
@@ -634,7 +635,8 @@ export const cardDefinitions: CardDefinition[] = [
           const self = getEffectSourceCard(context.self);
           if (!self) return;
           if (sourceIsSelf(context)) {
-            //TODO: find top card - play it
+            const topCard = getPlayerDeck(getCardController(self))[0];
+            initiateCardPlaying(topCard);
           }
         }
       }
@@ -709,7 +711,7 @@ export const cardDefinitions: CardDefinition[] = [
     provisionCost: 4,
     basePower: 0,
     baseArmor: 0,
-    types: ['Monster'],
+    types: ['Weather'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Green],
     description: 'Spawn Fog (3) on an enemy row.',

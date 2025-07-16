@@ -73,5 +73,6 @@ export function getRowEffect(rowEffect: RowEffectType): RowEffect {
 
 export function hasRowEffect(row: Row, rowEffect: RowEffectType): boolean {
   //First in list is the active weather effect
+  if (!row.effects || row.effects.length === 0) return false;
   return row.effects[0]?.type === rowEffect;
 }
