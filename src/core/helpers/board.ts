@@ -2,6 +2,8 @@ import { getCardPosition, getGameState } from "../state";
 import { CardInstance, PlayerRole, Row, Zone } from "../types";
 
 export function getCardController(card: CardInstance): PlayerRole {
+  console.log('gettingcardcontroller', card);
+  if (card.controller) return card.controller;
   const position = getCardPosition(card);
   return position.player
 }

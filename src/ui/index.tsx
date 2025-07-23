@@ -10,11 +10,10 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 /**
  * TODO:
- * If no legal targets - just play without triggering the effect
- * get card controller should return the player that is currently playing the card - if applicable
  * If action is engine initiated - do not block 
  * move stickyimagepreview from card to game controller
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
+
  * UI Multi targeting
  * Mulligan
  * Move away from the drag and drop library and just do it ourselves

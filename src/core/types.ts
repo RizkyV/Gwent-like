@@ -110,6 +110,7 @@ export interface CardInstance {
   instanceId: string; //Unique ID per game instance
   baseCard: CardDefinition; //Reference to static card definition
   owner: PlayerRole;
+  controller?: PlayerRole; //The player that controls the card currently (set by the UI)
   currentPower: number;
   currentArmor?: number;
   currentBasePower?: number; //Base power can change due to effects

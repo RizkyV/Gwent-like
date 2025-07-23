@@ -1,4 +1,4 @@
-import { playCard, activateAbility, canActivateAbility, getGameState, getAllPossibleTargets } from "../core/state";
+import { playCard, activateAbility, canActivateAbility, getGameState, getAllPossibleTargets, setCardController, getCurrentPlayer } from "../core/state";
 import { uiStateStore } from "./game-controller";
 import { CardInstance, EffectSource, HookType, PlayerRole, RowType } from "../core/types";
 import { useTranslation } from "react-i18next";
@@ -55,6 +55,8 @@ export function handleRowDropConfirm() {
         setPlayInitiator(null);
         playCard(card, pendingAction.player, pendingAction.rowType, pendingAction.index);
     }
+
+    setCardController(card, null); // Reset controller after playing
 }
 
 export function handleAbilityActivate(card: CardInstance) {
@@ -181,6 +183,7 @@ export function setCardPlayingState(card: CardInstance) {
         setPlayInitiator,
     } = uiStateStore.getState();
     console.log(`Setting card playing state for ${card.baseCard.name}`);
+    setCardController(card, getCurrentPlayer());
     setSelectedHandCard(card);
     setUIPhase("playing");
     setPlayInitiator("engine");

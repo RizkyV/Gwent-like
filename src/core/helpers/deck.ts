@@ -23,6 +23,7 @@ export function createCardInstance(def: CardDefinition, player: PlayerRole): Car
         instanceId: crypto.randomUUID(),
         baseCard: def,
         owner: player,
+        controller: null,
         currentPower: def.basePower,
         currentArmor: def.baseArmor,
         currentBasePower: def.basePower,

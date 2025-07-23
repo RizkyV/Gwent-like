@@ -483,7 +483,7 @@ export function moveCardToBoard(card: CardInstance, player: PlayerRole, rowType:
   setGameState(newState)
 }
 
-export function getCardPosition(card: CardInstance): CardPosition | null {
+export function getCardPosition(card: CardInstance, state: GameState = gameState): CardPosition | null {
   let foundCard: CardInstance | null = null;
   let owner: PlayerRole | null = null;
   let zone: Zone | null = null;
@@ -493,8 +493,8 @@ export function getCardPosition(card: CardInstance): CardPosition | null {
   // Find the card in rows, hand, or deck
   for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
     //Row
-    for (let r = 0; r < gameState.players[role].rows.length; r++) {
-      const row = gameState.players[role].rows[r];
+    for (let r = 0; r < state.players[role].rows.length; r++) {
+      const row = state.players[role].rows[r];
       for (let c = 0; c < row.cards.length; c++) {
         if (row.cards[c].instanceId === card.instanceId) {
           foundCard = row.cards[c];
@@ -508,7 +508,7 @@ export function getCardPosition(card: CardInstance): CardPosition | null {
       if (owner) break;
     }
     //Hand
-    const hand = gameState.players[role].hand;
+    const hand = state.players[role].hand;
     for (let c = 0; c < hand.length; c++) {
       if (hand[c].instanceId === card.instanceId) {
         foundCard = hand[c];
@@ -519,7 +519,7 @@ export function getCardPosition(card: CardInstance): CardPosition | null {
       }
     }
     //Deck
-    const deck = gameState.players[role].deck;
+    const deck = state.players[role].deck;
     for (let c = 0; c < deck.length; c++) {
       if (deck[c].instanceId === card.instanceId) {
         foundCard = deck[c];
@@ -530,7 +530,7 @@ export function getCardPosition(card: CardInstance): CardPosition | null {
       }
     }
     //Graveyard
-    const graveyard = gameState.players[role].graveyard;
+    const graveyard = state.players[role].graveyard;
     for (let c = 0; c < graveyard.length; c++) {
       if (graveyard[c].instanceId === card.instanceId) {
         foundCard = graveyard[c];
@@ -712,6 +712,21 @@ export function addRowEffect(player: PlayerRole, rowType: RowType, rowEffect: Ro
     row.effects.push(weatherEffect);
   }
   setGameState(newState);
+}
+
+export function setCardController(card: CardInstance, player: PlayerRole): void {
+  const newState = { ...gameState };
+  const targetCard = getCardPosition(card, newState)?.card;
+  if (!targetCard) {
+    console.warn(`Card with instanceId ${card.instanceId} not found in game state.`);
+    return;
+  }
+  targetCard.controller = player;
+  setGameState(newState);
+}
+
+export function getCurrentPlayer(): PlayerRole {
+  return gameState.currentPlayer;
 }
 
 export function getHighestCards(): CardInstance[] | null {
