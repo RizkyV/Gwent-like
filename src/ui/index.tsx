@@ -15,19 +15,18 @@ import { DEFAULT_LOCAL_PLAYER } from "../core/constants";
 import { create } from "zustand";
 import { flipCoin } from "../core/helpers/utils";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Types from "./types";
 
 /**
  * TODO:
+ * Move all the game stuff to the game-controller
  * get card controller should return the player that is currently playing the card - if applicable
  * If action is engine initiated - do not block 
  * move stickyimagepreview from card to game controller
- * UI needs to expose functions to the state - allowing the state to tell the UI that a player is now playing a card (eg. Cantarella)
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
  * If no legal targets - just play without triggering the effect
  * UI Multi targeting
  * Mulligan
- * Potential hook queueing - potential timing issues
+ * Move away from the drag and drop library and just do it ourselves
 */
 
 export type uiState = {
@@ -93,14 +92,16 @@ const App = () => {
     <BrowserRouter>
       <div className="app">
         <Routes>
-          <Route path="/Gwent-like" element={<>
-            {/*       <GlobalCancelOnContextMenu /> */}
-            {false && <h1 className="app__title">GWENT-LIKE</h1>}
+          <Route path="/Gwent-like" element={
+            <>
+              {/*       <GlobalCancelOnContextMenu /> */}
+              {false && <h1 className="app__title">GWENT-LIKE</h1>}
 
-            <GameInfo gameState={gameState} localPlayer={localPlayer} />
-            <GameController gameState={gameState} localPlayer={localPlayer} />
-          </>
+              <GameInfo gameState={gameState} localPlayer={localPlayer} />
+              <GameController gameState={gameState} localPlayer={localPlayer} />
+            </>
           } />
+          <Route path="/Gwent-like/deck" element={<></>} />
         </Routes>
       </div>
     </BrowserRouter>

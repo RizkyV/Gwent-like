@@ -1,6 +1,6 @@
 import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
 import { ALWAYS_IVORY_START_PLAYER, ALWAYS_OBSIDIAN_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
-import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType, RowEffect } from './types.js';
+import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType, RowEffect, HookedEffect } from './types.js';
 import { getOtherPlayer } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
 import { getStatusEffect } from './helpers/status.js';
@@ -10,7 +10,13 @@ import { getRowEffect } from './helpers/row.js';
 import { setCardPlayingState } from '../ui/ui-helpers.js';
 
 let gameState: GameState | null = null;
+let queue: QueueEffect[] = [];
 const listeners: Array<(state: GameState | null) => void> = [];
+
+export type QueueEffect = {
+  effect: HookedEffect;
+  context: EffectContext;
+}
 
 export function subscribe(listener: (state: GameState | null) => void) {
   listeners.push(listener);
@@ -577,7 +583,8 @@ export function triggerHook(
         ...context,
         self: { kind: 'card', card },
       };
-      effect.effect(scopedContext);
+      queue.push({effect, context: scopedContext} as QueueEffect);
+      //effect.effect(scopedContext);
     }
     //Trigger hooks of statuses
     const statusEffects = card.statuses ? Array.from(card.statuses).flatMap(status => getStatusEffect(status[0]).effects?.filter(e => e.hook === hook) || []) : [];
@@ -594,7 +601,8 @@ export function triggerHook(
         ...context,
         self: { kind: 'card', card },
       };
-      effect.effect(scopedContext);
+      queue.push({effect, context: scopedContext} as QueueEffect);
+      //effect.effect(scopedContext);
     }
   }
   //Trigger hooks of row effects
@@ -609,11 +617,19 @@ export function triggerHook(
               ...context,
               self: { kind: 'rowEffect', type: rowEffect.type, row },
             };
-            rowEffectsEffect.effect(scopedContext);
+            queue.push({effect: rowEffectsEffect, context: scopedContext} as QueueEffect);
+            //rowEffectsEffect.effect(scopedContext);
           }
         }
       }
     }
+  }
+
+  while (queue.length > 0) {
+    const queuedEffect = queue.shift();
+    if (!queuedEffect) continue;
+    const { effect, context } = queuedEffect;
+    effect.effect(context);
   }
 }
 
