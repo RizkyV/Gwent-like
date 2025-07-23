@@ -414,6 +414,21 @@ export function getPlayerDeck(player: PlayerRole): CardInstance[] {
   return gameState.players[player].deck;
 }
 
+export function getAllPossibleTargets(): EffectSource[] {
+  const targets: EffectSource[] = [];
+  // Get all cards on the board as potential targets
+  for (const player of ['ivory', 'obsidian'] as PlayerRole[]) {
+    const playerCards = getPlayerCards(player);
+    targets.push(...playerCards.map(card => ({ kind: "card" as const, card })));
+  }
+  // Get all rows as potential targets
+  for (const player of ['ivory', 'obsidian'] as PlayerRole[]) {
+    const playerRows = gameState.players[player].rows;
+    targets.push(...playerRows.map(row => ({ kind: "row" as const, row })));
+  }
+  return targets;
+};
+
 
 /**
  * Gets the cards on board for a player

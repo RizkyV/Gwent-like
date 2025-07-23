@@ -19,8 +19,8 @@ export const DEFAULT_DECK_SIZE = 25;
 /**
  * Test Configuration
  */
-export const ALWAYS_IVORY_START_PLAYER = false; // If true, the ivory player always starts first
-export const ALWAYS_OBSIDIAN_START_PLAYER = true; // If true, the obsidian player always starts first
+export const ALWAYS_IVORY_START_PLAYER = true; // If true, the ivory player always starts first
+export const ALWAYS_OBSIDIAN_START_PLAYER = false; // If true, the obsidian player always starts first
 export const DUMMY_DELAY = 2000; // Delay in milliseconds for dummy player actions
 export const STATE_DELAY = 300; // Delay in milliseconds for state updates
 export const SHUFFLE_DECKS = true; // If true, decks are shuffled before the game starts

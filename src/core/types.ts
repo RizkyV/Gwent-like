@@ -154,7 +154,7 @@ export type GameEffect = (context: EffectContext) => void;
 export type HookedEffect = {
   hook: HookType;
   effect: GameEffect;
-  validTargets?: (source: CardInstance, target: EffectSource) => boolean;
+  validTargets?: (source: EffectSource, target: EffectSource) => boolean;
   zone?: Zone | ((context: EffectContext) => boolean);
 };
 export type Predicate = {

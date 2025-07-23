@@ -45,27 +45,31 @@ export function isEnemyRow(self: CardInstance, player: PlayerRole): boolean {
 }
 
 
-export const targetIsFriendlyUnit = (source: CardInstance, target: EffectSource): boolean => {
+export const targetIsFriendlyUnit = (source: EffectSource, target: EffectSource): boolean => {
+  if (source.kind !== 'card') return false;
   if (target.kind !== 'card') return false;
   if (target.card.baseCard.category !== CardCategory.Unit) return false;
   const position = getCardPosition(target.card);
   if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
-  return isFriendly(source, target.card);
+  return isFriendly(source.card, target.card);
 }
-export const targetIsEnemyUnit = (source: CardInstance, target: EffectSource): boolean => {
+export const targetIsEnemyUnit = (source: EffectSource, target: EffectSource): boolean => {
+  if (source.kind !== 'card') return false;
   if (target.kind !== 'card') return false;
   if (target.card.baseCard.category !== CardCategory.Unit) return false;
   const position = getCardPosition(target.card);
   if (position.zone !== Zone.RowMelee && position.zone !== Zone.RowRanged) return false;
-  return !isFriendly(source, target.card);
+  return !isFriendly(source.card, target.card);
 }
-export function targetIsFriendlyRow(source: CardInstance, target: EffectSource): boolean {
+export function targetIsFriendlyRow(source: EffectSource, target: EffectSource): boolean {
+  if (source.kind !== 'card') return false;
   if (target.kind !== 'row') return false;
-  return getCardController(source) === target.row.player;
+  return getCardController(source.card) === target.row.player;
 }
-export function targetIsEnemyRow(source: CardInstance, target: EffectSource): boolean {
+export function targetIsEnemyRow(source: EffectSource, target: EffectSource): boolean {
+  if (source.kind !== 'card') return false;
   if (target.kind !== 'row') return false;
-  return getCardController(source) !== target.row.player;
+  return getCardController(source.card) !== target.row.player;
 }
 
 export function getEffectSourceCard(effectSource: EffectSource): CardInstance | null {
@@ -277,8 +281,8 @@ export const cardDefinitions: CardDefinition[] = [
     isValidRow: isFriendlyRow
   },
   {
-    id: 'unit_olaf_champion_of_skellige',
-    name: 'cards.unit_olaf_champion_of_skellige.name',
+    id: 'unit_nanook_king_of_the_tundra',
+    name: 'cards.unit_nanook_king_of_the_tundra.name',
     category: CardCategory.Unit,
     provisionCost: 11,
     basePower: 15,
@@ -286,8 +290,8 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Bear'],
     rarity: CardRarity.Gold,
     colors: [CardColor.Green, CardColor.Green, CardColor.Green],
-    description: 'cards.unit_olaf_champion_of_skellige.desc',
-    artworkUrl: import.meta.env.BASE_URL + 'assets/cards/unit_olaf_champion_of_skellige.png',
+    description: 'cards.unit_nanook_king_of_the_tundra.desc',
+    artworkUrl: import.meta.env.BASE_URL + 'assets/cards/unit_nanook_king_of_the_tundra.png',
     tags: ['Tall', 'Dominance'],
     sets: ['Witcher'],
     isValidRow: isFriendlyRow,

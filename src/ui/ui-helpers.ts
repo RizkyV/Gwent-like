@@ -1,4 +1,4 @@
-import { playCard, activateAbility, canActivateAbility, getGameState } from "../core/state";
+import { playCard, activateAbility, canActivateAbility, getGameState, getAllPossibleTargets } from "../core/state";
 import { uiStateStore } from "./game-controller";
 import { CardInstance, EffectSource, HookType, PlayerRole, RowType } from "../core/types";
 import { useTranslation } from "react-i18next";
@@ -34,10 +34,19 @@ export function handleRowDropConfirm() {
 
     const card = pendingAction.card;
     const onPlayEffect = card.baseCard.effects?.find(e => e.hook === HookType.OnPlay);
-
     if (onPlayEffect && onPlayEffect.validTargets) {
-        setIsTargeting(true);
-        setUIPhase("targeting");
+        if (hasValidTarget(onPlayEffect.validTargets, { kind: "card", card })) {
+            setIsTargeting(true);
+            setUIPhase("targeting");
+        } else {
+            console.info(`No valid targets for play effect on card ${card.baseCard.name}`);
+            setSelectedHandCard(null);
+            setIsTargeting(false);
+            setPendingAction(null);
+            setUIPhase("waiting");
+            setPlayInitiator(null);
+            playCard(card, pendingAction.player, pendingAction.rowType, pendingAction.index);
+        }
     } else {
         setSelectedHandCard(null);
         setIsTargeting(false);
@@ -57,14 +66,22 @@ export function handleAbilityActivate(card: CardInstance) {
     }
     const onAbilityEffect = card.baseCard.effects?.find(e => e.hook === HookType.OnAbilityActivated);
     if (onAbilityEffect && onAbilityEffect.validTargets) {
-        setIsTargeting(true);
-        setPendingAction({ type: "ability", card });
-        setUIPhase("targeting");
+        if (hasValidTarget(onAbilityEffect.validTargets, { kind: "card", card })) {
+            setIsTargeting(true);
+            setPendingAction({ type: "ability", card });
+            setUIPhase("targeting");
+        } else {
+            console.info(`No valid targets for ability on card ${card.baseCard.name}`);
+            setIsTargeting(false);
+            setPendingAction(null);
+            setUIPhase("waiting");
+            activateAbility(card);
+        }
     } else {
-        activateAbility(card);
         setIsTargeting(false);
         setPendingAction(null);
         setUIPhase("waiting");
+        activateAbility(card);
     }
 }
 
@@ -83,12 +100,22 @@ export function isValidTarget(target: EffectSource): boolean {
         // Card target
         switch (target.kind) {
             case "card":
-                return !!effect?.validTargets?.(effectSource, { kind: "card", card: target.card });
+                return !!effect?.validTargets?.({ kind: "card", card: effectSource }, { kind: "card", card: target.card });
             case "row":
-                return !!effect?.validTargets?.(effectSource, { kind: "row", row: target.row });
+                return !!effect?.validTargets?.({ kind: "card", card: effectSource }, { kind: "row", row: target.row });
         }
         return false;
     }
+}
+
+export function hasValidTarget(validTargets: (source: EffectSource, target: EffectSource) => boolean, source: EffectSource): boolean {
+    const targets = getAllPossibleTargets();
+    for (const target of targets) {
+        if (validTargets(source, target)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -164,11 +191,11 @@ export function setCardPlayingState(card: CardInstance) {
  */
 
 export function getLocalizedPlayer(player: PlayerRole) {
-  const { t } = useTranslation();
-  return player === PlayerRole.Ivory ? t("game.ivory") : t("game.obsidian");
+    const { t } = useTranslation();
+    return player === PlayerRole.Ivory ? t("game.ivory") : t("game.obsidian");
 }
 
 export function getLocalizedRowType(rowType: RowType) {
-  const { t } = useTranslation();
-  return rowType === RowType.Melee ? t("zones.melee") : t("zones.ranged");
+    const { t } = useTranslation();
+    return rowType === RowType.Melee ? t("zones.melee") : t("zones.ranged");
 }

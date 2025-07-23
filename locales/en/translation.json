@@ -58,6 +58,10 @@
       "name": "Frog",
       "desc": "Doomed."
     },
+    "unit_nanook_king_of_the_tundra": {
+      "name": "Nanook, King of the Tundra",
+      "desc": ""
+    },
     "unit_olaf_champion_of_skellige": {
       "name": "Olaf, Champion of Skellige",
       "desc": ""
