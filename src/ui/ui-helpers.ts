@@ -1,5 +1,5 @@
 import { playCard, activateAbility, canActivateAbility, getGameState } from "../core/state";
-import { uiStateStore } from "./index";
+import { uiStateStore } from "./game-controller";
 import { CardInstance, EffectSource, HookType, PlayerRole, RowType } from "../core/types";
 import { useTranslation } from "react-i18next";
 

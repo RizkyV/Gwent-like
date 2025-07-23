@@ -1,13 +1,13 @@
 import React from "react";
 import HandCard from "./hand-card";
-import { canActivateAbility, getRowPoints } from "../core/state";
+import { getRowPoints } from "../core/state";
 import { CardInstance } from "../core/types";
 import type { Row as RowData } from "../core/types";
 import { useDrop } from "react-dnd";
-import { uiStateStore } from "./index";
 import { handleCardDrop, handleAbilityActivate, handleTargetClick, isValidTarget, handleRowDropConfirm, getLocalizedPlayer, getLocalizedRowType } from "./ui-helpers";
 import { useTranslation } from "react-i18next";
 import { getRowEffect } from "../core/helpers/row";
+import { uiStateStore } from "./game-controller";
 
 export type RowProps = {
   row: RowData;

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { CardInstance } from "../core/types";
 import { useDrag } from "react-dnd";
 import { useTranslation } from "react-i18next";
-import { uiStateStore } from "./index";
+import { uiStateStore } from "./game-controller";
 import { canPlayCard } from "./ui-helpers";
 
 export type CardProps = {

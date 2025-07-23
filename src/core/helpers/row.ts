@@ -31,7 +31,6 @@ export const rowEffects: Record<RowEffectType, RowEffect> = {
       {
         hook: HookType.OnTurnEnd,
         effect: (context) => {
-          //TODO: change to highest power instead
           const row = context.self.kind === 'rowEffect' ? context.self.row : null;
           if (!row) return;
           if(!isFriendlyTurn(context)) return;

@@ -1,7 +1,7 @@
 import React from "react";
 import HandCard from "./hand-card";
 import { CardInstance } from "../core/types";
-import { uiStateStore } from "./index";
+import { uiStateStore } from "./game-controller";
 
 export type HandProps = {
   cards: CardInstance[];

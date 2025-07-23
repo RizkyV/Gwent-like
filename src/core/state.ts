@@ -627,6 +627,7 @@ export function triggerHook(
 
   while (queue.length > 0) {
     const queuedEffect = queue.shift();
+    console.info(`Executing queued effect: ${queuedEffect?.effect.hook}`, queuedEffect?.context);
     if (!queuedEffect) continue;
     const { effect, context } = queuedEffect;
     effect.effect(context);
@@ -700,7 +701,7 @@ export function addRowEffect(player: PlayerRole, rowType: RowType, rowEffect: Ro
 
 export function getHighestCards(): CardInstance[] | null {
   let highestCards: CardInstance[] = [];
-  let highestPower = Infinity;
+  let highestPower = 0;
   const cards = [...getPlayerCards(PlayerRole.Ivory), ...getPlayerCards(PlayerRole.Obsidian)];
   //Determine the highest power
   for (const card of cards) {
