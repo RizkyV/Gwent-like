@@ -44,12 +44,24 @@ export enum HookType {
   OnDemiseTrigger = 'onDemiseTrigger',
   OnThriveTrigger = 'onThriveTrigger',
   OnExposedTrigger = 'onExposedTrigger',
-  OnHarmonyTrigger = 'onHarmonyTrigger'
+  OnHarmonyTrigger = 'onHarmonyTrigger',
 }
 export enum PredicateType {
   canBeTargeted = 'canBeTargeted',
   canBeDamaged = 'canBeDamaged',
-  affectedBySummoningSickness = 'affectedBySummoningSickness'
+  affectedBySummoningSickness = 'affectedBySummoningSickness',
+  hookIsNotDoubleTrigger = 'hookIsNotDoubleTrigger', //used to trigger hooks twice (dont stack)
+  hookIsNotTripleTrigger = 'hookIsNotTripleTrigger', //used to trigger hooks three times (dont stack)
+  hookIsNotAdditionalTrigger = 'hookIsNotAdditionalTrigger', //used to trigger hooks an additional time (stacks)
+}
+export enum AbilityTag {
+  Thrive = "thrive",
+  Zeal = "zeal",
+  Play = "play",
+  Harmony = "harmony",
+  Demise = "demise",
+  Exposed = "exposed",
+  // ...add more as needed
 }
 
 // === PLAYER & GAME STATE ===
@@ -157,13 +169,15 @@ export type HookedEffect = {
   effect: GameEffect;
   validTargets?: (source: EffectSource, target: EffectSource) => boolean;
   zone?: Zone | ((context: EffectContext) => boolean);
+  tags?: AbilityTag[];
 };
 export type Predicate = {
   type: PredicateType;
   check: (context: EffectContext) => boolean;
-  layer?: string; //5 layers of predicates. 1 - Card, 2 - Adjacency, 3 - Row (self exclusive), 4 - Player, 5 - Global  (if its self + adjacent, then make to predicates - one with 1 and one with 2)
-  // instead of layers just write a function that determines whether the target/source is affected by the predicate
-  // a predicate that just effects itself should check sourceIsSelf()
+  zone?: Zone | ((context: EffectContext) => boolean);
+  tags?: AbilityTag[];
+  //predicates are default active on board, otherwise need a zone.
+  //all predicates are asked for every card, so they need to specify exactly which cards they apply to. (friendly, same row, adjacent etc.)
 };
 export type StatusEffect = {
   type: StatusType;
@@ -182,6 +196,7 @@ export type EffectSource =
   | { kind: "status"; status: StatusType; card: CardInstance }
   | { kind: "row"; row: Row }
   | { kind: "rowEffect"; type: RowEffectType; row: Row }
+  | { kind: "hook"; type: HookType }
   // Add more as needed
 
 export interface EffectContext {

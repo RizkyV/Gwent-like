@@ -12,7 +12,7 @@ export type CardProps = {
   onClick?: () => void;
   showPlayButton?: boolean;
 };
-
+//TODO: rendering options - 1 inline (prov name power) - 2 game card (image with overlays) - 3 full (everything) 
 export const HandCard: React.FC<CardProps> = ({
   card,
   allowDragging = true,

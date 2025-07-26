@@ -10,8 +10,10 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 /**
  * TODO:
- * If action is engine initiated - do not block 
  * move stickyimagepreview from card to game controller
+
+ * build visual card templates - on board / in hand view - right click full card view
+ * If action is engine initiated - do not block 
  * Determine whether players are controllable by the UI - Only allow the active player to do things.
 
  * UI Multi targeting

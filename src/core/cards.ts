@@ -1,4 +1,4 @@
-import { CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, CardTypeCategory, EffectContext, EffectSource, HookType, PlayerRole, PredicateType, Row, RowEffectType, StatusType, Zone } from '../core/types.js';
+import { AbilityTag, CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, CardTypeCategory, EffectContext, EffectSource, HookedEffect, HookType, PlayerRole, PredicateType, Row, RowEffectType, StatusType, Zone } from '../core/types.js';
 import { getCardController, getCardRow, getCardRowIndex } from './helpers/board.js';
 import { cardIsType, getCardBasePower, getCardTypes, isBonded } from './helpers/card.js';
 import { getOtherPlayer } from './helpers/player.js';
@@ -94,7 +94,7 @@ export function canThrive(context: EffectContext): boolean {
   if (source.currentPower < self.currentPower) return false;
   return true;
 }
-const thrive1 = {
+const thrive1: HookedEffect = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
     const self = getEffectSourceCard(context.self);
@@ -103,9 +103,10 @@ const thrive1 = {
       boostCard(self, 1, { kind: 'card', card: self });
       triggerHook(HookType.OnThriveTrigger, { source: context.self, trigger: context.source });
     }
-  }
+  },
+  tags: [AbilityTag.Thrive]
 }
-const thrive2 = {
+const thrive2: HookedEffect = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
     const self = getEffectSourceCard(context.self);
@@ -114,7 +115,8 @@ const thrive2 = {
       boostCard(self, 2, { kind: 'card', card: self });
       triggerHook(HookType.OnThriveTrigger, { source: context.self, trigger: context.source });
     }
-  }
+  },
+  tags: [AbilityTag.Thrive]
 }
 export function triggersHarmony(card: CardInstance): boolean {
   const player = getCardController(card);
@@ -130,7 +132,7 @@ export function triggersHarmony(card: CardInstance): boolean {
   }
   return false;
 }
-const harmony1 = {
+const harmony1: HookedEffect = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
     const self = getEffectSourceCard(context.self);
@@ -142,9 +144,10 @@ const harmony1 = {
         triggerHook(HookType.OnHarmonyTrigger, { source: context.self, trigger: context.source });
       }
     }
-  }
+  },
+  tags: [AbilityTag.Harmony]
 }
-const harmony2 = {
+const harmony2: HookedEffect = {
   hook: HookType.OnPlay,
   effect: (context: EffectContext) => {
     const self = getEffectSourceCard(context.self);
@@ -156,10 +159,11 @@ const harmony2 = {
         triggerHook(HookType.OnHarmonyTrigger, { source: context.self, trigger: context.source });
       }
     }
-  }
+  },
+  tags: [AbilityTag.Harmony]
 }
 
-const handleCooldown = {
+const handleCooldown: HookedEffect = {
   hook: HookType.OnTurnEnd,
   effect: (context: EffectContext) => {
     const self = getEffectSourceCard(context.self);
@@ -175,7 +179,13 @@ const handleCooldown = {
  */
 const zeal = {
   type: PredicateType.affectedBySummoningSickness,
-  check: (context: EffectContext) => false
+  check: (context: EffectContext) => {
+    const self = getEffectSourceCard(context.self);
+    const source = getEffectSourceCard(context.source);
+    if (!self || !source) return true;
+    return !sourceIsSelf(context);
+  },
+  tags: [AbilityTag.Zeal]
 }
 export const cardDefinitions: CardDefinition[] = [
   {
@@ -291,6 +301,7 @@ export const cardDefinitions: CardDefinition[] = [
     rarity: CardRarity.Gold,
     colors: [CardColor.Green, CardColor.Green, CardColor.Green],
     description: 'cards.unit_nanook_king_of_the_tundra.desc',
+    flavorText: 'In the endless white, he reigns.',
     artworkUrl: import.meta.env.BASE_URL + 'assets/cards/unit_nanook_king_of_the_tundra.png',
     tags: ['Tall', 'Dominance'],
     sets: ['Witcher'],
@@ -735,6 +746,35 @@ export const cardDefinitions: CardDefinition[] = [
         },
         validTargets: targetIsEnemyRow,
         zone: Zone.Graveyard
+      }
+    ]
+  },
+  {
+    id: 'unit_pakal_the_prowler',
+    name: 'Pakal, the Prowler',
+    category: CardCategory.Unit,
+    provisionCost: 11,
+    basePower: 9,
+    baseArmor: 0,
+    types: ['Cat'],
+    rarity: CardRarity.Gold,
+    colors: [CardColor.Green, CardColor.Black],
+    description: 'Whenever an enemy unit dies, boost self by 1.',
+    artworkUrl: import.meta.env.BASE_URL + 'assets/cards/unit_pakal_the_prowler.png',
+    tags: ['Cat'],
+    sets: ['Base'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      {
+        hook: HookType.OnDeath,
+        effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const source = getEffectSourceCard(context.source);
+          if (!self || !source) return;
+          if(getCardController(self) !== getCardController(source)) {
+            boostCard(self, 1, context.source);
+          }
+        }
       }
     ]
   }
