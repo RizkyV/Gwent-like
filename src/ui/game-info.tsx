@@ -14,7 +14,7 @@ export const GameInfo: React.FC<InfoProps> = ({ gameState, localPlayer }) => {
     return (
         <div className="game-info">
             <div>{t('game.currentRound')}: <strong>{gameState.currentRound}</strong></div>
-            <div>{t('game.activePlayer')}: {getLocalizedPlayer(gameState.currentPlayer)}</div>
+            <div>{t('game.activePlayer')}: {getLocalizedPlayer(gameState.currentPlayer, t)}</div>
             <div>
                 <span>{t('game.ivoryWins')}: <strong>{gameState.players.ivory.roundWins}</strong></span>
             </div>

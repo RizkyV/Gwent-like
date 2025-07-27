@@ -292,7 +292,7 @@ export const cardDefinitions: CardDefinition[] = [
   },
   {
     id: 'unit_nanook_king_of_the_tundra',
-    name: 'cards.unit_nanook_king_of_the_tundra.name',
+    name: 'Nanook, King of the Tundra',
     category: CardCategory.Unit,
     provisionCost: 11,
     basePower: 15,
@@ -300,7 +300,7 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Bear'],
     rarity: CardRarity.Gold,
     colors: [CardColor.Green, CardColor.Green, CardColor.Green],
-    description: 'cards.unit_nanook_king_of_the_tundra.desc',
+    description: '',
     flavorText: 'In the endless white, he reigns.',
     artworkUrl: import.meta.env.BASE_URL + 'assets/cards/unit_nanook_king_of_the_tundra.png',
     tags: ['Tall', 'Dominance'],

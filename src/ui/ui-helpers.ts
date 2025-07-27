@@ -193,12 +193,21 @@ export function setCardPlayingState(card: CardInstance) {
  * Localisation helpers
  */
 
-export function getLocalizedPlayer(player: PlayerRole) {
-    const { t } = useTranslation();
+export function getLocalizedCardName(card: CardInstance, t: (key: string) => string): string {
+    const key = `cards.${card.baseCard.id}.name`;
+    const name = t(key);
+    // If translation is missing, t(key) returns the key itself
+    return name === key ? card.baseCard.name : name;
+}
+export function getLocalizedCardDescription(card: CardInstance, t: (key: string) => string): string {
+    const key = `cards.${card.baseCard.id}.desc`;
+    const desc = t(key);
+    return desc === key ? card.baseCard.description : desc;
+}
+export function getLocalizedPlayer(player: PlayerRole, t: (key: string) => string) {
     return player === PlayerRole.Ivory ? t("game.ivory") : t("game.obsidian");
 }
 
-export function getLocalizedRowType(rowType: RowType) {
-    const { t } = useTranslation();
+export function getLocalizedRowType(rowType: RowType, t: (key: string) => string) {
     return rowType === RowType.Melee ? t("zones.melee") : t("zones.ranged");
 }

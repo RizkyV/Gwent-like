@@ -3,7 +3,7 @@ import { CardInstance } from "../core/types";
 import { useDrag } from "react-dnd";
 import { useTranslation } from "react-i18next";
 import { uiStateStore } from "./game-controller";
-import { canPlayCard } from "./ui-helpers";
+import { canPlayCard, getLocalizedCardDescription, getLocalizedCardName } from "./ui-helpers";
 
 export type CardProps = {
   card: CardInstance;
@@ -93,7 +93,7 @@ export const HandCard: React.FC<CardProps> = ({
             <img className="card__art" src={card.baseCard.artworkUrl!} alt={card.baseCard.name} />
             {hovered && (
               <div className="card__description-tooltip">
-                <div className="card__name">{t(card.baseCard.name)}</div>
+                <div className="card__name">{getLocalizedCardName(card, t)}</div>
                 <div className="card__power">
                   {t('card.power')}: <span>{card.currentPower}</span>
                 </div>
@@ -120,7 +120,7 @@ export const HandCard: React.FC<CardProps> = ({
                   <div className="card__category">{t('card.category')}: {card.baseCard.category}</div>
                 )}
                 {card.baseCard.description && (
-                  <div className="card__description">{t(card.baseCard.description)}</div>
+                  <div className="card__description">{getLocalizedCardDescription(card, t)}</div>
                 )}
                 {showPlayButton && (
                   <button className="card__action-btn">{t('actions.play')}</button>
@@ -130,7 +130,7 @@ export const HandCard: React.FC<CardProps> = ({
           </>
         ) : (
           <>
-            <div className="card__name">{t(card.baseCard.name)}</div>
+            <div className="card__name">{getLocalizedCardName(card, t)}</div>
             <div className="card__power">
               {t('card.power')}: <span>{card.currentPower}</span>
             </div>
@@ -158,7 +158,7 @@ export const HandCard: React.FC<CardProps> = ({
             )}
             {hovered && card.baseCard.description && (
               <div className="card__description-tooltip">
-                <div className="card__description">{t(card.baseCard.description)}</div>
+                <div className="card__description">{getLocalizedCardDescription(card, t)}</div>
               </div>
             )}
             {showPlayButton && (

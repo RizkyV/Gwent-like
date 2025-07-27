@@ -65,7 +65,7 @@ export const Row: React.FC<RowProps> = ({ row }) => {
     }}>
       <div className="row__header">
         <span className="row__title">
-          {getLocalizedPlayer(row.player)} {getLocalizedRowType(row.type)} <span className="row__points">({getRowPoints(row)})</span>
+          {getLocalizedPlayer(row.player, t)} {getLocalizedRowType(row.type, t)} <span className="row__points">({getRowPoints(row)})</span>
         </span>
         {showTargetButton && (
           <button className="card__action-btn" >{t('actions.target')}</button>

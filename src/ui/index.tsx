@@ -6,7 +6,7 @@ import GameController from "./game-controller";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import i18n from '../i18n';
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Outlet, Route, Routes, useParams } from "react-router-dom";
 
 /**
  * TODO:
@@ -22,27 +22,26 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 */
 
 const App = () => {
-  useUrlLocale(); // Initialize locale from URL parameters
-
   return (
     <BrowserRouter>
       <div className="app">
         <Routes>
-          <Route path="/Gwent-like" element={<GameController />} />
-          <Route path="/Gwent-like/deck" element={<></>} />
+        <Route path="/Gwent-like/:lang" element={<LocaleRouteWrapper />}>
+          <Route index element={<GameController />} />
+          <Route path="deck" element={<></>} />
+        </Route>
         </Routes>
       </div>
     </BrowserRouter>
   );
 };
 
-function useUrlLocale() {
+const LocaleRouteWrapper = () => {
+  const { lang } = useParams<{ lang?: string }>();
   useEffect(() => {
-    const pathname = window.location.pathname;
-    const parts = pathname.split("/");
-    const lang = parts[2];
     if (lang) i18n.changeLanguage(lang);
-  }, [window.location.search]);
+  }, [lang]);
+  return <Outlet />;
 };
 
 const rootElement = document.getElementById('root')!;
