@@ -24,7 +24,7 @@ export const HandCard: React.FC<CardProps> = ({
   const [shouldOpenUpwards, setShouldOpenUpwards] = useState(false);
   const cardRef = React.useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
-  const { setSelectedHandCard, setUIPhase, setPlayInitiator } = uiStateStore();
+  const { isUiActive, setSelectedHandCard, setUIPhase, setPlayInitiator } = uiStateStore();
 
   React.useEffect(() => {
     if (hovered && cardRef.current) {
@@ -41,7 +41,8 @@ export const HandCard: React.FC<CardProps> = ({
   const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: 'CARD',
     canDrag: () => {
-      return allowDragging && canPlayCard();
+      console.log(isUiActive, allowDragging, canPlayCard());
+      return allowDragging && canPlayCard() && isUiActive;
     },
     item: () => {
       setSelectedHandCard(card);

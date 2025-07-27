@@ -1,7 +1,6 @@
 import { AbilityTag, CardCategory, CardColor, CardDefinition, CardInstance, CardRarity, CardTypeCategory, EffectContext, EffectSource, HookedEffect, HookType, PlayerRole, PredicateType, Row, RowEffectType, StatusType, Zone } from '../core/types.js';
 import { getCardController, getCardRow, getCardRowIndex } from './helpers/board.js';
 import { cardIsType, getCardBasePower, getCardTypes, isBonded } from './helpers/card.js';
-import { getOtherPlayer } from './helpers/player.js';
 import { hasRowEffect } from './helpers/row.js';
 import { activatedAbility, addRowEffect, addStatus, boostCard, dealDamage, decrementCooldown, getCardPosition, getPlayerCards, getPlayerDeck, getRow, initiateCardPlaying, removeStatus, spawnCard, triggerHook } from './state.js';
 
@@ -238,6 +237,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Four',
+    isToken: true,
     isValidRow: isFriendlyRow
   },
   {
@@ -248,6 +248,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Five',
+    isToken: true,
     isValidRow: isFriendlyRow
   },
   {
@@ -258,6 +259,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Six',
+    isToken: true,
     isValidRow: isFriendlyRow
   },
   {
@@ -268,6 +270,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Seven',
+    isToken: true,
     isValidRow: isFriendlyRow
   },
   {
@@ -278,6 +281,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Eight',
+    isToken: true,
     isValidRow: isFriendlyRow
   },
   {
@@ -288,6 +292,7 @@ export const cardDefinitions: CardDefinition[] = [
     category: CardCategory.Unit,
     provisionCost: 5,
     description: 'Card Nine',
+    isToken: true,
     isValidRow: isFriendlyRow
   },
   {
@@ -317,6 +322,7 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Warrior'],
     rarity: CardRarity.Bronze,
     description: 'Play: Deal 2 damage to an enemy unit.',
+    isToken: true,
     //artworkUrl: '/assets/cards/card11.png',
     effects: [
       {
@@ -344,6 +350,7 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Warrior'],
     rarity: CardRarity.Bronze,
     description: 'Turn End: Boost this by 1.',
+    isToken: true,
     effects: [
       {
         hook: HookType.OnTurnEnd,

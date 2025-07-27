@@ -26,10 +26,11 @@ const App = () => {
     <BrowserRouter>
       <div className="app">
         <Routes>
-        <Route path="/Gwent-like/:lang" element={<LocaleRouteWrapper />}>
-          <Route index element={<GameController />} />
-          <Route path="deck" element={<></>} />
-        </Route>
+          <Route path="/Gwent-like" element={<GameController />} />
+          <Route path="/Gwent-like/:lang" element={<LocaleRouteWrapper />}>
+            <Route index element={<GameController />} />
+            <Route path="deck" element={<></>} />
+          </Route>
         </Routes>
       </div>
     </BrowserRouter>

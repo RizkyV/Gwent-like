@@ -1,7 +1,7 @@
-import { flipCoin, getPlayerHandSize } from './helpers/utils.js';
+import { flipCoin } from './helpers/utils.js';
 import { ALWAYS_IVORY_START_PLAYER, ALWAYS_OBSIDIAN_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
 import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType, RowEffect, HookedEffect } from './types.js';
-import { getOtherPlayer } from './helpers/player.js';
+import { getOtherPlayer, getPlayerHandSize } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
 import { getStatusEffect } from './helpers/status.js';
 import { getCardController, isCardInZone } from './helpers/board.js';
@@ -625,17 +625,17 @@ export function triggerHook(
     const rows = gameState.players[role].rows;
     for (const row of rows) {
       if (row && row.effects) {
-        for (const rowEffect of row.effects) {
-          for (const rowEffectsEffect of rowEffect.effects) {
+        if(row.effects.length === 0) continue;
+        const activeRowEffect = row.effects[0];
+          for (const rowEffectsEffect of activeRowEffect.effects) {
             if( rowEffectsEffect.hook !== hook) continue;
             const scopedContext: EffectContext = {
               ...context,
-              self: { kind: 'rowEffect', type: rowEffect.type, row },
+              self: { kind: 'rowEffect', type: activeRowEffect.type, row },
             };
             queue.push({effect: rowEffectsEffect, context: scopedContext} as QueueEffect);
             //rowEffectsEffect.effect(scopedContext);
           }
-        }
       }
     }
   }

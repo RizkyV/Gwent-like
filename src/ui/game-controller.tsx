@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import GameBoard from "./game-board";
-import { passTurn, subscribe } from "../core/state";
+import { getCurrentPlayer, passTurn, subscribe } from "../core/state";
 import { playerMadeMove } from "../controllers/uiPlayer";
 import { CardInstance, EffectSource, GameState, PlayerRole, RowType } from "../core/types";
 import { cancelPlayIfAllowed } from "./ui-helpers";
 import { useTranslation } from "react-i18next";
 import { create } from "zustand";
 import { runGame } from "../cli/main";
-import { DEFAULT_LOCAL_PLAYER } from "../core/constants";
+import { DEFAULT_LOCAL_PLAYER, LOCAL_PLAYER_CONTROLS_BOTH } from "../core/constants";
 import { flipCoin } from "../core/helpers/utils";
 import GameInfo from "./game-info";
 
@@ -17,9 +17,10 @@ export type uiState = {
     pendingAction: PendingAction | null;
     uiPhase: UIPhase;
     playInitiator: PlayInitiator | null;
+    isUiActive: boolean;
+    // Actions to update the state
     setSelectedHandCard: (card: CardInstance | null) => void;
     setIsTargeting: (isTargeting: boolean) => void;
-    flipTargeting: () => void;
     setPendingAction: (action: PendingAction | null) => void;
     setUIPhase: (phase: UIPhase) => void;
     setPlayInitiator: (initiator: PlayInitiator | null) => void;
@@ -38,9 +39,9 @@ export const uiStateStore = create<uiState>((set) => ({
     pendingAction: null,
     uiPhase: "waiting",
     playInitiator: null,
+    isUiActive: true,
     setSelectedHandCard: (card) => set({ selectedHandCard: card }),
     setIsTargeting: (isTargeting) => set({ isTargeting }),
-    flipTargeting: () => set((state) => ({ isTargeting: !state.isTargeting })),
     setPendingAction: (action) => set({ pendingAction: action }),
     setUIPhase: (phase) => set({ uiPhase: phase }),
     setPlayInitiator: (initiator) => set({ playInitiator: initiator }),
@@ -53,7 +54,7 @@ type GameControllerProps = {
 const GameController: React.FC<GameControllerProps> = () => {
     const [gameState, setGameState] = useState(null);
     const [localPlayer, setLocalPlayer] = useState<PlayerRole | null>(null);
-    const { uiPhase, playInitiator } = uiStateStore();
+    const { uiPhase, playInitiator, isUiActive } = uiStateStore();
     const { t } = useTranslation();
 
     useEffect(() => {
@@ -70,6 +71,14 @@ const GameController: React.FC<GameControllerProps> = () => {
         // Cleanup on unmount
         return unsubscribe;
     }, []);
+    // Update UI active state based on game state - if local player is controlling both, set UI active to true
+/*     useEffect(() => {
+        if (gameState) {
+            console.log('currentPlayer', gameState.currentPlayer, 'localPlayer', localPlayer);
+            console.log('isUiActive', LOCAL_PLAYER_CONTROLS_BOTH || gameState.currentPlayer === localPlayer);
+            uiStateStore.setState({ isUiActive: LOCAL_PLAYER_CONTROLS_BOTH || gameState.currentPlayer === localPlayer });
+        }
+    }, [gameState]); */
 
     if (!gameState) return <div>{t('ui.loading')}</div>;
 
@@ -77,6 +86,10 @@ const GameController: React.FC<GameControllerProps> = () => {
     const canCancel = (uiPhase === "playing" || playInitiator === "user") || uiPhase === "targeting";
 
     const handleEndOrPassTurn = () => {
+        if(!isUiActive) {
+            console.warn("Only the active player can end or pass the turn");
+            return;
+        }
         if (hasTakenAction) {
             if (gameState.GameConfig.controllers[gameState.currentPlayer].type === 'human') {
                 playerMadeMove();
