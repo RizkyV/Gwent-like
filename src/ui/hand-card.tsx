@@ -41,7 +41,6 @@ export const HandCard: React.FC<CardProps> = ({
   const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: 'CARD',
     canDrag: () => {
-      console.log(isUiActive, allowDragging, canPlayCard());
       return allowDragging && canPlayCard() && isUiActive;
     },
     item: () => {

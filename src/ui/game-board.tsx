@@ -4,6 +4,8 @@ import Hand from "./hand";
 import Row from "./row";
 import { ZonePreview } from "./zone-preview";
 import { getOtherPlayer } from "../core/helpers/player";
+import HandCard from "./hand-card";
+import GameInfo from "./game-info";
 
 export type BoardProps = {
     gameState: GameState;
@@ -11,6 +13,9 @@ export type BoardProps = {
 };
 
 const GameBoard: React.FC<BoardProps> = ({ gameState, localPlayer }) => {
+    const ivoryLeader = gameState.players.ivory.leader;
+    const obsidianLeader = gameState.players.obsidian.leader;
+
     return (
         <>
             {/* opponent zones */}
@@ -27,15 +32,33 @@ const GameBoard: React.FC<BoardProps> = ({ gameState, localPlayer }) => {
                 position={{ top: 16, left: 16 }}
             />
 
-            {/* opponent hand and rows */}
+            {/* opponent hand, leader and rows */}
             <Hand
                 cards={gameState.players[getOtherPlayer(localPlayer)].hand}
                 title={`${getOtherPlayer(localPlayer)} Hand`}
             />
+            <div
+                className={`leader-card leader-card--opponent`}
+            >
+                <HandCard
+                    card={gameState.players[getOtherPlayer(localPlayer)].leader}
+                    highlight={false}
+                    allowDragging={false}
+                />
+            </div>
             <Row row={gameState.players[getOtherPlayer(localPlayer)].rows.find(r => r.type === RowType.Ranged)} />
             <Row row={gameState.players[getOtherPlayer(localPlayer)].rows.find(r => r.type === RowType.Melee)} />
 
-            {/* local rows and hand */}
+            {/* local hand, leader and rows */}
+            <div
+                className={`leader-card leader-card--local`}
+            >
+                <HandCard
+                    card={gameState.players[localPlayer].leader}
+                    highlight={false}
+                    allowDragging={false}
+                />
+            </div>
             <Row row={gameState.players[localPlayer].rows.find(r => r.type === RowType.Melee)} />
             <Row row={gameState.players[localPlayer].rows.find(r => r.type === RowType.Ranged)} />
             <Hand

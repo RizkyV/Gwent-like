@@ -1,6 +1,6 @@
 import { flipCoin } from './helpers/utils.js';
 import { ALWAYS_IVORY_START_PLAYER, ALWAYS_OBSIDIAN_START_PLAYER, CARDS_DRAWN_ROUND_1, CARDS_DRAWN_ROUND_2, CARDS_DRAWN_ROUND_3 } from './constants.js';
-import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType, RowEffect, HookedEffect } from './types.js';
+import { GameState, CardInstance, PlayerRole, EffectContext, GamePhase, Zone, HookType, GameConfig, CardDefinition, RowType, Row, CardCategory, PredicateType, StatusType, EffectSource, CardPosition, RowEffectType, RowEffect, HookedEffect, GameDeck } from './types.js';
 import { getOtherPlayer, getPlayerHandSize } from './helpers/player.js';
 import { buildDeck, createCardInstance } from './helpers/deck.js';
 import { getStatusEffect } from './helpers/status.js';
@@ -11,6 +11,7 @@ import { setCardPlayingState } from '../ui/ui-helpers.js';
 
 let gameState: GameState | null = null;
 let queue: QueueEffect[] = [];
+let currentTimeStamp = 0; //anything that needs a timestamp uses this and increments
 const listeners: Array<(state: GameState | null) => void> = [];
 
 export type QueueEffect = {
@@ -39,28 +40,30 @@ export function setGameState(newState: GameState) {
   listeners.forEach(listener => listener(gameState));
 }
 
-export function resetGameState(ivoryDeck: CardDefinition[], obsidianDeck: CardDefinition[], config: GameConfig) {
+export function resetGameState(ivoryDeck: GameDeck, obsidianDeck: GameDeck, config: GameConfig) {
   setGameState({
     players: {
       ivory: {
         hand: [],
-        deck: buildDeck(ivoryDeck, PlayerRole.Ivory),
+        deck: buildDeck(ivoryDeck.cards, PlayerRole.Ivory),
         graveyard: [],
         rows: [
           { type: RowType.Melee, cards: [], player: PlayerRole.Ivory },
           { type: RowType.Ranged, cards: [], player: PlayerRole.Ivory }
         ],
+        leader: createCardInstance(ivoryDeck.leader, PlayerRole.Ivory),
         passed: false,
         roundWins: 0
       },
       obsidian: {
         hand: [],
-        deck: buildDeck(obsidianDeck, PlayerRole.Obsidian),
+        deck: buildDeck(obsidianDeck.cards, PlayerRole.Obsidian),
         graveyard: [],
         rows: [
           { type: RowType.Melee, cards: [], player: PlayerRole.Obsidian },
           { type: RowType.Ranged, cards: [], player: PlayerRole.Obsidian }
         ],
+        leader: createCardInstance(obsidianDeck.leader, PlayerRole.Obsidian),
         passed: false,
         roundWins: 0
       }
@@ -117,6 +120,10 @@ export function checkState(): void {
     }
   }
   setGameState(newState);
+}
+
+export function getTimestamp(): number {
+  return currentTimeStamp++;
 }
 
 /* 
@@ -362,7 +369,7 @@ export function activateAbility(card: CardInstance, target?: EffectSource): void
 
 export function activatedAbility(card: CardInstance, cooldown?: number): void {
   const newState = { ...gameState };
-  const _card = findCardOnBoardInState(newState, card.instanceId);
+  const _card = getCardPosition(card, newState)?.card;
   _card.abilityUsed = true;
   _card.abilityCounter += 1;
   _card.abilityCooldown = cooldown ?? 0;
@@ -387,8 +394,9 @@ export function canActivateAbility(card: CardInstance): boolean {
 //returns true if default behavior (predicate doesnt change anything)
 export function checkPredicate(card: CardInstance, predicateType: PredicateType, context?: EffectContext): boolean {
   //TODO: also check statuses like hook trigger
-  //TOOD: always return true if the card is locked.
+  //TODO: always return true if the card is locked.
   const predicate = card.baseCard?.predicates?.find(predicate => predicate.type === predicateType);
+  context = { ...context, self: { kind: "card", card } };
   if (predicate) {
     return predicate.check(context);
   }
@@ -397,7 +405,7 @@ export function checkPredicate(card: CardInstance, predicateType: PredicateType,
 
 export function decrementCooldown(card: CardInstance): void {
   const newState = { ...gameState };
-  const _card = findCardOnBoardInState(newState, card.instanceId);
+  const _card = getCardPosition(card, newState)?.card;
   if (_card.abilityCooldown !== undefined && _card.abilityCooldown > 0) {
     _card.abilityCooldown -= 1;
     setGameState(newState);
@@ -491,6 +499,7 @@ export function getCardPosition(card: CardInstance, state: GameState = gameState
   let foundCardIndex = -1;
 
   // Find the card in rows, hand, or deck
+  //TODO: FIND IN LEADER
   for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
     //Row
     for (let r = 0; r < state.players[role].rows.length; r++) {
@@ -539,6 +548,13 @@ export function getCardPosition(card: CardInstance, state: GameState = gameState
         foundCardIndex = c;
         break;
       }
+    }
+    //Leader
+    const leader = state.players[role].leader;
+    if(leader.instanceId === card.instanceId) {
+      foundCard = leader;
+      owner = role;
+      zone = Zone.Leader;
     }
   }
   //Not found
@@ -598,7 +614,7 @@ export function triggerHook(
         ...context,
         self: { kind: 'card', card },
       };
-      queue.push({effect, context: scopedContext} as QueueEffect);
+      queue.push({ effect, context: scopedContext } as QueueEffect);
       //effect.effect(scopedContext);
     }
     //Trigger hooks of statuses
@@ -616,7 +632,7 @@ export function triggerHook(
         ...context,
         self: { kind: 'card', card },
       };
-      queue.push({effect, context: scopedContext} as QueueEffect);
+      queue.push({ effect, context: scopedContext } as QueueEffect);
       //effect.effect(scopedContext);
     }
   }
@@ -625,18 +641,31 @@ export function triggerHook(
     const rows = gameState.players[role].rows;
     for (const row of rows) {
       if (row && row.effects) {
-        if(row.effects.length === 0) continue;
+        if (row.effects.length === 0) continue;
         const activeRowEffect = row.effects[0];
-          for (const rowEffectsEffect of activeRowEffect.effects) {
-            if( rowEffectsEffect.hook !== hook) continue;
-            const scopedContext: EffectContext = {
-              ...context,
-              self: { kind: 'rowEffect', type: activeRowEffect.type, row },
-            };
-            queue.push({effect: rowEffectsEffect, context: scopedContext} as QueueEffect);
-            //rowEffectsEffect.effect(scopedContext);
-          }
+        for (const rowEffectsEffect of activeRowEffect.effects) {
+          if (rowEffectsEffect.hook !== hook) continue;
+          const scopedContext: EffectContext = {
+            ...context,
+            self: { kind: 'rowEffect', type: activeRowEffect.type, row },
+          };
+          queue.push({ effect: rowEffectsEffect, context: scopedContext } as QueueEffect);
+          //rowEffectsEffect.effect(scopedContext);
+        }
       }
+    }
+  }
+
+  //Trigger hooks of leaders
+  for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
+    const leader = gameState.players[role].leader;
+    const leaderEffects = leader.baseCard.effects?.filter(e => e.hook === hook) || [];
+    for (const effect of leaderEffects) {
+      const scopedContext: EffectContext = {
+        ...context,
+        self: { kind: 'card', card: leader },
+      };
+      queue.push({ effect, context: scopedContext } as QueueEffect);
     }
   }
 
@@ -651,7 +680,7 @@ export function triggerHook(
 
 export function addStatus(card: CardInstance, status: StatusType, duration?: number): void {
   const newState = { ...gameState }
-  const targetCard = findCardOnBoardInState(newState, card.instanceId);
+  const targetCard = getCardPosition(card, newState)?.card;
   const newStatuses = new Map(targetCard.statuses);
 
   //Decay/Vitality interaction
@@ -692,7 +721,7 @@ export function addStatus(card: CardInstance, status: StatusType, duration?: num
 
 export function removeStatus(card: CardInstance, status: StatusType): void {
   const newState = { ...gameState }
-  const targetCard = findCardOnBoardInState(newState, card.instanceId);
+  const targetCard = getCardPosition(card, newState)?.card;
   const newStatuses = new Map(targetCard.statuses);
   newStatuses.delete(status);
   targetCard.statuses = newStatuses;
@@ -787,7 +816,7 @@ export function getRow(player: PlayerRole, type: RowType): Row | null {
 
 export function tickStatusDurations(card: CardInstance): void {
   const newState = { ...gameState };
-  card = findCardOnBoardInState(newState, card.instanceId);
+  card = getCardPosition(card, newState)?.card;
   if (!card) {
     console.warn(`Card with instanceId ${card.instanceId} not found in game state.`);
     return;
@@ -832,7 +861,7 @@ export function tickRowEffectDuration(row: Row): void {
 export function dealDamage(target: CardInstance, amount: number, source: EffectSource): void {
   const newState = { ...gameState };
   //Find the target card in the game state
-  const targetCard = findCardOnBoardInState(newState, target.instanceId);
+  const targetCard = getCardPosition(target, newState)?.card;
 
   //1 - Check for innate card effects
   //2 - Check for statuses
@@ -853,7 +882,7 @@ export function dealDamage(target: CardInstance, amount: number, source: EffectS
 export function boostCard(target: CardInstance, amount: number, source: EffectSource): void {
   const newState = { ...gameState };
   //Find the target card in the game state
-  const targetCard = findCardOnBoardInState(newState, target.instanceId);
+  const targetCard = getCardPosition(target, newState)?.card;
 
   //TODO: check for all sort of stuff
 
@@ -900,23 +929,6 @@ export function drawCard(player: PlayerRole, source?: EffectSource) {
   } else {
     console.log(`${player}'s deck is empty - cannot draw a card`);
   }
-}
-
-/**
- * State builder helpers
- */
-export function findCardOnBoardInState(state: GameState, targetId: string): CardInstance | null {
-  for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
-    for (let r = 0; r < state.players[role].rows.length; r++) {
-      const row = state.players[role].rows[r];
-      for (let c = 0; c < row.cards.length; c++) {
-        if (row.cards[c].instanceId === targetId) {
-          return row.cards[c];
-        }
-      }
-    }
-  }
-  return null; // Card not found
 }
 
 /**

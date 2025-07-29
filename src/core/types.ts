@@ -1,9 +1,9 @@
 // === ENUMS & BASIC TYPES ===
 export enum PlayerRole { Ivory = 'ivory', Obsidian = 'obsidian' }
 export enum GamePhase { Draw = 'draw', Mulligan = 'mulligan', Play = 'play', RoundEnd = 'roundEnd', GameOver = 'gameOver' }
-export enum Zone { Deck = 'deck', Hand = 'hand', Graveyard = 'graveyard', RowMelee = 'melee', RowRanged = 'ranged', Exile = 'exile' }
+export enum Zone { Deck = 'deck', Hand = 'hand', Graveyard = 'graveyard', RowMelee = 'melee', RowRanged = 'ranged', Leader = 'leader', Exile = 'exile' }
 export enum RowType { Melee = 'melee', Ranged = 'ranged' }
-export enum CardCategory { Unit = 'unit', Special = 'special', Resource = 'resource' }
+export enum CardCategory { Unit = 'unit', Special = 'special', Resource = 'resource', Leader = 'leader' }
 export enum CardRarity { Bronze = 'bronze', Gold = 'gold' }
 export enum CardColor { White = 'W', Blue = 'U', Black = 'B', Red = 'R', Green = 'G' }
 export enum CardTypeCategory { Race = 'race', Class = 'class', Faction = 'faction' }
@@ -85,6 +85,7 @@ export type PlayerState = {
   hand: CardInstance[];
   deck: CardInstance[];
   graveyard: CardInstance[];
+  leader: CardInstance | null;
   passed: boolean;
   roundWins: number;
 };
@@ -100,6 +101,12 @@ export type GameState = {
   currentTurn: number;
   GameConfig: GameConfig;
 };
+
+export type GameDeck = {
+  name: string;
+  cards: CardDefinition[];
+  leader: CardDefinition | null;
+}
 
 // === ROWS ===
 export type RowEffect = {

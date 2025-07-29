@@ -90,6 +90,24 @@ body {
   position: relative;
 }
 
+.leader-card {
+  position: absolute;
+  left: 24px;
+  z-index: 201;
+  width: $card-width;
+  height: $card-total-height;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &--opponent {
+    top: 20%;
+  }
+  &--local {
+    bottom: 20%;
+  }
+}
+
 // === HAND ===
 .hand {
   width: 100vw;

@@ -18,6 +18,9 @@ declare global {
 export function getCardDefinition(id: string): CardDefinition | null {
   return cardDefinitions.find(card => card.id === id) || null;
 }
+export function getLeaderDefinition(id: string): CardDefinition | null {
+  return leaders.find(card => card.id === id) || null;
+}
 /**
  * Helpers
  */
@@ -769,6 +772,38 @@ export const cardDefinitions: CardDefinition[] = [
     description: 'Whenever an enemy unit dies, boost self by 1.',
     artworkUrl: import.meta.env.BASE_URL + 'assets/cards/unit_pakal_the_prowler.png',
     tags: ['Cat'],
+    sets: ['Base'],
+    isValidRow: isFriendlyRow,
+    effects: [
+      {
+        hook: HookType.OnDeath,
+        effect: (context: EffectContext) => {
+          const self = getEffectSourceCard(context.self);
+          const source = getEffectSourceCard(context.source);
+          if (!self || !source) return;
+          if(getCardController(self) !== getCardController(source)) {
+            boostCard(self, 1, context.source);
+          }
+        }
+      }
+    ]
+  }
+];
+
+export const leaders: CardDefinition[] = [
+{
+    id: 'leader_ursine_ritual',
+    name: 'Ursine Ritual',
+    category: CardCategory.Leader,
+    provisionCost: 11,
+    basePower: 0,
+    baseArmor: 0,
+    types: [],
+    rarity: CardRarity.Gold,
+    colors: [CardColor.Green],
+    description: 'Whenever an enemy unit dies, boost self by 1.',
+    isToken: true,
+    tags: [],
     sets: ['Base'],
     isValidRow: isFriendlyRow,
     effects: [
