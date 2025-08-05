@@ -1,4 +1,4 @@
-import { DEFAULT_DECK_SIZE, DEFAULT_PROVISION_LIMIT, SHUFFLE_DECKS } from "../constants";
+import { MINIMUM_DECK_SIZE, MAXIMUM_PROVISION_LIMIT, SHUFFLE_DECKS } from "../constants";
 import { CardDefinition, CardInstance, PlayerRole } from "../types";
 import { generateID } from "./utils";
 
@@ -55,7 +55,7 @@ export function generateRandomDeck(cardPool: CardDefinition[]): CardDefinition[]
     // Track how many times each card has been used
     const cardCounts: Record<string, number> = {};
 
-    while (deck.length < DEFAULT_DECK_SIZE) {
+    while (deck.length < MINIMUM_DECK_SIZE) {
         // Build a list of candidate cards, sorted by least used (to encourage diversity)
         const candidates = [...shuffled].sort((a, b) => {
             const countA = cardCounts[a.id] ?? 0;
@@ -65,13 +65,13 @@ export function generateRandomDeck(cardPool: CardDefinition[]): CardDefinition[]
 
         let added = false;
         for (const card of candidates) {
-            const remainingSlots = DEFAULT_DECK_SIZE - (deck.length + 1);
+            const remainingSlots = MINIMUM_DECK_SIZE - (deck.length + 1);
             const newTotalProvision = totalProvision + card.provisionCost;
-            const remainingProvision = DEFAULT_PROVISION_LIMIT - newTotalProvision;
+            const remainingProvision = MAXIMUM_PROVISION_LIMIT - newTotalProvision;
 
             // If this is the last slot, just check provision
             if (remainingSlots === 0) {
-                if (newTotalProvision <= DEFAULT_PROVISION_LIMIT) {
+                if (newTotalProvision <= MAXIMUM_PROVISION_LIMIT) {
                     deck.push(card);
                     totalProvision = newTotalProvision;
                     cardCounts[card.id] = (cardCounts[card.id] ?? 0) + 1;

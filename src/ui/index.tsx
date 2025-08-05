@@ -10,8 +10,9 @@ import { BrowserRouter, Outlet, Route, Routes, useParams } from "react-router-do
 
 /**
  * TODO:
- * move stickyimagepreview from card to game controller
+ * move stickyimagepreview from card to game controller - BUG: cantarella visual is not working
 
+ * decouple play from ui - allow play effects to be doubled, and multiple targetings.
  * build visual card templates - on board / in hand view - right click full card view
  * If action is engine initiated - do not block 
  * Determine whether players are controllable by the UI - Only allow the active player to do things.

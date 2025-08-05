@@ -61,7 +61,7 @@ export const statusEffects: Record<StatusType, StatusEffect> = {
   },
   doomed: {
     type: StatusType.Doomed,
-    description: 'Card does not go to the graveyard when destroyed, but is removed from the game',
+    description: 'Card does not go to the graveyard when destroyed, but is removed from the game instead (The card still dies and triggers any relevant effects)',
     effects: [
       {
         hook: HookType.OnDeath,

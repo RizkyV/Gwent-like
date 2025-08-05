@@ -12,7 +12,11 @@ export type CardProps = {
   onClick?: () => void;
   showPlayButton?: boolean;
 };
-//TODO: rendering options - 1 inline (prov name power) - 2 game card (image with overlays) - 3 full (everything) 
+//TODO: rendering options - 
+// 1 inline (prov name power - duplicates in deck) - mostly used in deck builder (left pane)
+// 2 deck card (image with base power, status, prov, types, name) - used in deck builder
+// 3 game card (image with power, status etc. - hover = name, types, description) - used in game board (hand, board, graveyard, deck) 
+// 4 full (everything) - right click on deck or game card to open full view - left pane = name, types, description, flavor, reminder text , right pane = deck card look minus type and name
 export const HandCard: React.FC<CardProps> = ({
   card,
   allowDragging = true,

@@ -541,7 +541,7 @@ export const cardDefinitions: CardDefinition[] = [
     isValidRow: isFriendlyRow,
     effects: [
       {
-        hook: HookType.OnAbilityActivated,
+        hook: HookType.OnAbilityActivate,
         effect: (context: EffectContext) => {
           const self = getEffectSourceCard(context.self);
           const target = getEffectSourceCard(context.target);
@@ -572,7 +572,7 @@ export const cardDefinitions: CardDefinition[] = [
     isValidRow: isFriendlyRow,
     effects: [
       {
-        hook: HookType.OnAbilityActivated,
+        hook: HookType.OnAbilityActivate,
         effect: (context: EffectContext) => {
           const self = getEffectSourceCard(context.self);
           const target = getEffectSourceCard(context.target);
@@ -597,18 +597,20 @@ export const cardDefinitions: CardDefinition[] = [
     types: ['Machine', 'Siege Engine'],
     rarity: CardRarity.Bronze,
     colors: [CardColor.Black],
-    description: 'Zeal. Activate: Deal 2 damage to an enemy unit. Charges: 3.',
+    description: 'Zeal. Activate: Damage target enemy by 2. Charges: 3.',
     tags: ['Decay', 'Bonded'],
     sets: ['Witcher'],
     isValidRow: isFriendlyRow,
     effects: [
       {
-        hook: HookType.OnAbilityActivated,
+        hook: HookType.OnAbilityActivate,
         effect: (context: EffectContext) => {
           const self = getEffectSourceCard(context.self);
           const target = getEffectSourceCard(context.target);
           if (!self || !target) return;
           if (sourceIsSelf(context)) {
+            //Trigger targeting hook before dealing damage
+            triggerHook(HookType.OnTarget, { source: context.target, trigger: context.self })
             dealDamage(target, 2, context.self);
             activatedAbility(self);
           }
@@ -714,7 +716,7 @@ export const cardDefinitions: CardDefinition[] = [
     isValidRow: isFriendlyRow,
     effects: [
       {
-        hook: HookType.OnDamaged,
+        hook: HookType.OnDamage,
         effect: (context: EffectContext) => {
           const self = getEffectSourceCard(context.self);
           if (!self) return;
@@ -792,8 +794,8 @@ export const cardDefinitions: CardDefinition[] = [
 
 export const leaders: CardDefinition[] = [
 {
-    id: 'leader_ursine_ritual',
-    name: 'Ursine Ritual',
+    id: 'leader_pakal_ritual',
+    name: 'Pakal Ritual',
     category: CardCategory.Leader,
     provisionCost: 11,
     basePower: 0,

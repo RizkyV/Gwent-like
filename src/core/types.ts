@@ -25,20 +25,20 @@ export enum RowEffectType {
 }
 export enum HookType {
   OnPlay = 'onPlay',
-  OnSummoned = 'onSummoned',
+  OnSummon = 'onSummon',
   OnTurnStart = 'onTurnStart',
   OnTurnEnd = 'onTurnEnd',
   OnTurnPass = 'onTurnPass',
   OnRoundStart = 'onRoundStart',
   OnRoundEnd = 'onRoundEnd',
-  OnTargeted = 'onTargeted',
-  OnDamaged = 'onDamaged',
-  OnBoosted = 'onBoosted',
+  OnTarget = 'onTarget',
+  OnDamage = 'onDamage',
+  OnBoost = 'onBoost',
   OnDeath = 'onDeath',
   OnDraw = 'onDraw',
   OnDiscard = 'onDiscard',
-  OnMoved = 'onMoved',
-  OnAbilityActivated = 'onAbilityActivated',
+  OnMove = 'onMove',
+  OnAbilityActivate = 'onAbilityActivate',
 
   //Keyword hooks
   OnDemiseTrigger = 'onDemiseTrigger',
@@ -130,9 +130,9 @@ export interface CardInstance {
   baseCard: CardDefinition; //Reference to static card definition
   owner: PlayerRole;
   controller?: PlayerRole; //The player that controls the card currently (set by the UI)
-  currentPower: number;
+  currentPower: number | null;
   currentArmor?: number;
-  currentBasePower?: number; //Base power can change due to effects
+  currentBasePower?: number | null; //Base power can change due to effects
   statuses: Map<StatusType, CardStatus>;
   enteredTurn?: number;
   abilityUsed: boolean;
@@ -145,7 +145,7 @@ export interface CardDefinition {
   name: string;
   category: CardCategory;
   provisionCost: number;
-  basePower: number;
+  basePower: number | null;
   baseArmor?: number;
   types?: string[]; //races - classes - factions (creeds)
   rarity?: CardRarity;

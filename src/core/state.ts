@@ -36,7 +36,7 @@ export function getGameState(): GameState | null {
 
 export function setGameState(newState: GameState) {
   console.info('Setting new game state:', newState);
-  gameState = newState;
+  gameState = checkState(newState);
   listeners.forEach(listener => listener(gameState));
 }
 
@@ -68,7 +68,6 @@ export function resetGameState(ivoryDeck: GameDeck, obsidianDeck: GameDeck, conf
         roundWins: 0
       }
     },
-    //TODO: should default to ivory player
     currentPlayer: ALWAYS_IVORY_START_PLAYER ? PlayerRole.Ivory : ALWAYS_OBSIDIAN_START_PLAYER ? PlayerRole.Obsidian : (flipCoin() ? PlayerRole.Ivory : PlayerRole.Obsidian),
     currentRound: 0,
     phase: GamePhase.Draw,
@@ -84,9 +83,13 @@ export function resetGameState(ivoryDeck: GameDeck, obsidianDeck: GameDeck, conf
 /**
  * Checks that the state is valid (no 0 power units, etc.) - and cleans up if it isnt
  */
-export function checkState(): void {
+export function checkState(newState: GameState): GameState {
   //TODO: reset instance ability state - like cooldown, charges, ability used - BUT NOT COUNTER
-  let newState = { ...gameState };
+  //State based actions:
+  // 1. Remove dead units from rows and move them to graveyard (reset transient properties - all but currentBasePower, abilityCounter)
+  // 2. Remove units with 0 base power from graveyards to exile
+  // 3. Cleanup tracking (haunts, etc.)
+  // Do we trigger onDeath hooks after 1 or after 2?
 
   for (const role of ['ivory', 'obsidian'] as PlayerRole[]) {
     for (let rowIdx = 0; rowIdx < newState.players[role].rows.length; rowIdx++) {
@@ -119,11 +122,30 @@ export function checkState(): void {
       }
     }
   }
-  setGameState(newState);
+  return newState;
 }
 
 export function getTimestamp(): number {
   return currentTimeStamp++;
+}
+/**
+ * Processes the queued effects, and checks that the state is valid. Needs to be run after every single player action.
+ */
+export function resolveCurrentState(): void {
+  // Does this need to a while loop as well?
+  while (queue.length > 0) {
+    processEffectQueue();
+  }
+}
+
+export function processEffectQueue(): void {
+  while (queue.length > 0) {
+    const queuedEffect = queue.shift();
+    console.info(`Executing queued effect: ${queuedEffect?.effect.hook}`, queuedEffect?.context);
+    if (!queuedEffect) continue;
+    const { effect, context } = queuedEffect;
+    effect.effect(context);
+  }
 }
 
 /* 
@@ -177,7 +199,7 @@ export function passTurn(player: PlayerRole) {
   triggerHook(HookType.OnTurnPass, { player: player })
   //TODO: Dont trigger turn end if it ends the round - therefore move this check to after the checkEndRound in engine - same as endTurn as it passes automatically
   triggerHook(HookType.OnTurnEnd, { player: player })
-  checkState();
+  resolveCurrentState();
 }
 export function endTurn() {
   console.log(`Ending turn for player ${gameState.currentPlayer} - turn number is ${gameState.currentTurn}`);
@@ -209,7 +231,7 @@ export function endTurn() {
     triggerHook(HookType.OnTurnStart, { player: newPlayer });
     triggerHook(HookType.OnTurnEnd, { player: newPlayer });
   }
-  checkState();
+  resolveCurrentState();
 }
 
 export function checkEndOfRound(): boolean {
@@ -355,16 +377,16 @@ export function playCard(card: CardInstance, player: PlayerRole, rowType: RowTyp
   newState.turn.hasPlayedCard = true;
   setGameState(newState);
   triggerHook(HookType.OnPlay, { source: { kind: 'card', card }, target });
-  triggerHook(HookType.OnSummoned, { source: { kind: 'card', card }, player: player });
-  checkState();
+  triggerHook(HookType.OnSummon, { source: { kind: 'card', card }, player: player });
+  resolveCurrentState();
 }
 
 export function activateAbility(card: CardInstance, target?: EffectSource): void {
   const newState = { ...gameState };
   newState.turn.hasActivatedAbility = true;
   setGameState(newState);
-  triggerHook(HookType.OnAbilityActivated, { source: { kind: 'card', card }, target });
-  checkState();
+  triggerHook(HookType.OnAbilityActivate, { source: { kind: 'card', card }, target });
+  resolveCurrentState();
 }
 
 export function activatedAbility(card: CardInstance, cooldown?: number): void {
@@ -445,6 +467,14 @@ export function getAllPossibleTargets(): EffectSource[] {
  */
 export function getPlayerCards(player: PlayerRole): CardInstance[] {
   return gameState.players[player].rows.flatMap(row => row.cards);
+}
+
+export function getRowCards(player: PlayerRole, rowType: RowType): CardInstance[] {
+  const row = gameState.players[player].rows.find(r => r.type === rowType);
+  if (row) {
+    return row.cards;
+  }
+  return [];
 }
 /**
  * 
@@ -551,7 +581,7 @@ export function getCardPosition(card: CardInstance, state: GameState = gameState
     }
     //Leader
     const leader = state.players[role].leader;
-    if(leader.instanceId === card.instanceId) {
+    if (leader.instanceId === card.instanceId) {
       foundCard = leader;
       owner = role;
       zone = Zone.Leader;
@@ -585,7 +615,7 @@ export function triggerHook(
   hook: HookType,
   context: EffectContext,
 ): void {
-  //TODO: dont trigger hooks for locked units
+  //TODO: dont trigger hooks for locked units - therefore "admin" effects like handleCooldown and checkChanneling should be done via an admin, not via the card
   console.info(`Triggering hook: ${hook}`, context);
   const allCards = [
     ...gameState.players.ivory.rows.flatMap(row => row.cards),
@@ -598,6 +628,8 @@ export function triggerHook(
     ...gameState.players.obsidian.graveyard,
   ];
   //TODO: ORDER ORDER ORDER
+  //TODO: the source of the hook trigger, triggers first. (eg. the card that died, the card that was played)
+
   //Trigger hooks of cards
   for (const card of allCards) {
     const cardEffects = card.baseCard.effects?.filter(e => e.hook === hook) || [];
@@ -615,7 +647,6 @@ export function triggerHook(
         self: { kind: 'card', card },
       };
       queue.push({ effect, context: scopedContext } as QueueEffect);
-      //effect.effect(scopedContext);
     }
     //Trigger hooks of statuses
     const statusEffects = card.statuses ? Array.from(card.statuses).flatMap(status => getStatusEffect(status[0]).effects?.filter(e => e.hook === hook) || []) : [];
@@ -633,7 +664,6 @@ export function triggerHook(
         self: { kind: 'card', card },
       };
       queue.push({ effect, context: scopedContext } as QueueEffect);
-      //effect.effect(scopedContext);
     }
   }
   //Trigger hooks of row effects
@@ -650,7 +680,6 @@ export function triggerHook(
             self: { kind: 'rowEffect', type: activeRowEffect.type, row },
           };
           queue.push({ effect: rowEffectsEffect, context: scopedContext } as QueueEffect);
-          //rowEffectsEffect.effect(scopedContext);
         }
       }
     }
@@ -667,14 +696,6 @@ export function triggerHook(
       };
       queue.push({ effect, context: scopedContext } as QueueEffect);
     }
-  }
-
-  while (queue.length > 0) {
-    const queuedEffect = queue.shift();
-    console.info(`Executing queued effect: ${queuedEffect?.effect.hook}`, queuedEffect?.context);
-    if (!queuedEffect) continue;
-    const { effect, context } = queuedEffect;
-    effect.effect(context);
   }
 }
 
@@ -758,10 +779,19 @@ export function getCurrentPlayer(): PlayerRole {
   return gameState.currentPlayer;
 }
 
-export function getHighestCards(): CardInstance[] | null {
+export function getHighestCards(player?: PlayerRole, rowType?: RowType): CardInstance[] | null {
   let highestCards: CardInstance[] = [];
   let highestPower = 0;
-  const cards = [...getPlayerCards(PlayerRole.Ivory), ...getPlayerCards(PlayerRole.Obsidian)];
+  let cards = [];
+  if (player) {
+    if (rowType) {
+      cards = getRowCards(player, rowType);
+    } else {
+      cards = getPlayerCards(player);
+    }
+  } else {
+    cards = [...getPlayerCards(PlayerRole.Ivory), ...getPlayerCards(PlayerRole.Obsidian)];
+  }
   //Determine the highest power
   for (const card of cards) {
     if (card.currentPower >= highestPower) {
@@ -777,16 +807,25 @@ export function getHighestCards(): CardInstance[] | null {
   if (highestCards.length === 0) return null; // No valid cards found
   return highestCards;
 }
-export function getHighestCard(): CardInstance | null {
-  const highestCards = getHighestCards();
+export function getHighestCard(player?: PlayerRole, rowType?: RowType): CardInstance | null {
+  const highestCards = getHighestCards(player, rowType);
   if (highestCards === null || highestCards.length === 0) return null;
   //Return a card randomly chosen from the highest cards
   return highestCards[Math.floor(Math.random() * highestCards.length)];
 }
-export function getLowestCards(): CardInstance[] | null {
+export function getLowestCards(player?: PlayerRole, rowType?: RowType): CardInstance[] | null {
   let lowestCards: CardInstance[] = [];
   let lowestPower = Infinity;
-  const cards = [...getPlayerCards(PlayerRole.Ivory), ...getPlayerCards(PlayerRole.Obsidian)];
+  let cards = [];
+  if (player) {
+    if (rowType) {
+      cards = getRowCards(player, rowType);
+    } else {
+      cards = getPlayerCards(player);
+    }
+  } else {
+    cards = [...getPlayerCards(PlayerRole.Ivory), ...getPlayerCards(PlayerRole.Obsidian)];
+  }
   //Determine the lowest power
   for (const card of cards) {
     if (card.currentPower <= lowestPower) {
@@ -802,8 +841,8 @@ export function getLowestCards(): CardInstance[] | null {
   if (lowestCards.length === 0) return null; // No valid cards found
   return lowestCards;
 }
-export function getLowestCard(): CardInstance | null {
-  const lowestCards = getLowestCards();
+export function getLowestCard(player?: PlayerRole, rowType?: RowType): CardInstance | null {
+  const lowestCards = getLowestCards(player, rowType);
   if (lowestCards === null || lowestCards.length === 0) return null;
   //Return a card randomly chosen from the lowest cards
   return lowestCards[Math.floor(Math.random() * lowestCards.length)];
@@ -871,12 +910,12 @@ export function dealDamage(target: CardInstance, amount: number, source: EffectS
   const newPower = Math.max(0, targetCard.currentPower - amount);
   targetCard.currentPower = newPower;
   const damagedAmount = targetCard.currentPower - newPower;
-  setGameState(newState);
-  triggerHook(HookType.OnDamaged, {
+  triggerHook(HookType.OnDamage, {
     source: { kind: 'card', card: target },
     trigger: source,
     amount: damagedAmount
   });
+  setGameState(newState);
 }
 
 export function boostCard(target: CardInstance, amount: number, source: EffectSource): void {
@@ -887,12 +926,15 @@ export function boostCard(target: CardInstance, amount: number, source: EffectSo
   //TODO: check for all sort of stuff
 
   // Apply boost
+  if (targetCard.currentPower === null) {
+    console.warn(`Card with instanceId ${target.instanceId} has no power.`);
+    return;
+  }
   const newPower = targetCard.currentPower + amount;
   targetCard.currentPower = newPower;
   const boostedAmount = newPower - targetCard.currentPower;
   setGameState(newState);
-  //TODO: send along the source
-  triggerHook(HookType.OnBoosted, {
+  triggerHook(HookType.OnBoost, {
     source: source,
     target: { kind: 'card', card: targetCard },
     amount: boostedAmount
@@ -909,7 +951,7 @@ export function spawnCard(target: CardDefinition, row: Row, index: number, sourc
   const targetRow = newState.players[player].rows.find(_row => _row.type === row.type);
   targetRow.cards.splice(index, 0, newCard)
   setGameState(newState);
-  triggerHook(HookType.OnSummoned, {
+  triggerHook(HookType.OnSummon, {
     source: source,
     player: player
   })

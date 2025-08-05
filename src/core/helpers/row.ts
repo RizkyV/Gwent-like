@@ -34,7 +34,7 @@ export const rowEffects: Record<RowEffectType, RowEffect> = {
           const row = context.self.kind === 'rowEffect' ? context.self.row : null;
           if (!row) return;
           if(!isFriendlyTurn(context)) return;
-          const highestPowerCard = getHighestCard();
+          const highestPowerCard = getHighestCard(row.player, row.type);
           if (highestPowerCard) {
             dealDamage(highestPowerCard, 2, { kind: 'rowEffect', type: RowEffectType.Fog, row: row });
           }
